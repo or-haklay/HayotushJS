@@ -1,0 +1,85 @@
+import React from "react";
+import { Tabs, useRouter } from "expo-router";
+import { View, TouchableOpacity } from "react-native";
+import { useTheme } from "react-native-paper";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons"; // ספריית אייקונים פופולרית
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SIZING, COLORS } from "../../theme/theme"; // יבוא קבצי נושא
+
+const TabsLayout = () => {
+  const theme = useTheme();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false, // נסתיר את הכותרת הדיפולטיבית, כי לכל מסך יש כותרת משלו
+        tabBarActiveTintColor: COLORS.accent, // צבע לאייקון פעיל (Teal)
+        tabBarInactiveTintColor: COLORS.background, // צבע לאייקון לא פעיל (אפור)
+        tabBarStyle: {
+          backgroundColor: COLORS.neutral, // צבע רקע התפריט (לבן)
+          borderTopWidth: 1,
+          borderTopColor: "#E0E0E0",
+          height: 60,
+          paddingBottom: 5,
+          marginBottom: insets.bottom ? insets.bottom : 10,
+          marginHorizontal: SIZING.pageMargin,
+          borderRadius: SIZING.radius_xl, // 4. פינות מעוגלות
+          elevation: 2,
+        },
+        tabBarLabelStyle: {
+          fontFamily: "Poppins-SemiBold",
+          fontSize: 10,
+        },
+      }}
+    >
+      {/* מסך הבית */}
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: "ראשי",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
+          ),
+        }}
+      />
+
+      {/* כפתור הוספה מרכזי - זהו "טאב" מיוחד שהוא בעצם כפתור */}
+
+      {/* מסך הפרופיל */}
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "פרופיל",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="paw" size={size} color={color} />
+          ),
+        }}
+      />
+      {/* מסך חיפוש שירות */}
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: "חיפוש",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="search" size={size} color={color} />
+          ),
+        }}
+      />
+
+      {/* מסך הגדרות */}
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "הגדרות",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tabs>
+  );
+};
+
+export default TabsLayout;
