@@ -27,7 +27,6 @@ import placesService from "../../services/placesService";
 import config from "../../config.json";
 import { COLORS } from "../../theme/theme";
 import { useTranslation } from "react-i18next";
-const { t, i18n } = useTranslation();
 
 // Mock details API (replace with proxy /details/:place_id)
 const toText = (v) => {
@@ -45,6 +44,7 @@ const absolutePhoto = (name, maxWidth = 900) => {
 };
 
 export default function ServiceDetailsScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { id, name } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);

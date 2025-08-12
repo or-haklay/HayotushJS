@@ -6,7 +6,6 @@ import {
   Image,
   TouchableOpacity,
   SafeAreaView,
-  FlatList,
 } from "react-native";
 import {
   Text,

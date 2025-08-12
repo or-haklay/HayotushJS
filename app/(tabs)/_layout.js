@@ -1,15 +1,11 @@
 import React from "react";
-import { Tabs, useRouter } from "expo-router";
-import { View, TouchableOpacity } from "react-native";
-import { useTheme } from "react-native-paper";
+import { Tabs } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons"; // ספריית אייקונים פופולרית
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SIZING, COLORS } from "../../theme/theme"; // יבוא קבצי נושא
 import { useTranslation } from "react-i18next";
 
 const TabsLayout = () => {
-  const theme = useTheme();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 

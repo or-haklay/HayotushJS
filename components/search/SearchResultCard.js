@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, Chip, IconButton, Badge } from "react-native-paper";
 import { StyleSheet, Linking } from "react-native";
 import { COLORS } from "../../theme/theme";
@@ -5,37 +6,35 @@ import { View } from "react-native";
 import { useRouter } from "expo-router";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import { useTranslation } from "react-i18next";
-import { t } from "i18next";
 
-// בתוך ServiceDetailsScreen():
-
-const router = useRouter();
-
-const openMaps = (item) => {
-  if (item.googleMapsUri) Linking.openURL(item.googleMapsUri);
-  else if (item.id)
-    Linking.openURL(
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        item.displayName?.text || ""
-      )}&query_place_id=${item.id}`
-    );
-};
-
-const goToDetails = (item) => {
-  router.push({
-    pathname: "/service/[id]",
-    params: {
-      id: item.id,
-      name: item.displayName?.text || t("common.service"),
-    },
-  });
-};
-
-function renderItem({ item }) {
+// This component uses hooks, so it must be a function component itself.
+// The renderItem in the FlatList should be a function that returns this component.
+const SearchResultCard = ({ item }) => {
   const { t } = useTranslation();
+  const router = useRouter();
+
+  const goToDetails = () => {
+    router.push({
+      pathname: "/service/[id]",
+      params: {
+        id: item.id,
+        name: item.displayName?.text || t("common.service"),
+      },
+    });
+  };
+
+  const openMaps = () => {
+    if (item.googleMapsUri) Linking.openURL(item.googleMapsUri);
+    else if (item.id)
+      Linking.openURL(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          item.displayName?.text || ""
+        )}&query_place_id=${item.id}`
+      );
+  };
 
   return (
-    <Card style={styles.card} onPress={() => goToDetails(item)}>
+    <Card style={styles.card} onPress={goToDetails}>
       <Card.Title
         title={item.displayName?.text || t("common.no_name")}
         subtitle={`${item.formattedAddress || ""}${
@@ -57,7 +56,7 @@ function renderItem({ item }) {
               name="navigate"
               size={28}
               color={COLORS.primary}
-              onPress={() => openMaps(item)}
+              onPress={openMaps}
             />
           </View>
         )}
@@ -65,7 +64,6 @@ function renderItem({ item }) {
       <Card.Content>
         <View style={styles.chipContainer}>
           {item.currentOpeningHours?.openNow != null && (
-            /*is opening  */
             <Chip
               compact
               icon={item.currentOpeningHours.openNow ? "check" : "close"}
@@ -82,7 +80,6 @@ function renderItem({ item }) {
             </Chip>
           )}
           {typeof item.userRatingCount === "number" && (
-            /* review count */
             <Chip compact style={{ backgroundColor: COLORS.background }}>{`${
               item.userRatingCount
             } ${t("details.reviews")}`}</Chip>
@@ -94,9 +91,9 @@ function renderItem({ item }) {
       </Card.Content>
     </Card>
   );
-}
+};
 
-export default renderItem;
+export default SearchResultCard;
 
 const styles = StyleSheet.create({
   card: {

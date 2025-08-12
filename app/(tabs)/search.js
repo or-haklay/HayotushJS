@@ -14,8 +14,8 @@ import {
   SegmentedButtons,
   Menu,
 } from "react-native-paper";
-import renderItem from "../../components/search/SearchResultCard";
-import { COLORS, FONTS, SIZING } from "../../theme/theme";
+import SearchResultCard from "../../components/search/SearchResultCard";
+import { COLORS, SIZING } from "../../theme/theme";
 import placesService from "../../services/placesService";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -276,7 +276,7 @@ export default function SearchScreen() {
         <FlatList
           data={data}
           keyExtractor={(item) => item.id}
-          renderItem={renderItem}
+          renderItem={({ item }) => <SearchResultCard item={item} />}
           onRefresh={handleRefresh}
           refreshing={refreshing}
           onEndReachedThreshold={0.6}
