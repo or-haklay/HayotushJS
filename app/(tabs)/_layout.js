@@ -5,11 +5,13 @@ import { useTheme } from "react-native-paper";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons"; // ספריית אייקונים פופולרית
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SIZING, COLORS } from "../../theme/theme"; // יבוא קבצי נושא
+import { useTranslation } from "react-i18next";
 
 const TabsLayout = () => {
   const theme = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -38,7 +40,7 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="home"
         options={{
-          title: "ראשי",
+          title: t("common.home"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
@@ -51,7 +53,7 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "פרופיל",
+          title: t("common.profile"),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="paw" size={size} color={color} />
           ),
@@ -61,7 +63,7 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="search"
         options={{
-          title: "חיפוש",
+          title: t("common.search"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="search" size={size} color={color} />
           ),
@@ -72,7 +74,7 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "הגדרות",
+          title: t("common.settings"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings" size={size} color={color} />
           ),

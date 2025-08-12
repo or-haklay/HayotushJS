@@ -33,6 +33,7 @@
   "action.logout": "Logout",
   "filter.open_now": "Open Now",
   "filter.min_rating": "Min Rating",
+
   "details.free": "Free",
   "profile.admin": "Admin",
   "action.edit_profile": "Edit Profile",
@@ -65,5 +66,28 @@
   "profile.last_active": "Last Active",
   "profile.created_at": "Created At",
   "profile.updated_at": "Updated At",
-  "profile.never_active": "Never Active"
+  "profile.never_active": "Never Active",
+
+  "common.pet": "Pet",
+  "home.welcome_to": "Welcome to Hayotush!",
+  "home.no_pets_yet": "It seems you haven't added a pet yet.",
+  "home.add_first_pet": "Add your first pet",
+  "home.welcome_back": "Welcome back,",
+  "home.reminder_text1": "Don't forget to schedule a",
+  "home.reminder_text2": "for ",
+  "home.reminder_text_annual_checkup": "yearly checkup",
+  "home.reminder_button": "Schedule Reminder",
+  "home.my_pets": "My Pets",
+  "home.quick_actions": "Quick Actions",
+  "home.reminders": "Reminders",
+  "home.expenses": "Expenses",
+  "home.medical_records": "Medical Records",
+  "home.no_pet_selected": "No Pet Selected",
+
+  "common.home": "Home",
+  "common.profile": "Profile",
+  "common.search": "Search",
+  "common.settings": "Settings",
+  "common.no_name": "No Name",
+  "common.service": "Service"
 }

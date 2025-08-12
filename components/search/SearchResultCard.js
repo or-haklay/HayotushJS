@@ -5,6 +5,7 @@ import { View } from "react-native";
 import { useRouter } from "expo-router";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import { useTranslation } from "react-i18next";
+import { t } from "i18next";
 
 // בתוך ServiceDetailsScreen():
 
@@ -23,7 +24,10 @@ const openMaps = (item) => {
 const goToDetails = (item) => {
   router.push({
     pathname: "/service/[id]",
-    params: { id: item.id, name: item.displayName?.text || "Service" },
+    params: {
+      id: item.id,
+      name: item.displayName?.text || t("common.service"),
+    },
   });
 };
 
@@ -33,7 +37,7 @@ function renderItem({ item }) {
   return (
     <Card style={styles.card} onPress={() => goToDetails(item)}>
       <Card.Title
-        title={item.displayName?.text || "No Name"}
+        title={item.displayName?.text || t("common.no_name")}
         subtitle={`${item.formattedAddress || ""}${
           item._distanceM != null
             ? ` • ${(item._distanceM / 1000).toFixed(1)} km`

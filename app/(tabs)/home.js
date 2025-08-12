@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import petService from "../../services/petService";
 import authService from "../../services/authService";
 import { SIZING, FONTS, COLORS } from "../../theme/theme";
+import { useTranslation } from "react-i18next";
 
 const PlaceholderImage = require("../../assets/images/dog-think.png");
 
@@ -28,7 +29,7 @@ const HomeScreen = () => {
   const theme = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,7 +69,9 @@ const HomeScreen = () => {
         style={styles.petImage}
       />
       <View style={styles.petInfo}>
-        <Text style={styles.petName}>{pet?.name || "No Pet Selected"}</Text>
+        <Text style={styles.petName}>
+          {pet?.name || t("home.no_pet_selected")}
+        </Text>
         <Text style={styles.petType}>{pet?.type || ""}</Text>
       </View>
       <Ionicons name="chevron-forward" size={24} color={COLORS.disabled} />
@@ -105,13 +108,13 @@ const HomeScreen = () => {
           resizeMode="contain"
         />
         <Text variant="headlineSmall" style={{ textAlign: "center" }}>
-          ברוך הבא ל-Hayotush!
+          {t("home.welcome_to")}
         </Text>
         <Text variant="bodyLarge" style={styles.centerText}>
-          נראה שעדיין לא הוספת חיית מחמד.
+          {t("home.no_pets_yet")}
         </Text>
         <Button mode="contained" onPress={() => router.push("/add-pet")}>
-          הוסף את חיית המחמד הראשונה
+          {t("home.add_first_pet")}
         </Button>
       </View>
     );
@@ -138,7 +141,8 @@ const HomeScreen = () => {
         </View>
 
         <Text style={styles.greeting}>
-          ברוך שובך, {user?.name?.split(" ")[0] || ""}!
+          {t("home.welcome_back")}
+          {user?.name?.split(" ")[0] || ""}!
         </Text>
 
         {/* תזכורת חשובה */}
@@ -149,26 +153,33 @@ const HomeScreen = () => {
           ]}
         >
           <View style={styles.reminderTextContainer}>
-            <Text style={styles.reminderText}>אל תשכח לקבוע</Text>
-            <Text style={styles.reminderPetName}>ל{pets[0]?.name}</Text>
-            <Text style={styles.reminderText}>בדיקה שנתית!</Text>
+            <Text style={styles.reminderText}>{t("home.reminder_text1")}</Text>
+            <Text style={styles.reminderPetName}>
+              {t("home.reminder_text2")}
+              {pets[0]?.name}
+            </Text>
+            <Text style={styles.reminderText}>
+              {t("home.reminder_text_annual_checkup")}
+            </Text>
           </View>
           <TouchableOpacity
             style={[styles.reminderButton, { backgroundColor: COLORS.accent }]}
             onPress={() => router.push("/add-event-modal")}
           >
-            <Text style={styles.reminderButtonText}>קבע תזכורת</Text>
+            <Text style={styles.reminderButtonText}>
+              {t("home.reminder_button")}
+            </Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.sectionTitle}>חיות המחמד שלי</Text>
+        <Text style={styles.sectionTitle}>{t("home.my_pets")}</Text>
 
         <PetCard pet={pets[0]} />
 
-        <Text style={styles.sectionTitle}>פעולות מהירות</Text>
+        <Text style={styles.sectionTitle}>{t("home.quick_actions")}</Text>
         <View style={styles.quickActionsContainer}>
           <QuickActionButton
-            title="תזכורות"
+            title={t("home.reminders")}
             icon={
               <Ionicons
                 name="notifications-outline"
@@ -180,7 +191,7 @@ const HomeScreen = () => {
             onPress={() => router.push("/reminders")}
           />
           <QuickActionButton
-            title="הוצאות"
+            title={t("home.expenses")}
             icon={
               <MaterialCommunityIcons
                 name="cash-multiple"
@@ -192,7 +203,7 @@ const HomeScreen = () => {
             onPress={() => router.push("/expenses")}
           />
           <QuickActionButton
-            title="תיעוד רפואי"
+            title={t("home.medical_records")}
             icon={
               <Ionicons name="heart-outline" size={30} color={COLORS.white} />
             }
@@ -210,8 +221,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    margin: SIZING.pageMargin,
-    padding: SIZING.padding,
+
     borderRadius: SIZING.radius_md,
     elevation: 2,
   },
@@ -344,6 +354,7 @@ const styles = StyleSheet.create({
   quickActionText: {
     ...FONTS.body,
     fontFamily: "Rubik",
+    fontSize: 12,
     color: COLORS.white,
     marginTop: SIZING.base,
     textAlign: "center",

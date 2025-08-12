@@ -66,5 +66,27 @@
   "profile.last_active": "אחרון פעיל",
   "profile.created_at": "נוצר ב",
   "profile.updated_at": "עודכן ב",
-  "profile.never_active": "מעולם לא היה פעיל"
+  "profile.never_active": "מעולם לא היה פעיל",
+
+  "common.pet": "חיית מחמד",
+  "home.welcome_to": "ברוכים הבאים ל-חיותוש!",
+  "home.no_pets_yet": "נראה שלא הוספת חיית מחמד עדיין.",
+  "home.add_first_pet": "הוסף את חיית המחמד הראשונה שלך",
+  "home.welcome_back": "ברוך שובך,",
+  "home.reminder_text1": "אל תשכח לקבוע",
+  "home.reminder_text2": "ל",
+  "home.reminder_text_annual_checkup": "בדיקת בריאות שנתית",
+  "home.reminder_button": "קבע תזכורת",
+  "home.my_pets": "החיות שלי",
+  "home.quick_actions": "פעולות מהירות",
+  "home.reminders": "תזכורות",
+  "home.expenses": "הוצאות",
+  "home.medical_records": "רשומות רפואיות",
+
+  "common.home": "בית",
+  "common.profile": "פרופיל",
+  "common.search": "חיפוש",
+  "common.settings": "הגדרות",
+  "common.no_name": "אין שם",
+  "common.service": "שירות"
 }
