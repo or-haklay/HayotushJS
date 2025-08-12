@@ -24,6 +24,7 @@ import LogoWithName from "../../components/ui/LogoWithName";
 import authService from "../../services/authService";
 import Joi from "joi";
 import { useSafeAreaInsets } from "react-native-safe-area-context"; // Adjusted import path
+import GoogleAuthButton from "../../components/auth/GoogleAuthButton";
 
 const image = require("../../assets/images/dog-happy.jpg");
 
@@ -130,9 +131,9 @@ const SignUpScreen = () => {
           </View>
 
           <View style={styles.form}>
+            <GoogleAuthButton />
             <Text style={styles.welcomeTitle}>Register</Text>
             <Text style={styles.loginText}>Create an account to continue</Text>
-
             <TextInput
               label="Name"
               value={name}
@@ -148,7 +149,6 @@ const SignUpScreen = () => {
             <HelperText type="error" visible={!!errors.name}>
               {errors.name}
             </HelperText>
-
             <TextInput
               label="Email"
               value={email}
@@ -166,7 +166,6 @@ const SignUpScreen = () => {
             <HelperText type="error" visible={!!errors.email}>
               {errors.email}
             </HelperText>
-
             <TextInput
               label="Password"
               value={password}
@@ -183,7 +182,6 @@ const SignUpScreen = () => {
             <HelperText type="error" visible={!!errors.password}>
               {errors.password}
             </HelperText>
-
             <View
               style={{
                 flexDirection: "row",

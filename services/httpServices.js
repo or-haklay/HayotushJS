@@ -3,10 +3,14 @@ import config from "../config.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { Alert } from "react-native";
+// נכון:
+import Constants from "expo-constants";
 
 const TOKEN_KEY = "token";
+const API_URL = config.URL;
 
-axios.defaults.baseURL = config.URL;
+/* axios.defaults.baseURL = config.URL; */
+axios.defaults.baseURL = API_URL;
 axios.defaults.headers.common["Content-Type"] = "application/json";
 
 // --- Request Interceptor ---

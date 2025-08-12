@@ -9,13 +9,13 @@ import {
 } from "react-native";
 // 1. ייבוא רכיבים מ-React Native Paper
 import { Text, Button } from "react-native-paper";
-import { COLORS, SIZING, FONTS } from "../../theme/theme"; // ודא שהנתיב נכון
+import { COLORS, SIZING, FONTS } from "../theme/theme"; // ודא שהנתיב נכון
 import { useRouter } from "expo-router";
-import LogoWithName from "../../components/ui/LogoWithName";
+import LogoWithName from "../components/ui/LogoWithName";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-const image = require("../../assets/images/dog-sit-removebg.png"); // ודא שהנתיב נכון
+const image = require("../assets/images/dog-sit-removebg.png"); // ודא שהנתיב נכון
 
 const WelcomeScreen = () => {
   const router = useRouter();

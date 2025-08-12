@@ -1,11 +1,21 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { Text, Button, Switch, List } from "react-native-paper";
+import {
+  Text,
+  Button,
+  Switch,
+  List,
+  Menu,
+  languageMenuVisible,
+} from "react-native-paper";
 import { COLORS, SIZING, FONTS } from "../../theme/theme";
 import authService from "../../services/authService";
 import { useRouter } from "expo-router";
+import { setLanguage } from "../../services/i18n/index";
+import { useTranslation } from "react-i18next";
 
 export default function SettingsScreen() {
+  const { t, i18n } = useTranslation();
   const router = useRouter();
 
   const logout = async () => {
@@ -24,13 +34,30 @@ export default function SettingsScreen() {
         title="התראות Push"
         right={() => <Switch value={true} onValueChange={() => {}} />}
       />
-      <List.Item title="שפה" description="עברית" />
+      <List.Item
+        title="שפה"
+        description="עברית"
+        right={() => (
+          <Menu
+            visible={languageMenuVisible}
+            onDismiss={() => setLanguageMenuVisible(false)}
+            anchor={
+              <Button onPress={() => setLanguageMenuVisible(true)}>שפה</Button>
+            }
+          >
+            <Menu.Item onPress={() => setLanguage("he")} title="עברית" />
+            <Menu.Item onPress={() => setLanguage("en")} title="English" />
+          </Menu>
+        )}
+      />
+      <Button onPress={() => setLanguage("he")}>עברית</Button>
+      <Button onPress={() => setLanguage("en")}>English</Button>
       <Button
         mode="outlined"
         onPress={logout}
         style={{ marginTop: SIZING.margin }}
       >
-        התנתק
+        {t("action.logout")}
       </Button>
     </View>
   );
