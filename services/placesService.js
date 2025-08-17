@@ -1,62 +1,127 @@
-// app/services/placesService.js
-import http from "./httpServices"; // your axios wrapper with baseURL from config.json
+import httpServices from "./httpServices";
 
-const BASE = "/places"; // relative to API baseURL from config.json
+const apiEndpoint = "/places";
 
 export async function searchPlaces({
-  q,
-  petCategory,
+  query,
+  location,
   category,
-  lat,
-  lng,
+  petCategory,
   radius = 5000,
-  sessionToken,
-  rank = "relevance",
   maxResults = 20,
-  regionCode = "IL",
-  languageCode = "he",
+}) {
+  const params = {};
+  if (query) params.q = query;
+  if (maxResults) params.maxResults = maxResults;
+
+  if (location) {
+    params.lat = location.latitude;
+    params.lng = location.longitude;
+  }
+
+  if (category) {
+    params.category = category;
+  }
+
+  if (petCategory) {
+    params.petCategory = petCategory;
+  }
+
+  if (radius) {
+    params.radius = radius;
+  }
+
+  console.log("🔍 Searching places with params:", params);
+
+  try {
+    const { data } = await httpServices.get(`${apiEndpoint}/search`, {
+      params,
+    });
+    console.log(
+      "✅ Places search successful, found:",
+      data?.places?.length || 0
+    );
+    return data?.places ?? [];
+  } catch (error) {
+    console.error("❌ Places search failed:", error);
+    console.error("❌ Error response:", error.response?.data);
+    throw error;
+  }
+}
+
+export async function getPlaceDetails(placeId) {
+  try {
+    const { data } = await httpServices.get(
+      `${apiEndpoint}/details/${placeId}`
+    );
+    return data?.place || null;
+  } catch (error) {
+    console.error("❌ Get place details failed:", error);
+    throw error;
+  }
+}
+
+export async function getNearbyPlaces({
+  location,
+  radius = 5000,
+  category,
+  maxResults = 20,
 }) {
   const params = {
-    q,
-    petCategory,
-    category,
-    lat,
-    lng,
+    lat: location.latitude,
+    lng: location.longitude,
     radius,
-    sessionToken,
-    rank,
     maxResults,
-    regionCode,
-    languageCode,
   };
-  const { data } = await http.get(`${BASE}/search`, { params });
-  return data;
+
+  if (category) {
+    params.category = category;
+  }
+
+  console.log("🔍 Getting nearby places with params:", params);
+
+  try {
+    const { data } = await httpServices.get(`${apiEndpoint}/nearby`, {
+      params,
+    });
+    console.log(
+      "✅ Nearby places search successful, found:",
+      data?.places?.length || 0
+    );
+    return data?.places ?? [];
+  } catch (error) {
+    console.error("❌ Nearby places search failed:", error);
+    console.error("❌ Error response:", error.response?.data);
+    throw error;
+  }
 }
 
-export async function getPlaceDetails(
-  placeId,
-  { sessionToken, languageCode = "he" } = {}
-) {
-  const { data } = await http.get(
-    `${BASE}/details/${encodeURIComponent(placeId)}`,
-    {
-      params: {
-        ...(sessionToken ? { sessionToken } : {}),
-        languageCode,
-        regionCode: "IL",
-        languageCode: "he",
-      },
-    }
-  );
-  return data;
+export async function getPlacePhotos(placeId, maxPhotos = 5) {
+  try {
+    const { data } = await httpServices.get(
+      `${apiEndpoint}/photos/${placeId}`,
+      {
+        params: { maxPhotos },
+      }
+    );
+    return data?.photos ?? [];
+  } catch (error) {
+    console.error("❌ Get place photos failed:", error);
+    throw error;
+  }
 }
 
-export function getPhotoUrl(photoName, maxWidthPx = 900) {
-  if (!photoName) return null;
-  // Return relative URL; when rendering <Image>, prepend config.URL if needed
-  return `${BASE}/photo?name=${encodeURIComponent(
-    photoName
-  )}&maxWidthPx=${maxWidthPx}`;
+export async function getPlaceReviews(placeId, maxReviews = 10) {
+  try {
+    const { data } = await httpServices.get(
+      `${apiEndpoint}/reviews/${placeId}`,
+      {
+        params: { maxReviews },
+      }
+    );
+    return data?.reviews ?? [];
+  } catch (error) {
+    console.error("❌ Get place reviews failed:", error);
+    throw error;
+  }
 }
-
-export default { searchPlaces, getPlaceDetails, getPhotoUrl };

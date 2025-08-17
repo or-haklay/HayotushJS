@@ -4,14 +4,14 @@ import { SIZING, FONTS, COLORS } from "../../theme/theme";
 
 const logo = require("../../assets/images/logo.png");
 
-function LogoWithName() {
+const LogoWithName = ({ isWhite = false }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.name}>Hayotush</Text>
+      <Text style={[styles.name, isWhite && styles.nameWhite]}>Hayotush</Text>
       <Image source={logo} style={styles.logo} />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -34,6 +34,9 @@ const styles = StyleSheet.create({
     ...FONTS.h3,
     color: COLORS.neutral,
     fontWeight: "bold",
+  },
+  nameWhite: {
+    color: COLORS.white,
   },
 });
 

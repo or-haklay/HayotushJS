@@ -1,7 +1,7 @@
 {
   "search.placeholder": "Search for a pet service...",
   "filters.open_now": "Open Now",
-  "filters.min_rating": "Min Rating: {{value}}",
+  "filters.min_rating": "Min Rating",
   "sort.relevance": "Relevance",
   "sort.distance": "Distance",
   "sort.rating": "Rating",
@@ -88,5 +88,6 @@
   "common.search": "Search",
   "common.settings": "Settings",
   "common.no_name": "No Name",
-  "common.service": "Service"
+  "common.service": "Service",
+  "common.chat": "Chat"
 }

@@ -1,7 +1,7 @@
 {
   "search.placeholder": "חפש שירות לחיות מחמד...",
   "filters.open_now": "פתוח עכשיו",
-  "filters.min_rating": "דירוג מינימלי: {{value}}",
+  "filters.min_rating": "דירוג מינימלי",
   "sort.relevance": "רלוונטיות",
   "sort.distance": "מרחק",
   "sort.rating": "דירוג",
@@ -89,5 +89,6 @@
   "common.search": "חיפוש",
   "common.settings": "הגדרות",
   "common.no_name": "אין שם",
-  "common.service": "שירות"
+  "common.service": "שירות",
+  "common.chat": "צ'אט"
 }

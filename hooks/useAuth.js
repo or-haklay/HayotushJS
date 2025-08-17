@@ -1,6 +1,6 @@
 // hooks/useAuth.js
 import { useState, useEffect } from "react";
-import authService from "../services/authService"; // ודא שהנתיב ל-authService נכון
+import authService from "../services/authService";
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
@@ -20,7 +20,7 @@ export const useAuth = () => {
     };
 
     checkAuthentication();
-  }, []); // המערך הריק גורם לזה לרוץ רק פעם אחת כשהאפליקציה נטענת
+  }, []);
 
   return { user, isLoading };
 };

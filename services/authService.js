@@ -50,7 +50,7 @@ async function getUser() {
 
 async function getUserId() {
   const user = await getUser();
-  return user ? user._id || user.id : null;
+  return user ? user._id || user.id || null : null;
 }
 
 async function createUser(userData) {
@@ -61,7 +61,10 @@ async function createUser(userData) {
 }
 
 async function login(email, password) {
-  const { data } = await httpServices.post("/users/login", { email, password });
+  const { data } = await httpServices.post("/users/login", {
+    email,
+    password,
+  });
   // Expecting { token, user? }
   await setToken(data.token);
   return data.token; // keep original behavior (returns the token)
@@ -77,11 +80,13 @@ async function refreshAuthHeaderFromStorage() {
   }
   return token;
 }
+
 async function oauthLogin(provider, payload) {
   const { data } = await httpServices.post(`/auth/${provider}`, payload);
   await setToken(data.token);
   return data.token;
 }
+
 export default {
   setToken,
   getJWT,

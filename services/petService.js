@@ -6,16 +6,21 @@ const apiEndpoint = "/pets";
  * מביא את כל חיות המחמד של המשתמש המחובר
  * GET /api/pets
  */
-export async function getMyPets() {
-  const { data } = await httpServices.get(`${apiEndpoint}/my-pets`);
-  return data.pets;
+async function getMyPets() {
+  try {
+    const response = await httpServices.get(`${apiEndpoint}/my-pets`);
+
+    return response.data.pets;
+  } catch (error) {
+    throw error;
+  }
 }
 
 /**
  * מביא חיית מחמד ספציפית לפי ID
  * GET /api/pets/:petId
  */
-export async function getPetById(petId) {
+async function getPetById(petId) {
   const { data } = await httpServices.get(`${apiEndpoint}/${petId}`);
   return data.pet;
 }
@@ -24,7 +29,7 @@ export async function getPetById(petId) {
  * יוצר חיית מחמד חדשה
  * POST /api/pets
  */
-export async function createPet(petData) {
+async function createPet(petData) {
   const { data } = await httpServices.post(apiEndpoint, petData);
   return data.pet;
 }
@@ -33,7 +38,7 @@ export async function createPet(petData) {
  * מעדכן חיית מחמד קיימת
  * PUT /api/pets/:petId
  */
-export async function updatePet(petId, petData) {
+async function updatePet(petId, petData) {
   const { data } = await httpServices.put(`${apiEndpoint}/${petId}`, petData);
   return data.pet;
 }
@@ -42,9 +47,8 @@ export async function updatePet(petId, petData) {
  * מוחק חיית מחמד
  * DELETE /api/pets/:petId
  */
-export async function deletePet(petId) {
-  const { data } = await httpServices.delete(`${apiEndpoint}/${petId}`);
-  return data;
+async function deletePet(petId) {
+  await httpServices.delete(`${apiEndpoint}/${petId}`);
 }
 
 const petService = {
