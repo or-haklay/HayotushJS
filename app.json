@@ -4,40 +4,11 @@
     "slug": "hayotush",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
+    "icon": "./assets/images/android-chrome-512x512.png",
     "scheme": "hayotushjs",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "n"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo.png",
-        "backgroundColor": "#ffffff",
-        "icon": "./assets/images/logo.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.HayotushJS"
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/logo.png"
-    },
-    "plugins": [
-      "expo-router",
-      "expo-web-browser",
-      "expo-localization",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/logo.png",
-          "color": "#ffffff"
-        }
-      ]
-    ],
+    "plugins": ["expo-router", "expo-web-browser", "expo-localization"],
     "experiments": {
       "typedRoutes": true
     },

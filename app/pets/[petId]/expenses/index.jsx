@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { View, RefreshControl, FlatList, Alert } from "react-native";
+import { View, RefreshControl, FlatList, Alert, ScrollView } from "react-native";
 import { useLocalSearchParams, useFocusEffect, useRouter } from "expo-router";
 import {
   Text,
@@ -10,18 +10,24 @@ import {
   Badge,
   Snackbar,
   Divider,
+  Chip,
 } from "react-native-paper";
 import {
   listExpenses,
   deleteExpense,
 } from "../../../../services/expensesService";
 import { COLORS, FONTS } from "../../../../theme/theme";
+import { useTranslation } from "react-i18next";
+
+const CATEGORIES = ["Vet", "Food", "Grooming", "Toys", "Insurance", "Other"];
 
 export default function ExpensesListScreen() {
   const { petId } = useLocalSearchParams();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [rows, setRows] = useState([]);
+  const [category, setCategory] = useState(null);
   const [sortBy, setSortBy] = useState("date");
   const [order, setOrder] = useState("desc");
   const [loading, setLoading] = useState(false);
@@ -33,7 +39,7 @@ export default function ExpensesListScreen() {
       const data = await listExpenses({ petId, sort: sortBy, order });
       setRows(data || []);
     } catch (e) {
-      setErr(e?.response?.data?.message || "שגיאה בטעינת הוצאות");
+      setErr(e?.response?.data?.message || t("expenses.load_error"));
     } finally {
       setLoading(false);
     }
@@ -54,41 +60,73 @@ export default function ExpensesListScreen() {
   }, [sortBy, order]);
 
   const onDelete = (id) => {
-    Alert.alert("מחיקת הוצאה", "בטוח למחוק?", [
-      { text: "ביטול" },
+    Alert.alert(t("expenses.delete_title"), t("expenses.delete_confirm"), [
+      { text: t("action.cancel") },
       {
-        text: "מחק",
+        text: t("expenses.delete"),
         style: "destructive",
         onPress: async () => {
           try {
             await deleteExpense(id);
             setRows((prev) => prev.filter((x) => (x.id || x._id) !== id));
           } catch (e) {
-            setErr(e?.response?.data?.message || "מחיקה נכשלה");
+            setErr(e?.response?.data?.message || t("expenses.delete_error"));
           }
         },
       },
     ]);
   };
 
+  // סינון לפי קטגוריה
+  const filtered = useMemo(() => {
+    if (!category) return rows;
+    return rows.filter((r) => r.category === category);
+  }, [rows, category]);
+
   const total = useMemo(
-    () => rows.reduce((s, r) => s + (Number(r.amount) || 0), 0),
-    [rows]
+    () => filtered.reduce((s, r) => s + (Number(r.amount) || 0), 0),
+    [filtered]
   );
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.white }}>
-      <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
-        <Text style={[FONTS.h2]}>הוצאות</Text>
+      <View style={{ padding: 16, paddingBottom: 8 }}>
+        <Text style={FONTS.h2}>{t("expenses.title")}</Text>
 
+        {/* קטגוריות */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginTop: 8 }}
+        >
+          <Chip
+            selected={!category}
+            onPress={() => setCategory(null)}
+            style={{ marginRight: 8 }}
+          >
+            {t("expenses.all_categories")}
+          </Chip>
+          {CATEGORIES.map((c) => (
+            <Chip
+              key={c}
+              selected={category === c}
+              onPress={() => setCategory(category === c ? null : c)}
+              style={{ marginRight: 8 }}
+            >
+              {c}
+            </Chip>
+          ))}
+        </ScrollView>
+
+        {/* מיון */}
         <View style={{ marginTop: 8 }}>
           <SegmentedButtons
             value={sortBy}
             onValueChange={setSortBy}
             buttons={[
-              { value: "date", label: "תאריך" },
-              { value: "amount", label: "סכום" },
-              { value: "category", label: "קטגוריה" },
+              { value: "date", label: t("expenses.sort.date") },
+              { value: "amount", label: t("expenses.sort.amount") },
+              { value: "category", label: t("expenses.sort.category") },
             ]}
             style={{ backgroundColor: COLORS.white }}
             theme={{
@@ -113,6 +151,7 @@ export default function ExpensesListScreen() {
           </View>
         </View>
 
+        {/* סיכום */}
         <View
           style={{
             marginTop: 8,
@@ -122,15 +161,17 @@ export default function ExpensesListScreen() {
             alignItems: "center",
           }}
         >
-          <Text style={FONTS.body}>סה״כ: {total.toFixed(2)} ₪</Text>
-          <Badge>{rows.length}</Badge>
+          <Text style={FONTS.body}>
+            {t("expenses.total")}: {total.toFixed(2)} {t("common.currency")}
+          </Text>
+          <Badge>{filtered.length}</Badge>
         </View>
       </View>
 
       <Divider />
 
       <FlatList
-        data={rows}
+        data={filtered}
         keyExtractor={(item) => item.id || item._id}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={load} />
@@ -147,7 +188,8 @@ export default function ExpensesListScreen() {
               right={(props) => (
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <Badge {...props} style={{ marginRight: 8 }}>
-                    {Number(item.amount).toFixed(0)}₪
+                    {Number(item.amount).toFixed(0)}
+                    {t("common.currency")}
                   </Badge>
                   <IconButton
                     icon="pencil"
@@ -168,7 +210,7 @@ export default function ExpensesListScreen() {
         ListEmptyComponent={
           !loading ? (
             <View style={{ padding: 24 }}>
-              <Text>אין הוצאות עדיין.</Text>
+              <Text>{t("expenses.no_expenses")}</Text>
             </View>
           ) : null
         }

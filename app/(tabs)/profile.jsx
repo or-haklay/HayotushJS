@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -7,6 +7,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TouchableOpacity,
+  Modal,
+  ImageBackground,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,11 +23,15 @@ import {
   Chip,
   Divider,
   List,
+  Portal,
+  Dialog,
+  IconButton,
 } from "react-native-paper";
 import Joi from "joi";
 import { COLORS, FONTS, SIZING } from "../../theme/theme";
 import userService from "../../services/userService";
 import { useTranslation } from "react-i18next";
+import uploadService from "../../services/uploadService";
 
 const dateToISO = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
 const safeNum = (v) =>
@@ -32,77 +39,91 @@ const safeNum = (v) =>
 const fmt = (v) =>
   v === undefined || v === null || v === "" ? "—" : String(v);
 
-const profileSchema = Joi.object({
-  name: Joi.string().min(2).required().messages({
-    "string.empty": "Name is required",
-    "string.min": "Name must be at least 2 characters",
-  }),
-  email: Joi.string()
-    .email({ tlds: { allow: false } })
-    .required()
-    .messages({
-      "string.empty": "Email is required",
-      "string.email": "Invalid email address",
-    }),
-  phone: Joi.string()
-    .allow("", null)
-    .pattern(/^[0-9+\-()\s]*$/)
-    .messages({
-      "string.pattern.base": "Phone may contain digits and + - ( )",
-    }),
-  bio: Joi.string()
-    .allow("", null)
-    .max(280)
-    .messages({ "string.max": "Bio must be at most 280 characters" }),
-  profilePicture: Joi.string()
-    .uri({ allowRelative: false })
-    .allow("", null)
-    .messages({ "string.uri": "Profile picture must be a valid URL" }),
-  dateOfBirth: Joi.string()
-    .allow("", null)
-    .pattern(/^\d{4}-\d{2}-\d{2}$/)
-    .messages({ "string.pattern.base": "Date of birth must be YYYY-MM-DD" }),
-  address: Joi.object({
-    street: Joi.string().allow("", null),
-    city: Joi.string().allow("", null),
-    country: Joi.string().allow("", null),
-    houseNumber: Joi.alternatives().try(
-      Joi.number().integer().min(0),
-      Joi.allow("", null)
-    ),
-    zipCode: Joi.alternatives().try(
-      Joi.number().integer().min(0),
-      Joi.allow("", null)
-    ),
-  }),
-});
-
-const passwordSchema = Joi.object({
-  currentPassword: Joi.string()
-    .required()
-    .messages({ "string.empty": "Current password is required" }),
-  newPassword: Joi.string()
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
-    .required()
-    .messages({
-      "string.pattern.base":
-        "New password must be 8+ chars incl. uppercase, lowercase and a digit",
-    })
-    .messages({
-      "string.pattern.base":
-        "New password must be 8+ chars incl. uppercase, lowercase and a digit",
-      "string.empty": "New password is required",
-    }),
-  confirmPassword: Joi.any().valid(Joi.ref("newPassword")).required().messages({
-    "any.only": "Passwords do not match",
-    "any.required": "Confirm your new password",
-  }),
-});
-
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+
+  // העברת ה-schemas לתוך הקומפוננטה כדי ש-t יהיה זמין
+  const profileSchema = useMemo(
+    () =>
+      Joi.object({
+        name: Joi.string()
+          .min(2)
+          .required()
+          .messages({
+            "string.empty": t("profile.name_required"),
+            "string.min": t("profile.name_min_error"),
+          }),
+        email: Joi.string()
+          .email({ tlds: { allow: false } })
+          .required()
+          .messages({
+            "string.empty": t("profile.email_required"),
+            "string.email": t("profile.email_invalid"),
+          }),
+        phone: Joi.string()
+          .allow("", null)
+          .pattern(/^[0-9+\-()\s]*$/)
+          .messages({
+            "string.pattern.base": t("profile.phone_pattern_error"),
+          }),
+        bio: Joi.string()
+          .allow("", null)
+          .max(280)
+          .messages({ "string.max": t("profile.bio_max_error") }),
+        profilePicture: Joi.string()
+          .uri({ allowRelative: false })
+          .allow("", null)
+          .messages({ "string.uri": t("profile.url_error") }),
+        dateOfBirth: Joi.string()
+          .allow("", null)
+          .pattern(/^\d{4}-\d{2}-\d{2}$/)
+          .messages({ "string.pattern.base": t("profile.date_format_error") }),
+        address: Joi.object({
+          street: Joi.string().allow("", null),
+          city: Joi.string().allow("", null),
+          country: Joi.string().allow("", null),
+          houseNumber: Joi.alternatives().try(
+            Joi.number().integer().min(0),
+            Joi.allow("", null)
+          ),
+          zipCode: Joi.alternatives().try(
+            Joi.number().integer().min(0),
+            Joi.allow("", null)
+          ),
+        }),
+      }),
+    [t]
+  );
+
+  const passwordSchema = useMemo(
+    () =>
+      Joi.object({
+        currentPassword: Joi.string()
+          .required()
+          .messages({ "string.empty": t("profile.current_password_required") }),
+        newPassword: Joi.string()
+          .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
+          .required()
+          .messages({
+            "string.pattern.base": t("profile.new_password_pattern"),
+            "string.empty": t("profile.new_password_required"),
+          }),
+        confirmPassword: Joi.any()
+          .valid(Joi.ref("newPassword"))
+          .required()
+          .messages({
+            "any.only": t("profile.confirm_password_mismatch"),
+            "any.required": t("profile.confirm_password_required"),
+          }),
+      }),
+    [t]
+  );
+
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [showImageOptions, setShowImageOptions] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [pwdSaving, setPwdSaving] = useState(false);
@@ -156,6 +177,146 @@ export default function ProfileScreen() {
   // NEW: view/edit + password toggle
   const [editMode, setEditMode] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
+  const handlePickImage = async () => {
+    const image = await uploadService.pickImage();
+    if (image) {
+      setSelectedImage(image);
+      setShowImageOptions(false);
+
+      // העלאה ושמירה מיידית ללא קשר למצב עריכה
+      try {
+        const uploadResult = await uploadService.uploadProfilePicture(image);
+        if (uploadResult && uploadResult.success) {
+          // עדכון ה-URL בטופס
+          setForm((prev) => ({
+            ...prev,
+            profilePicture: uploadResult.fileUrl,
+          }));
+          // עדכון בשרת
+          await userService.updateProfile({
+            profilePicture: uploadResult.fileUrl,
+          });
+          // רענון נתוני פרופיל מהמחשב
+          await refreshProfileAfterImageChange();
+          // נקה את התמונה המקומית כדי להציג את ה-URL מהשרת
+          setSelectedImage(null);
+          Alert.alert(
+            t("profile.image_upload_success"),
+            t("profile.image_upload_success")
+          );
+        }
+      } catch (error) {
+        Alert.alert(
+          t("profile.image_upload_error"),
+          t("profile.image_upload_error")
+        );
+        console.error("Error uploading profile picture:", error);
+      }
+    }
+  };
+
+  const handleRemoveProfilePicture = async () => {
+    Alert.alert(
+      t("profile.remove_picture.title"),
+      t("profile.remove_picture.message"),
+      [
+        { text: t("profile.remove_picture.cancel"), style: "cancel" },
+        {
+          text: t("profile.remove_picture.remove"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setForm((f) => ({ ...f, profilePicture: "" }));
+              setSelectedImage(null);
+              setShowImageOptions(false);
+              // אם יש תמונה קיימת, נמחק אותה מהשרת
+              if (original?.profilePicture) {
+                // כאן אפשר להוסיף קריאה לשרת למחיקת התמונה
+                // await uploadService.deleteProfilePicture();
+              }
+              // עדכן את הפרופיל בשרת
+              await userService.updateProfile({ profilePicture: "" });
+              await refreshProfileAfterImageChange();
+              Alert.alert(
+                t("profile.remove_picture.success"),
+                t("profile.remove_picture.success")
+              );
+            } catch (error) {
+              Alert.alert(
+                t("profile.remove_picture.error"),
+                t("profile.remove_picture.error")
+              );
+              console.error("Error removing profile picture:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const getProfileImageSource = () => {
+    if (selectedImage?.uri) {
+      return { uri: selectedImage.uri };
+    }
+    if (form.profilePicture) {
+      return { uri: form.profilePicture };
+    }
+    return require("../../assets/images/default-avatar-profile.png");
+  };
+
+  // פונקציה לטעינה מחדש של הפרופיל
+  const reloadProfile = useCallback(async () => {
+    try {
+      const me = await userService.getMe();
+      setOriginal(me);
+      setForm({
+        name: me.name || "",
+        email: me.email || "",
+        phone: me.phone || "",
+        bio: me.bio || "",
+        profilePicture: me.profilePicture || "",
+        dateOfBirth: dateToISO(me.dateOfBirth),
+        address: {
+          street: me.address?.street || "",
+          city: me.address?.city || "",
+          country: me.address?.country || "",
+          houseNumber:
+            me.address?.houseNumber != null
+              ? String(me.address.houseNumber)
+              : "",
+          zipCode:
+            me.address?.zipCode != null ? String(me.address.zipCode) : "",
+        },
+        subscriptionPlan: me.subscriptionPlan || "free",
+        subscriptionExpiresAt: me.subscriptionExpiresAt || null,
+        isAdmin: !!me.isAdmin,
+        googleId: me.googleId || null,
+        facebookId: me.facebookId || null,
+        lastActive: me.lastActive || null,
+        createdAt: me.createdAt || null,
+        updatedAt: me.updatedAt || null,
+      });
+
+      // נקה את התמונה הנבחרת אם יש תמונה בשרת
+      if (me.profilePicture) {
+        setSelectedImage(null);
+      }
+    } catch (e) {
+      console.error("Failed to reload profile", e);
+    }
+  }, []);
+
+  // פונקציה לטעינה מחדש של הפרופיל אחרי שינוי תמונה
+  const refreshProfileAfterImageChange = useCallback(async () => {
+    try {
+      await reloadProfile();
+      // עדכן את הממשק
+      setEditMode(false);
+      setErrors({});
+    } catch (error) {
+      console.error("Error refreshing profile after image change:", error);
+    }
+  }, [reloadProfile]);
 
   const isDirty = useMemo(() => {
     if (!original) return false;
@@ -221,7 +382,10 @@ export default function ProfileScreen() {
         });
       } catch (e) {
         console.error("Failed to load profile", e);
-        Alert.alert("Error", "Could not load your profile.");
+        Alert.alert(
+          t("profile.profile_load_error"),
+          t("profile.profile_load_error")
+        );
       } finally {
         setLoading(false);
       }
@@ -248,65 +412,88 @@ export default function ProfileScreen() {
     setErrors(map);
     if (Object.keys(map).length > 0) return;
 
-    // בנה PATCH מינימלי (רק מה שהשתנה)
-    const patch = {};
-    if (!original || form.name !== (original.name || ""))
-      patch.name = form.name;
-    if (!original || form.email !== (original.email || ""))
-      patch.email = form.email;
-    if (!original || form.phone !== (original.phone || ""))
-      patch.phone = form.phone;
-    if (!original || form.bio !== (original.bio || "")) patch.bio = form.bio;
-    if (!original || form.profilePicture !== (original.profilePicture || ""))
-      patch.profilePicture = form.profilePicture;
-    if (!original || form.dateOfBirth !== dateToISO(original.dateOfBirth))
-      patch.dateOfBirth = form.dateOfBirth || null;
-
-    const addr = {
-      street: form.address.street || undefined,
-      city: form.address.city || undefined,
-      country: form.address.country || undefined,
-      houseNumber:
-        form.address.houseNumber === ""
-          ? undefined
-          : Number(form.address.houseNumber),
-      zipCode:
-        form.address.zipCode === "" ? undefined : Number(form.address.zipCode),
-    };
-    const addrOrig = {
-      street: original?.address?.street,
-      city: original?.address?.city,
-      country: original?.address?.country,
-      houseNumber: original?.address?.houseNumber,
-      zipCode: original?.address?.zipCode,
-    };
-    if (!original || JSON.stringify(addr) !== JSON.stringify(addrOrig)) {
-      patch.address = addr;
-    }
-
-    if (Object.keys(patch).length === 0) {
-      Alert.alert("Nothing to save", "No changes detected.");
-      return;
-    }
-
-    // דיבאגר:
-    console.log("[Profile] Saving patch =>", patch);
-
     setSaving(true);
     try {
-      const updated = await userService.updateMe(patch);
-      setOriginal(updated);
-      setEditMode(false);
-      Alert.alert("Saved", "Your profile has been updated.");
+      // בנה PATCH מינימלי (רק מה שהשתנה)
+      const patch = {};
+      if (!original || form.name !== (original.name || ""))
+        patch.name = form.name;
+      if (!original || form.email !== (original.email || ""))
+        patch.email = form.email;
+      if (!original || form.phone !== (original.phone || ""))
+        patch.phone = form.phone;
+      if (!original || form.bio !== (original.bio || "")) patch.bio = form.bio;
+
+      // אם המשתמש בחר תמונה חדשה, נעלה אותה ל-S3
+      if (selectedImage) {
+        try {
+          const uploadResult = await uploadService.uploadProfilePicture(
+            selectedImage
+          );
+          if (uploadResult && uploadResult.success) {
+            patch.profilePicture = uploadResult.fileUrl;
+            // עדכן את ה-form עם ה-URL החדש
+            setForm((prev) => ({
+              ...prev,
+              profilePicture: uploadResult.fileUrl,
+            }));
+          }
+        } catch (error) {
+          Alert.alert(
+            t("profile.image_upload_error"),
+            t("profile.image_upload_error")
+          );
+          return;
+        }
+      } else if (
+        !original ||
+        form.profilePicture !== (original.profilePicture || "")
+      ) {
+        patch.profilePicture = form.profilePicture;
+      }
+
+      // בדוק אם יש שינויים בכתובת
+      if (
+        !original ||
+        form.address.street !== (original.address?.street || "") ||
+        form.address.city !== (original.address?.city || "") ||
+        form.address.country !== (original.address?.country || "") ||
+        form.address.houseNumber !==
+          String(original.address?.houseNumber ?? "") ||
+        form.address.zipCode !== String(original.address?.zipCode ?? "")
+      ) {
+        patch.address = form.address;
+      }
+
+      // בדוק אם יש שינויים בתאריך לידה
+      if (!original || form.dateOfBirth !== dateToISO(original.dateOfBirth)) {
+        patch.dateOfBirth = form.dateOfBirth;
+      }
+
+      // אם יש שינויים, שמור אותם
+      if (Object.keys(patch).length > 0) {
+        await userService.updateProfile(patch);
+
+        // עדכן את הנתונים המקוריים
+        await reloadProfile();
+
+        // נקה את התמונה הנבחרת
+        setSelectedImage(null);
+
+        // חזור למצב צפייה
+        setEditMode(false);
+        setErrors({});
+
+        Alert.alert(
+          t("profile.profile_update_success"),
+          t("profile.profile_update_success")
+        );
+      }
     } catch (e) {
-      console.error(
-        "[Profile] updateMe failed:",
-        e?.response?.status,
-        e?.response?.data || e.message
-      );
+      console.error("Failed to save profile", e);
       Alert.alert(
-        "Error",
-        e?.response?.data?.message || "Could not save your profile."
+        t("profile.profile_update_error"),
+        e?.response?.data?.message || t("profile.profile_update_error")
       );
     } finally {
       setSaving(false);
@@ -346,6 +533,7 @@ export default function ProfileScreen() {
     });
     setErrors({});
     setEditMode(false);
+    setSelectedImage(null); // נקה גם את התמונה הנבחרת
   };
 
   const onChangePwd = async () => {
@@ -368,12 +556,15 @@ export default function ProfileScreen() {
       setPwd({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setPwdErrors({});
       setShowPwd(false);
-      Alert.alert("Password updated", "Your password has been changed.");
+      Alert.alert(
+        t("profile.password_change_success"),
+        t("profile.password_change_success")
+      );
     } catch (e) {
       console.error("Failed to change password", e);
       Alert.alert(
-        "Error",
-        e?.response?.data?.message || "Could not change password."
+        t("profile.password_change_error"),
+        e?.response?.data?.message || t("profile.password_change_error")
       );
     } finally {
       setPwdSaving(false);
@@ -398,7 +589,8 @@ export default function ProfileScreen() {
       </Chip>
       {form.subscriptionExpiresAt ? (
         <Text style={styles.metaText}>
-          Expires: {new Date(form.subscriptionExpiresAt).toLocaleDateString()}
+          {t("profile.subscription_expires_on")}{" "}
+          {new Date(form.subscriptionExpiresAt).toLocaleDateString()}
         </Text>
       ) : null}
       {form.isAdmin ? (
@@ -435,23 +627,83 @@ export default function ProfileScreen() {
           ]}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Header */}
+          {/* Header with Profile Picture */}
           <View style={styles.headerCard}>
-            <View style={styles.avatarRow}>
-              {form.profilePicture ? (
-                <Avatar.Image size={92} source={{ uri: form.profilePicture }} />
-              ) : (
-                <Avatar.Icon size={92} icon="account" />
+            + {/* Hero background */}
+            <ImageBackground
+              source={require("../../assets/images/cover.png")}
+              style={styles.hero}
+              resizeMode="cover"
+            >
+              <View style={styles.heroShade} />
+            </ImageBackground>
+            <View style={styles.profilePictureSection}>
+              <TouchableOpacity onPress={() => setShowImageOptions(true)}>
+                <View style={styles.avatarRingOuter}>
+                  <View style={styles.avatarRingInner}>
+                    <Avatar.Image
+                      size={120}
+                      source={getProfileImageSource()}
+                      style={styles.profileAvatar}
+                      defaultSource={require("../../assets/images/default-avatar-profile.png")}
+                      onError={(error) => {
+                        console.log("Error loading profile image:", error);
+                        setForm((prev) => ({ ...prev, profilePicture: "" }));
+                      }}
+                    />
+                  </View>
+                </View>
+                <View style={styles.avatarOverlay}>
+                  <IconButton
+                    icon="camera"
+                    size={22}
+                    iconColor={COLORS.white}
+                    style={styles.cameraIcon}
+                  />
+                </View>
+              </TouchableOpacity>
+
+              <Text style={styles.profilePictureLabel}>
+                {t("profile.profile_picture")}
+              </Text>
+
+              {/* הצג מידע על התמונה הנוכחית רק במצב עריכה */}
+              {editMode && (
+                <>
+                  {selectedImage ? (
+                    <View style={styles.currentImageContainer}>
+                      <Text numberOfLines={1} style={{ flex: 1 }}>
+                        {selectedImage.name || t("profile.image_options")}
+                      </Text>
+                      <Button
+                        mode="outlined"
+                        onPress={() => setSelectedImage(null)}
+                        compact
+                      >
+                        {t("profile.image_remove")}
+                      </Button>
+                    </View>
+                  ) : form.profilePicture ? (
+                    <View style={styles.currentImageContainer}>
+                      <Text numberOfLines={1} style={{ flex: 1 }}>
+                        {t("profile.image_options")}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.noImageText}>
+                      {t("profile.image_options")}
+                    </Text>
+                  )}
+                </>
               )}
-              <View style={{ flex: 1, marginLeft: SIZING.base }}>
-                <Text style={styles.title}>{fmt(form.name)}</Text>
-                <Text style={styles.subtitle}>{fmt(form.email)}</Text>
-                <PlanBadge />
-              </View>
             </View>
             <View style={styles.avatarActions}>
               {!editMode ? (
-                <Button mode="contained" onPress={() => setEditMode(true)}>
+                <Button
+                  mode="contained"
+                  onPress={() => setEditMode(true)}
+                  style={styles.ctaBtn}
+                >
                   {t("action.edit_profile")}
                 </Button>
               ) : (
@@ -461,6 +713,7 @@ export default function ProfileScreen() {
                   </Button>
                   <Button
                     mode="contained"
+                    style={styles.ctaBtn}
                     onPress={() => {
                       onSave();
                     }}
@@ -473,6 +726,51 @@ export default function ProfileScreen() {
               )}
             </View>
           </View>
+
+          {/* Image Options Modal */}
+          <Portal>
+            <Dialog
+              visible={showImageOptions}
+              onDismiss={() => setShowImageOptions(false)}
+              style={styles.imageOptionsDialog}
+            >
+              <Dialog.Title>{t("profile.image_options")}</Dialog.Title>
+              <Dialog.Content>
+                <View style={styles.imageOptionsContainer}>
+                  <Button
+                    mode="contained"
+                    onPress={handlePickImage}
+                    icon="camera"
+                    style={styles.imageOptionButton}
+                  >
+                    {form.profilePicture
+                      ? t("profile.image_options")
+                      : t("profile.image_choose_from_gallery")}
+                  </Button>
+
+                  {form.profilePicture && (
+                    <Button
+                      mode="outlined"
+                      onPress={handleRemoveProfilePicture}
+                      icon="delete"
+                      style={[styles.imageOptionButton, styles.deleteButton]}
+                      textColor={COLORS.error}
+                    >
+                      {t("profile.image_remove")}
+                    </Button>
+                  )}
+
+                  <Button
+                    mode="outlined"
+                    onPress={() => setShowImageOptions(false)}
+                    style={styles.imageOptionButton}
+                  >
+                    {t("profile.image_cancel")}
+                  </Button>
+                </View>
+              </Dialog.Content>
+            </Dialog>
+          </Portal>
 
           {/* Basic Info */}
           <List.Section>
@@ -550,20 +848,6 @@ export default function ProfileScreen() {
                 />
                 <HelperText type="error" visible={!!errors.dateOfBirth}>
                   {errors.dateOfBirth}
-                </HelperText>
-
-                <TextInput
-                  label={t("profile.profile_picture")}
-                  value={form.profilePicture}
-                  onChangeText={(v) =>
-                    setForm((f) => ({ ...f, profilePicture: v.trim() }))
-                  }
-                  mode="outlined"
-                  style={styles.input}
-                  error={!!errors.profilePicture}
-                />
-                <HelperText type="error" visible={!!errors.profilePicture}>
-                  {errors.profilePicture}
                 </HelperText>
 
                 <TextInput
@@ -695,7 +979,9 @@ export default function ProfileScreen() {
             </List.Subheader>
             <View style={styles.card}>
               <View style={styles.rowWrap}>
-                <Text style={styles.metaText}>Plan</Text>
+                <Text style={styles.metaText}>
+                  {t("profile.subscription_plan")}
+                </Text>
                 <PlanBadge />
               </View>
               {form.subscriptionExpiresAt ? (
@@ -841,7 +1127,7 @@ export default function ProfileScreen() {
                 {t("profile.created_at")}:{" "}
                 {form.createdAt
                   ? new Date(form.createdAt).toLocaleDateString()
-                  : "Unknown"}
+                  : t("profile.never_active")}
               </Text>
               {form.updatedAt ? (
                 <Text style={styles.metaText}>
@@ -861,41 +1147,81 @@ export default function ProfileScreen() {
   );
 }
 
+const BRAND = {
+  primary: "#007C82", // טורקיז
+  accent: "#F2A900", // צהוב-כתום
+  dark: "#0F3B3C", // טורקיז כהה מאוד
+};
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: COLORS.background },
   kav: { flex: 1 },
   container: {
     flexGrow: 1,
     padding: SIZING.padding,
-    backgroundColor: COLORS.background,
+    backgroundColor: "#F5F7F8", // עדין יותר
   },
+
+  /* --- HERO --- */
+  hero: {
+    height: 220,
+    marginHorizontal: -SIZING.padding,
+    marginTop: -SIZING.padding,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: "hidden",
+  },
+  heroShade: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.08)",
+  },
+
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
 
+  /* כרטיס עליון “צף” */
   headerCard: {
     backgroundColor: COLORS.white,
-    borderRadius: SIZING.radius_lg,
+    borderRadius: 24,
     padding: SIZING.padding,
     marginBottom: SIZING.margin,
-    elevation: 2,
+    marginTop: -64, // ציפה מעל ה־hero
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
   },
-  avatarRow: { flexDirection: "row", alignItems: "center" },
+
   avatarActions: {
     marginTop: SIZING.base,
     flexDirection: "row",
     gap: SIZING.base,
   },
-  title: { ...FONTS.h2, color: COLORS.neutral },
-  subtitle: { ...FONTS.body, color: COLORS.neutral },
 
-  sectionHeader: { ...FONTS.h3, color: COLORS.neutral },
+  /* כותרות סקשנים */
+  sectionHeader: {
+    ...FONTS.h3,
+    color: BRAND.dark,
+    marginBottom: 6,
+  },
+
+  /* קלפים */
   card: {
     backgroundColor: COLORS.white,
-    borderRadius: SIZING.radius_lg,
+    borderRadius: 20,
     padding: SIZING.padding,
     marginBottom: SIZING.margin,
-    elevation: 1,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(0,0,0,0.06)",
   },
+
   input: { marginBottom: SIZING.base },
+
   rowWrap: {
     flexDirection: "row",
     alignItems: "center",
@@ -907,20 +1233,113 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: SIZING.base,
   },
-  metaText: { ...FONTS.caption, color: COLORS.neutral },
+
+  metaText: { ...FONTS.caption, color: "#5B6670" },
 
   fieldRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
-  fieldLabel: { ...FONTS.caption, color: COLORS.neutral },
+  fieldLabel: { ...FONTS.caption, color: "#5B6670" },
   fieldValue: { ...FONTS.body, color: COLORS.black, maxWidth: "60%" },
 
-  planChip: { backgroundColor: COLORS.dark, marginRight: SIZING.base },
-  adminChip: { marginLeft: SIZING.base },
-  free: { backgroundColor: COLORS.neutral },
-  premium: { backgroundColor: "#017A82" },
-  gold: { backgroundColor: "#FFC107" },
-  divider: { marginVertical: 4 },
+  /* צ'יפים */
+  planChip: {
+    backgroundColor: BRAND.dark,
+    marginRight: SIZING.base,
+  },
+  adminChip: { marginLeft: SIZING.base, backgroundColor: "#EAF4F5" },
+  free: { backgroundColor: "#D9E2E7" },
+  premium: { backgroundColor: BRAND.primary },
+  gold: { backgroundColor: BRAND.accent },
+
+  divider: { marginVertical: 4, opacity: 0.6 },
+
+  /* --- אווטאר וטבעת דו-גוונית --- */
+  profilePictureSection: {
+    alignItems: "center",
+    marginBottom: SIZING.base,
+  },
+  profilePictureLabel: {
+    marginTop: SIZING.base,
+    fontSize: FONTS.body.fontSize,
+    color: "#5B6670",
+  },
+  profileAvatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#e9eef0",
+  },
+  avatarRingOuter: {
+    width: 136,
+    height: 136,
+    borderRadius: 68,
+    backgroundColor: BRAND.accent,
+    padding: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  avatarRingInner: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 64,
+    backgroundColor: BRAND.primary,
+    padding: 3,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarOverlay: {
+    position: "absolute",
+    bottom: -2,
+    right: -2,
+    backgroundColor: BRAND.primary,
+    borderRadius: 16,
+    width: 34,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cameraIcon: {
+    backgroundColor: "transparent",
+  },
+
+  /* כפתור עיקרי */
+  ctaBtn: {
+    backgroundColor: BRAND.primary,
+    borderRadius: 16,
+    paddingHorizontal: 8,
+  },
+
+  currentImageContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: SIZING.base,
+    paddingVertical: SIZING.base,
+    paddingHorizontal: SIZING.base,
+    backgroundColor: "rgba(0,124,130,0.07)",
+    borderRadius: 12,
+  },
+
+  imageOptionsDialog: { margin: SIZING.base },
+  imageOptionsContainer: { padding: SIZING.base },
+  imageOptionButton: { marginBottom: SIZING.base },
+  deleteButton: {
+    backgroundColor: "rgba(220,53,69,0.06)",
+    borderColor: COLORS.error,
+    borderWidth: 1,
+  },
+  noImageText: {
+    fontSize: FONTS.body.fontSize,
+    color: "#5B6670",
+    marginTop: SIZING.base,
+    fontStyle: "italic",
+  },
 });

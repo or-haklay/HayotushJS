@@ -19,27 +19,32 @@ import { listExpenses } from "../../services/expensesService";
 import { listReminders } from "../../services/remindersService";
 import { listMedicalRecords } from "../../services/medicalRecordsService";
 import { COLORS, FONTS } from "../../theme/theme";
+import { useTranslation } from "react-i18next";
 
 const PlaceholderImage = require("../../assets/images/dog-think.png");
 const isObjectId = (v) => typeof v === "string" && /^[0-9a-fA-F]{24}$/.test(v);
 
-function getAgeString(birthDateStr) {
-  if (!birthDateStr) return "—";
-  const d = new Date(birthDateStr);
-  if (Number.isNaN(d.getTime())) return "—";
-  const now = new Date();
-  let years = now.getFullYear() - d.getFullYear();
-  let months = now.getMonth() - d.getMonth();
-  if (months < 0) {
-    years--;
-    months += 12;
-  }
-  return years > 0 ? `${years}ש׳ ${months}ח׳` : `${months} ח׳`;
-}
+// העברת הפונקציה לתוך הקומפוננטה כדי ש-t יהיה זמין
 
 export default function PetProfile() {
   const { petId } = useLocalSearchParams();
   const router = useRouter();
+  const { t } = useTranslation();
+
+  // העברת הפונקציה לתוך הקומפוננטה כדי ש-t יהיה זמין
+  const getAgeString = useCallback((birthDateStr) => {
+    if (!birthDateStr) return "—";
+    const d = new Date(birthDateStr);
+    if (Number.isNaN(d.getTime())) return "—";
+    const now = new Date();
+    let years = now.getFullYear() - d.getFullYear();
+    let months = now.getMonth() - d.getMonth();
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    return years > 0 ? `${years}${t("common.years")} ${months}${t("common.months")}` : `${months} ${t("common.months")}`;
+  }, [t]);
 
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -119,7 +124,7 @@ export default function PetProfile() {
       setMedCount(medicalRows?.length || 0);
       setLastMedical(medicalRows?.[0] || null);
     } catch (e) {
-      setErr(e?.response?.data?.message || "שגיאה בטעינה");
+      setErr(e?.response?.data?.message || t("pets.load_error"));
     } finally {
       setLoading(false);
     }
@@ -136,35 +141,66 @@ export default function PetProfile() {
     pet?.profilePictureUrl || pet?.photoUrl || pet?.imageUrl || null;
   const avatar = useMemo(() => {
     const letter = pet?.name?.[0]?.toUpperCase?.() || "?";
-    return photoUrl ? (
-      <Avatar.Image size={56} source={{ uri: photoUrl }} />
-    ) : (
-      <Avatar.Text
-        size={56}
-        label={letter}
-        style={{ backgroundColor: COLORS.primary }}
-        color={COLORS.white}
-      />
-    );
+    if (photoUrl) {
+      return (
+        <Avatar.Image 
+          size={56} 
+          source={{ uri: photoUrl }} 
+          defaultSource={require("../../assets/images/dog-think.png")}
+          onError={(error) => {
+            console.log("Error loading pet profile image:", error);
+          }}
+          onLoad={() => {
+            console.log("Pet profile image loaded successfully");
+          }}
+        />
+      );
+    } else {
+      // תמונת ברירת מחדל לפי סוג החיה
+      if (pet?.species === 'cat') {
+        return (
+          <Avatar.Image 
+            size={56} 
+            source={require("../../assets/images/cat-sit.png")} 
+          />
+        );
+      } else {
+        return (
+          <Avatar.Image 
+            size={56} 
+            source={require("../../assets/images/dog-sit.jpg")} 
+          />
+        );
+      }
+    }
   }, [pet, photoUrl]);
 
   const onDelete = () => {
-    Alert.alert("מחיקת חיה", "למחוק את הרשומה וכל הנתונים הנלווים?", [
-      { text: "ביטול" },
+    Alert.alert(t("pets.delete_title"), t("pets.delete_message"), [
+      { text: t("action.cancel") },
       {
-        text: "מחק",
+        text: t("pets.delete"),
         style: "destructive",
         onPress: async () => {
           try {
             await petService.deletePet(petId);
             router.replace("/(tabs)/pets");
           } catch {
-            setErr("מחיקה נכשלה");
+            setErr(t("pets.delete_error"));
           }
         },
       },
     ]);
   };
+
+  // פונקציה לטעינה מחדש של הפרופיל אחרי שינוי תמונה
+  const refreshPetAfterImageChange = useCallback(async () => {
+    try {
+      await load();
+    } catch (error) {
+      console.error("Error refreshing pet after image change:", error);
+    }
+  }, [load]);
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.white }}>
@@ -214,7 +250,7 @@ export default function PetProfile() {
                 <Chip icon="cake-variant">{getAgeString(pet.birthDate)}</Chip>
               ) : null}
               {pet?.weightKg ? (
-                <Chip icon="scale">{pet.weightKg} ק״ג</Chip>
+                <Chip icon="scale">{pet.weightKg} {t("common.kg")}</Chip>
               ) : null}
               {pet?.color ? <Chip icon="palette">{pet.color}</Chip> : null}
               {pet?.chipNumber ? (
@@ -242,7 +278,7 @@ export default function PetProfile() {
               })
             }
           >
-            הוצאות
+            {t("pets.expenses")}
           </Button>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <Button
@@ -255,7 +291,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              הוסף הוצאה
+              {t("pets.add_expense")}
             </Button>
             <Button
               mode="outlined"
@@ -267,7 +303,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              סיכום הוצאות
+              {t("pets.expenses_summary")}
             </Button>
           </View>
 
@@ -282,7 +318,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              מסמכים רפואיים
+              {t("pets.medical_records")}
             </Button>
             <Button
               mode="outlined"
@@ -294,7 +330,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              הוסף מסמך
+              {t("pets.add_medical_record")}
             </Button>
           </View>
 
@@ -309,7 +345,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              תזכורות
+              {t("pets.reminders")}
             </Button>
             <Button
               mode="outlined"
@@ -321,7 +357,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              הוסף תזכורת
+              {t("pets.add_reminder")}
             </Button>
           </View>
         </View>
@@ -330,31 +366,31 @@ export default function PetProfile() {
 
         <Card>
           <List.Section>
-            <List.Subheader>סטטוס</List.Subheader>
+            <List.Subheader>{t("pets.status")}</List.Subheader>
 
             <List.Item
-              title="הוצאה אחרונה"
+              title={t("pets.last_expense")}
               description={
                 lastExpense
                   ? `${new Date(lastExpense.date).toLocaleDateString(
                       "he-IL"
                     )} • ${lastExpense.category} • ${Number(
                       lastExpense.amount
-                    ).toFixed(0)}₪`
+                    ).toFixed(0)}${t("common.currency")}`
                   : "—"
               }
               left={(props) => <List.Icon {...props} icon="cash" />}
               right={(props) =>
                 lastExpense ? (
                   <Badge {...props}>
-                    {Number(lastExpense.amount).toFixed(0)}₪
+                    {Number(lastExpense.amount).toFixed(0)}{t("common.currency")}
                   </Badge>
                 ) : null
               }
             />
 
             <List.Item
-              title="תזכורת הבאה"
+              title={t("pets.next_reminder")}
               description={
                 nextReminder
                   ? `${new Date(nextReminder.date).toLocaleString("he-IL")} • ${
@@ -366,13 +402,13 @@ export default function PetProfile() {
             />
 
             <List.Item
-              title="מסמך רפואי אחרון"
+              title={t("pets.last_medical_record")}
               description={
                 lastMedical
                   ? `${new Date(lastMedical.date).toLocaleDateString(
                       "he-IL"
                     )} • ${lastMedical.recordName}`
-                  : `— (${medCount} סה״כ)`
+                  : `— (${medCount} ${t("pets.total")})`
               }
               left={(props) => <List.Icon {...props} icon="file-document" />}
               right={(props) =>
@@ -383,25 +419,25 @@ export default function PetProfile() {
             <Divider style={{ marginVertical: 8 }} />
 
             <List.Item
-              title="סה״כ חודש נוכחי"
+              title={t("pets.monthly_total")}
               description={`${new Date().toLocaleString("he-IL", {
                 month: "long",
               })}`}
               left={(props) => <List.Icon {...props} icon="calendar-month" />}
               right={(props) => (
                 <Text style={[FONTS.h3, { color: COLORS.primary }]}>
-                  {monthTotal.toFixed(0)}₪
+                  {monthTotal.toFixed(0)}{t("common.currency")}
                 </Text>
               )}
             />
 
             <List.Item
-              title="סה״כ השנה"
+              title={t("pets.yearly_total")}
               description={`${new Date().getFullYear()}`}
               left={(props) => <List.Icon {...props} icon="calendar" />}
               right={(props) => (
                 <Text style={[FONTS.h3, { color: COLORS.primary }]}>
-                  {yearTotal.toFixed(0)}₪
+                  {yearTotal.toFixed(0)}{t("common.currency")}
                 </Text>
               )}
             />

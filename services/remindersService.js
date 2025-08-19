@@ -24,16 +24,6 @@ export async function createReminder({
   timezone = "Asia/Jerusalem",
 }) {
   try {
-    console.log("🔔 Creating reminder with data:", {
-      petId,
-      title,
-      description,
-      date,
-      time,
-      repeatInterval,
-      timezone,
-    });
-
     const payload = {
       petId,
       title,
@@ -44,24 +34,10 @@ export async function createReminder({
       timezone,
     };
 
-    console.log("📤 Sending payload to /reminders:", payload);
-    console.log("📅 Date details:", {
-      date: date,
-      dateType: typeof date,
-      dateLength: date?.length,
-      time: time,
-      timeType: typeof time
-    });
-
     const { data } = await httpServices.post("/reminders", payload);
-
-    console.log("✅ Reminder created successfully:", data);
-
     return data?.reminder;
   } catch (error) {
     console.error("❌ Error creating reminder:", error);
-    console.error("❌ Error response:", error.response?.data);
-    console.error("❌ Error status:", error.response?.status);
     throw error;
   }
 }
@@ -71,9 +47,10 @@ export async function updateReminder(reminderId, patch) {
   return data?.reminder;
 }
 
-export async function completeReminder(reminderId) {
+export async function completeReminder(reminderId, isCompleted = true) {
   const { data } = await httpServices.patch(
-    `/reminders/${reminderId}/complete`
+    `/reminders/${reminderId}/complete`,
+    { isCompleted }
   );
   return data?.reminder;
 }

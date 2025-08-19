@@ -27,6 +27,7 @@ import Joi from "joi";
 import { useSafeAreaInsets } from "react-native-safe-area-context"; // Adjusted import path
 import GoogleAuthButton from "../../components/auth/GoogleAuthButton";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useTranslation } from "react-i18next";
 
 const image = require("../../assets/images/dog-happy.jpg");
 
@@ -55,6 +56,7 @@ const signUpSchema = Joi.object({
 const SignUpScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -86,7 +88,7 @@ const SignUpScreen = () => {
     setErrors(map);
 
     if (!checked) {
-      setTermsError("You must accept the terms and conditions");
+      setTermsError(t("auth.signup.error.terms_required"));
     } else {
       setTermsError("");
     }
@@ -96,11 +98,11 @@ const SignUpScreen = () => {
     setLoading(true);
     try {
       await authService.createUser({ name, email, password });
-      Alert.alert("Success", "Registration completed successfully");
+      Alert.alert(t("auth.signup.title"), t("auth.signup.success"));
       router.push("/(auth)/login");
     } catch (e) {
       console.error("Sign-up error:", e);
-      Alert.alert("Error", "Registration failed, please try again later");
+      Alert.alert(t("auth.signup.title"), t("auth.signup.error.general"));
     } finally {
       setLoading(false);
     }
@@ -146,15 +148,15 @@ const SignUpScreen = () => {
 
               <View style={styles.dividerContainer}>
                 <Divider style={styles.divider} />
-                <Text style={styles.dividerText}>או</Text>
+                <Text style={styles.dividerText}>{t("auth.login.or")}</Text>
                 <Divider style={styles.divider} />
               </View>
 
-              <Text style={styles.welcomeTitle}>הרשמה</Text>
-              <Text style={styles.loginText}>צור חשבון כדי להמשיך</Text>
+              <Text style={styles.welcomeTitle}>{t("auth.signup.title")}</Text>
+              <Text style={styles.loginText}>{t("auth.signup.subtitle")}</Text>
 
               <TextInput
-                label="שם"
+                label={t("auth.signup.name")}
                 value={name}
                 onChangeText={(v) => {
                   setName(v);
@@ -171,7 +173,7 @@ const SignUpScreen = () => {
               </HelperText>
 
               <TextInput
-                label="אימייל"
+                label={t("auth.signup.email")}
                 value={email}
                 onChangeText={(v) => {
                   setEmail(v);
@@ -190,7 +192,7 @@ const SignUpScreen = () => {
               </HelperText>
 
               <TextInput
-                label="סיסמה"
+                label={t("auth.signup.password")}
                 value={password}
                 onChangeText={(v) => {
                   setPassword(v);
@@ -214,21 +216,21 @@ const SignUpScreen = () => {
                   color={COLORS.primary}
                 />
                 <Text style={styles.termsText}>
-                  אני מסכים ל{" "}
+                  {t("auth.signup.terms_agree")}{" "}
                   <Text
                     accessibilityRole="link"
                     onPress={() => openURL("https://example.com/terms.html")}
                     style={styles.link}
                   >
-                    תנאי השימוש
+                    {t("auth.signup.terms_of_service")}
                   </Text>{" "}
-                  ול{" "}
+                  {t("auth.signup.and")}{" "}
                   <Text
                     accessibilityRole="link"
                     onPress={() => openURL("https://example.com/privacy.html")}
                     style={styles.link}
                   >
-                    מדיניות הפרטיות
+                    {t("auth.signup.privacy_policy")}
                   </Text>
                 </Text>
               </View>
@@ -253,7 +255,7 @@ const SignUpScreen = () => {
                 labelStyle={styles.buttonLabel}
                 disabled={loading}
               >
-                {loading ? "נרשם..." : "הרשמה"}
+                {loading ? t("auth.signup.loading") : t("auth.signup.button")}
               </Button>
               <Button
                 mode="text"
@@ -261,7 +263,7 @@ const SignUpScreen = () => {
                 style={styles.loginButton}
                 labelStyle={{ color: COLORS.primary, fontWeight: "600" }}
               >
-                יש לך כבר חשבון? התחבר
+                {t("auth.signup.has_account")}
               </Button>
             </View>
           </View>

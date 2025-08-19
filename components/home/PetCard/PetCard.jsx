@@ -21,19 +21,36 @@ const PetCard = ({ pet, onPress = null }) => {
     }
   };
 
+  // פונקציה לקביעת מקור התמונה עם תמונת ברירת מחדל
+  const getPetImageSource = () => {
+    if (pet?.profilePictureUrl) {
+      return { uri: pet.profilePictureUrl };
+    }
+    // תמונת ברירת מחדל לפי סוג החיה
+    if (pet?.species === "cat") {
+      return require("../../../assets/images/cat-sit.png");
+    } else {
+      return require("../../../assets/images/dog-sit.jpg");
+    }
+  };
+
   return (
     <TouchableOpacity style={styles.petCard} onPress={handlePress}>
       <Image
-        source={
-          pet?.profilePictureUrl
-            ? { uri: pet.profilePictureUrl }
-            : require("../../../assets/images/dog-think.png")
-        }
+        source={getPetImageSource()}
         style={styles.petImage}
+        defaultSource={require("../../../assets/images/dog-think.png")}
+        onError={(error) => {
+          console.error("Error loading pet image:", error);
+          // אם יש שגיאה בטעינת התמונה, השתמש בתמונת ברירת מחדל
+        }}
+        onLoad={() => {
+          // תמונה נטענה בהצלחה
+        }}
       />
       <View style={styles.petInfo}>
         <Text style={styles.petName}>{pet?.name || "No pet selected"}</Text>
-        <Text style={styles.petType}>{pet?.type || ""}</Text>
+        <Text style={styles.petType}>{pet?.species || pet?.type || ""}</Text>
       </View>
       <Ionicons name="chevron-forward" size={24} color={styles.chevron.color} />
     </TouchableOpacity>

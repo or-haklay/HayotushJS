@@ -54,10 +54,25 @@ async function getUserId() {
 }
 
 async function createUser(userData) {
-  const { data } = await httpServices.post("/users", userData);
-  // If backend returns token on signup, persist it
-  if (data?.token) await setToken(data.token);
-  return data;
+  console.log("🔍 Creating user with data:", userData); // 🆕 הוסף את זה
+
+  try {
+    const { data } = await httpServices.post("/users", userData);
+    console.log("🔍 Server response:", data); // 🆕 הוסף את זה
+
+    // If backend returns token on signup, persist it
+    if (data?.token) {
+      console.log("🔍 Token received, setting it"); // 🆕 הוסף את זה
+      await setToken(data.token);
+    } else {
+      console.log("🔍 No token received"); // 🆕 הוסף את זה
+    }
+
+    return data;
+  } catch (error) {
+    console.error("🔍 Error creating user:", error); // 🆕 הוסף את זה
+    throw error;
+  }
 }
 
 async function login(email, password) {

@@ -8,6 +8,7 @@ import { View } from "react-native";
 import { useAuth } from "../hooks/useAuth";
 import { COLORS, SIZING } from "../theme/theme";
 import { useFonts } from "expo-font";
+import "../services/i18n"; // Import i18n configuration
 
 // מונע ממסך הפתיחה להסתתר אוטומטית
 SplashScreen.preventAutoHideAsync();

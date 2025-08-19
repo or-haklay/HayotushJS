@@ -1,5 +1,13 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, ScrollView, RefreshControl, Alert } from "react-native";
+import {
+  View,
+  ScrollView,
+  RefreshControl,
+  Alert,
+  TouchableOpacity,
+  Modal,
+  ImageBackground,
+} from "react-native";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import {
   Text,
@@ -12,34 +20,50 @@ import {
   Divider,
   Snackbar,
   Badge,
+  Portal,
+  Dialog,
 } from "react-native-paper";
+import { SIZING } from "../../../theme/theme";
 
 import petService from "../../../services/petService";
 import { listExpenses } from "../../../services/expensesService";
 import { listReminders } from "../../../services/remindersService";
 import { listMedicalRecords } from "../../../services/medicalRecordsService";
+import uploadService from "../../../services/uploadService";
 import { COLORS, FONTS } from "../../../theme/theme";
+import { useTranslation } from "react-i18next";
 
-const PlaceholderImage = require("../../../assets/images/dog-think.png");
+const PlaceholderImageDog = require("../../../assets/images/default-avatar-dog.png");
+const PlaceholderImageCat = require("../../../assets/images/default-avatar-cat.png");
+const CoverPlaceholder = require("../../../assets/images/cover.png");
 const isObjectId = (v) => typeof v === "string" && /^[0-9a-fA-F]{24}$/.test(v);
 
-function getAgeString(birthDateStr) {
-  if (!birthDateStr) return "—";
-  const d = new Date(birthDateStr);
-  if (Number.isNaN(d.getTime())) return "—";
-  const now = new Date();
-  let years = now.getFullYear() - d.getFullYear();
-  let months = now.getMonth() - d.getMonth();
-  if (months < 0) {
-    years--;
-    months += 12;
-  }
-  return years > 0 ? `${years}ש׳ ${months}ח׳` : `${months} ח׳`;
-}
+// העברת הפונקציה לתוך הקומפוננטה כדי ש-t יהיה זמין
 
 export default function PetProfile() {
   const { petId } = useLocalSearchParams();
   const router = useRouter();
+  const { t } = useTranslation();
+
+  // העברת הפונקציה לתוך הקומפוננטה כדי ש-t יהיה זמין
+  const getAgeString = useCallback(
+    (birthDateStr) => {
+      if (!birthDateStr) return "—";
+      const d = new Date(birthDateStr);
+      if (Number.isNaN(d.getTime())) return "—";
+      const now = new Date();
+      let years = now.getFullYear() - d.getFullYear();
+      let months = now.getMonth() - d.getMonth();
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+      return years > 0
+        ? `${years}${t("common.years")} ${months}${t("common.months")}`
+        : `${months} ${t("common.months")}`;
+    },
+    [t]
+  );
 
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -51,6 +75,11 @@ export default function PetProfile() {
   const [nextReminder, setNextReminder] = useState(null);
   const [lastMedical, setLastMedical] = useState(null);
   const [medCount, setMedCount] = useState(0);
+
+  // מצב לעריכת תמונות
+  const [showImageOptions, setShowImageOptions] = useState(false);
+  const [imageType, setImageType] = useState(null); // 'profile' או 'cover'
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -119,7 +148,7 @@ export default function PetProfile() {
       setMedCount(medicalRows?.length || 0);
       setLastMedical(medicalRows?.[0] || null);
     } catch (e) {
-      setErr(e?.response?.data?.message || "שגיאה בטעינה");
+      setErr(e?.response?.data?.message || t("pets.load_error"));
     } finally {
       setLoading(false);
     }
@@ -132,38 +161,271 @@ export default function PetProfile() {
     }, [load, petId])
   );
 
-  const photoUrl =
-    pet?.profilePictureUrl || pet?.photoUrl || pet?.imageUrl || null;
+  const photoUrl = pet?.profilePictureUrl || null;
+  const coverUrl = pet?.coverPictureUrl || null;
   const avatar = useMemo(() => {
     const letter = pet?.name?.[0]?.toUpperCase?.() || "?";
-    return photoUrl ? (
-      <Avatar.Image size={56} source={{ uri: photoUrl }} />
-    ) : (
-      <Avatar.Text
-        size={56}
-        label={letter}
-        style={{ backgroundColor: COLORS.primary }}
-        color={COLORS.white}
-      />
-    );
-  }, [pet, photoUrl]);
+    if (photoUrl) {
+      return (
+        <TouchableOpacity onPress={() => openImageOptions("profile")}>
+          <View style={{ position: "relative" }}>
+            <Avatar.Image
+              size={56}
+              source={{ uri: photoUrl }}
+              defaultSource={
+                pet?.species === "cat"
+                  ? PlaceholderImageCat
+                  : PlaceholderImageDog
+              }
+              onError={(error) => {
+                console.error("Error loading pet profile image:", error);
+              }}
+              onLoad={() => {
+                // תמונה נטענה בהצלחה
+              }}
+            />
+            <View
+              style={{
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                backgroundColor: COLORS.primary,
+                borderRadius: 12,
+                width: 24,
+                height: 24,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <IconButton
+                icon="camera"
+                size={16}
+                iconColor={COLORS.white}
+                style={{ margin: 0 }}
+              />
+            </View>
+          </View>
+        </TouchableOpacity>
+      );
+    } else {
+      // תמונת ברירת מחדל לפי סוג החיה
+      if (pet?.species === "cat") {
+        return (
+          <TouchableOpacity onPress={() => openImageOptions("profile")}>
+            <View style={{ position: "relative" }}>
+              <Avatar.Image
+                size={56}
+                source={require("../../../assets/images/cat-sit.png")}
+              />
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                  backgroundColor: COLORS.primary,
+                  borderRadius: 12,
+                  width: 24,
+                  height: 24,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconButton
+                  icon="camera"
+                  size={16}
+                  iconColor={COLORS.white}
+                  style={{ margin: 0 }}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
+        );
+      } else {
+        return (
+          <TouchableOpacity onPress={() => openImageOptions("profile")}>
+            <View style={{ position: "relative" }}>
+              <Avatar.Image
+                size={56}
+                source={require("../../../assets/images/dog-sit.jpg")}
+              />
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                  backgroundColor: COLORS.primary,
+                  borderRadius: 12,
+                  width: 24,
+                  height: 24,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconButton
+                  icon="camera"
+                  size={16}
+                  iconColor={COLORS.white}
+                  style={{ margin: 0 }}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
+        );
+      }
+    }
+  }, [pet, photoUrl, coverUrl]);
 
   const onDelete = () => {
-    Alert.alert("מחיקת חיה", "למחוק את הרשומה וכל הנתונים הנלווים?", [
-      { text: "ביטול" },
+    Alert.alert(t("pets.delete_title"), t("pets.delete_message"), [
+      { text: t("action.cancel") },
       {
-        text: "מחק",
+        text: t("pets.delete"),
         style: "destructive",
         onPress: async () => {
           try {
             await petService.deletePet(petId);
             router.replace("/(tabs)/pets");
           } catch {
-            setErr("מחיקה נכשלה");
+            setErr(t("pets.delete_error"));
           }
         },
       },
     ]);
+  };
+
+  const onUpdateProfilePicture = async (imageUri) => {
+    try {
+      if (!imageUri) return;
+
+      // עדכן את התמונה בשרת
+      await petService.updatePetProfilePicture(petId, imageUri);
+
+      // טען מחדש את הנתונים
+      await load();
+
+      Alert.alert(t("common.success"), t("pets.profile_picture_updated"));
+    } catch (error) {
+      console.error("Error updating pet profile picture:", error);
+      Alert.alert(t("common.error"), t("pets.profile_picture_update_error"));
+    }
+  };
+
+  // פונקציה לטעינה מחדש של הפרופיל אחרי שינוי תמונה
+  const refreshPetAfterImageChange = useCallback(async () => {
+    try {
+      await load();
+    } catch (error) {
+      console.error("Error refreshing pet after image change:", error);
+    }
+  }, [load]);
+
+  // פונקציות לעריכת תמונות
+  const handlePickImage = async () => {
+    let image;
+
+    try {
+      if (imageType === "profile") {
+        image = await uploadService.pickProfileImage();
+      } else if (imageType === "cover") {
+        image = await uploadService.pickCoverImage();
+      }
+
+      if (image) {
+        setSelectedImage(image);
+        setShowImageOptions(false);
+
+        try {
+          let uploadResult;
+          if (imageType === "profile") {
+            uploadResult = await uploadService.uploadPetPicture(image);
+          } else if (imageType === "cover") {
+            uploadResult = await uploadService.uploadPetCoverPicture(image);
+          }
+
+          if (uploadResult && uploadResult.success) {
+            // עדכון בשרת
+            if (imageType === "profile") {
+              await petService.updatePetProfilePicture(
+                petId,
+                uploadResult.fileUrl
+              );
+            } else if (imageType === "cover") {
+              await petService.updatePetCoverPicture(
+                petId,
+                uploadResult.fileUrl
+              );
+            }
+
+            // רענון נתונים מהשרת
+            await refreshPetAfterImageChange();
+
+            // נקה את התמונה המקומית
+            setSelectedImage(null);
+            setImageType(null);
+
+            Alert.alert(
+              t("common.success"),
+              t("pets.image_updated_successfully", {
+                type:
+                  imageType === "profile" ? t("pets.profile") : t("pets.cover"),
+              })
+            );
+          }
+        } catch (error) {
+          Alert.alert(t("common.error"), t("pets.image_upload_error"));
+          console.error("Error uploading pet image:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert(t("common.error"), t("pets.image_pick_error"));
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    const imageTypeText =
+      imageType === "profile" ? t("pets.profile") : t("pets.cover");
+
+    Alert.alert(
+      t("pets.remove_image_title", { type: imageTypeText }),
+      t("pets.remove_image_message", { type: imageTypeText }),
+      [
+        { text: t("action.cancel"), style: "cancel" },
+        {
+          text: t("pets.remove"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // עדכון בשרת - שליחת ערך ריק במקום מחרוזת ריקה
+              if (imageType === "profile") {
+                await petService.updatePetProfilePicture(petId, null);
+              } else if (imageType === "cover") {
+                await petService.updatePetCoverPicture(petId, null);
+              }
+
+              // רענון נתונים מהשרת
+              await refreshPetAfterImageChange();
+
+              setShowImageOptions(false);
+              setImageType(null);
+
+              Alert.alert(
+                t("common.success"),
+                t("pets.image_removed_successfully", { type: imageTypeText })
+              );
+            } catch (error) {
+              Alert.alert(t("common.error"), t("pets.image_remove_error"));
+              console.error("Error removing pet image:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const openImageOptions = (type) => {
+    setImageType(type);
+    setShowImageOptions(true);
   };
 
   return (
@@ -175,16 +437,65 @@ export default function PetProfile() {
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
       >
         <Card>
-          {photoUrl ? (
-            <Card.Cover
-              source={{ uri: photoUrl }}
-              style={{ height: 200, backgroundColor: COLORS.white }}
-            />
+          {" "}
+          {coverUrl ? (
+            <TouchableOpacity onPress={() => openImageOptions("cover")}>
+              <View style={{ position: "relative" }}>
+                <Card.Cover
+                  source={{ uri: coverUrl }}
+                  style={{ height: 200, backgroundColor: COLORS.white }}
+                />
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    backgroundColor: COLORS.primary,
+                    borderRadius: 16,
+                    width: 32,
+                    height: 32,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <IconButton
+                    icon="camera"
+                    size={20}
+                    iconColor={COLORS.white}
+                    style={{ margin: 0 }}
+                  />
+                </View>
+              </View>
+            </TouchableOpacity>
           ) : (
-            <Card.Cover
-              source={PlaceholderImage}
-              style={{ height: 200, backgroundColor: COLORS.white }}
-            />
+            <TouchableOpacity onPress={() => openImageOptions("cover")}>
+              <View style={{ position: "relative" }}>
+                <Card.Cover
+                  source={CoverPlaceholder}
+                  style={{ height: 200, backgroundColor: COLORS.white }}
+                />
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    backgroundColor: COLORS.primary,
+                    borderRadius: 16,
+                    width: 32,
+                    height: 32,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <IconButton
+                    icon="camera"
+                    size={20}
+                    iconColor={COLORS.white}
+                    style={{ margin: 0 }}
+                  />
+                </View>
+              </View>
+            </TouchableOpacity>
           )}
           <Card.Title
             title={pet?.name || "—"}
@@ -214,7 +525,9 @@ export default function PetProfile() {
                 <Chip icon="cake-variant">{getAgeString(pet.birthDate)}</Chip>
               ) : null}
               {pet?.weightKg ? (
-                <Chip icon="scale">{pet.weightKg} ק״ג</Chip>
+                <Chip icon="scale">
+                  {pet.weightKg} {t("common.kg")}
+                </Chip>
               ) : null}
               {pet?.color ? <Chip icon="palette">{pet.color}</Chip> : null}
               {pet?.chipNumber ? (
@@ -242,7 +555,7 @@ export default function PetProfile() {
               })
             }
           >
-            הוצאות
+            {t("pets.expenses")}
           </Button>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <Button
@@ -255,7 +568,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              הוסף הוצאה
+              {t("pets.add_expense")}
             </Button>
             <Button
               mode="outlined"
@@ -267,7 +580,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              סיכום הוצאות
+              {t("pets.expenses_summary")}
             </Button>
           </View>
 
@@ -282,7 +595,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              מסמכים רפואיים
+              {t("pets.medical_records")}
             </Button>
             <Button
               mode="outlined"
@@ -294,7 +607,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              הוסף מסמך
+              {t("pets.add_medical_record")}
             </Button>
           </View>
 
@@ -309,7 +622,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              תזכורות
+              {t("pets.reminders")}
             </Button>
             <Button
               mode="outlined"
@@ -321,7 +634,7 @@ export default function PetProfile() {
               }
               style={{ flex: 1 }}
             >
-              הוסף תזכורת
+              {t("pets.add_reminder")}
             </Button>
           </View>
         </View>
@@ -330,31 +643,32 @@ export default function PetProfile() {
 
         <Card>
           <List.Section>
-            <List.Subheader>סטטוס</List.Subheader>
+            <List.Subheader>{t("pets.status")}</List.Subheader>
 
             <List.Item
-              title="הוצאה אחרונה"
+              title={t("pets.last_expense")}
               description={
                 lastExpense
                   ? `${new Date(lastExpense.date).toLocaleDateString(
                       "he-IL"
                     )} • ${lastExpense.category} • ${Number(
                       lastExpense.amount
-                    ).toFixed(0)}₪`
+                    ).toFixed(0)}${t("common.currency")}`
                   : "—"
               }
               left={(props) => <List.Icon {...props} icon="cash" />}
               right={(props) =>
                 lastExpense ? (
                   <Badge {...props}>
-                    {Number(lastExpense.amount).toFixed(0)}₪
+                    {Number(lastExpense.amount).toFixed(0)}
+                    {t("common.currency")}
                   </Badge>
                 ) : null
               }
             />
 
             <List.Item
-              title="תזכורת הבאה"
+              title={t("pets.next_reminder")}
               description={
                 nextReminder
                   ? `${new Date(nextReminder.date).toLocaleString("he-IL")} • ${
@@ -366,13 +680,13 @@ export default function PetProfile() {
             />
 
             <List.Item
-              title="מסמך רפואי אחרון"
+              title={t("pets.last_medical_record")}
               description={
                 lastMedical
                   ? `${new Date(lastMedical.date).toLocaleDateString(
                       "he-IL"
                     )} • ${lastMedical.recordName}`
-                  : `— (${medCount} סה״כ)`
+                  : `— (${medCount} ${t("pets.total")})`
               }
               left={(props) => <List.Icon {...props} icon="file-document" />}
               right={(props) =>
@@ -383,31 +697,85 @@ export default function PetProfile() {
             <Divider style={{ marginVertical: 8 }} />
 
             <List.Item
-              title="סה״כ חודש נוכחי"
+              title={t("pets.monthly_total")}
               description={`${new Date().toLocaleString("he-IL", {
                 month: "long",
               })}`}
               left={(props) => <List.Icon {...props} icon="calendar-month" />}
               right={(props) => (
                 <Text style={[FONTS.h3, { color: COLORS.primary }]}>
-                  {monthTotal.toFixed(0)}₪
+                  {monthTotal.toFixed(0)}
+                  {t("common.currency")}
                 </Text>
               )}
             />
 
             <List.Item
-              title="סה״כ השנה"
+              title={t("pets.yearly_total")}
               description={`${new Date().getFullYear()}`}
               left={(props) => <List.Icon {...props} icon="calendar" />}
               right={(props) => (
                 <Text style={[FONTS.h3, { color: COLORS.primary }]}>
-                  {yearTotal.toFixed(0)}₪
+                  {yearTotal.toFixed(0)}
+                  {t("common.currency")}
                 </Text>
               )}
             />
           </List.Section>
         </Card>
       </ScrollView>
+
+      {/* Image Options Modal */}
+      <Portal>
+        <Dialog
+          visible={showImageOptions}
+          onDismiss={() => setShowImageOptions(false)}
+        >
+          <Dialog.Title>
+            {imageType === "profile"
+              ? t("pets.profile_image_options")
+              : t("pets.cover_image_options")}
+          </Dialog.Title>
+          <Dialog.Content>
+            <View style={{ padding: 16 }}>
+              <Button
+                mode="contained"
+                onPress={handlePickImage}
+                icon="camera"
+                style={{ marginBottom: 16 }}
+              >
+                {imageType === "profile"
+                  ? pet?.profilePictureUrl
+                    ? t("pets.change_image")
+                    : t("pets.choose_image")
+                  : pet?.coverPictureUrl
+                  ? t("pets.change_image")
+                  : t("pets.choose_image")}
+              </Button>
+
+              {(imageType === "profile" && pet?.profilePictureUrl) ||
+              (imageType === "cover" && pet?.coverPictureUrl) ? (
+                <Button
+                  mode="outlined"
+                  onPress={handleRemoveImage}
+                  icon="delete"
+                  textColor={COLORS.error}
+                  style={{ marginBottom: 16 }}
+                >
+                  {t("pets.remove_image")}
+                </Button>
+              ) : null}
+
+              <Button
+                mode="outlined"
+                onPress={() => setShowImageOptions(false)}
+              >
+                {t("action.cancel")}
+              </Button>
+            </View>
+          </Dialog.Content>
+        </Dialog>
+      </Portal>
 
       <Snackbar
         visible={!!err}

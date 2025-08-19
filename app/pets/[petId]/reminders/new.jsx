@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { View, Platform, FlatList } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -17,27 +17,12 @@ import {
 } from "../../../../services/remindersService";
 import calendarService from "../../../../services/calendarService";
 import { COLORS, FONTS } from "../../../../theme/theme";
-
-const INTERVALS = [
-  { value: "none", label: "ללא חזרה" },
-  { value: "daily", label: "יומי" },
-  { value: "weekly", label: "שבועי" },
-  { value: "monthly", label: "חודשי" },
-  { value: "yearly", label: "שנתי" },
-];
+import { useTranslation } from "react-i18next";
 
 export default function NewReminder() {
   const { petId, reminderId } = useLocalSearchParams();
   const router = useRouter();
-
-  // בדיקה שה-petId קיים
-  React.useEffect(() => {
-    console.log("🔍 NewReminder mounted with petId:", petId);
-    if (!petId) {
-      console.error("❌ No petId provided!");
-      setErr("לא נמצא מזהה חיית מחמד");
-    }
-  }, [petId]);
+  const { t } = useTranslation();
 
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
@@ -50,6 +35,26 @@ export default function NewReminder() {
   const [err, setErr] = useState("");
   const [syncWithGoogle, setSyncWithGoogle] = useState(true);
   const [googleCalendarAvailable, setGoogleCalendarAvailable] = useState(false);
+
+  const INTERVALS = useMemo(
+    () => [
+      { value: "none", label: t("reminders.intervals.none") },
+      { value: "daily", label: t("reminders.intervals.daily") },
+      { value: "weekly", label: t("reminders.intervals.weekly") },
+      { value: "monthly", label: t("reminders.intervals.monthly") },
+      { value: "yearly", label: t("reminders.intervals.yearly") },
+    ],
+    [t]
+  );
+
+  // בדיקה שה-petId קיים
+  React.useEffect(() => {
+    console.log("🔍 NewReminder mounted with petId:", petId);
+    if (!petId) {
+      console.error("❌ No petId provided!");
+      setErr(t("reminders.no_pet_id"));
+    }
+  }, [petId]);
 
   // Load existing reminder for editing
   useEffect(() => {
@@ -67,7 +72,7 @@ export default function NewReminder() {
           setSyncWithGoogle(found.syncWithGoogle !== false);
         }
       } catch (e) {
-        setErr("שגיאה בטעינת תזכורת לעריכה");
+        setErr(t("reminders.edit_load_error"));
       }
     })();
   }, [reminderId, petId]);
@@ -87,7 +92,7 @@ export default function NewReminder() {
   };
 
   const submit = async () => {
-    if (!title.trim()) return setErr("כותרת חובה");
+    if (!title.trim()) return setErr(t("reminders.title_required"));
     setLoading(true);
     try {
       console.log("🚀 Submitting reminder for petId:", petId);
@@ -96,15 +101,6 @@ export default function NewReminder() {
       const [hours, minutes] = time.split(":").map(Number);
       const combinedDate = new Date(date);
       combinedDate.setHours(hours, minutes, 0, 0);
-
-      console.log("🔔 Frontend reminder data:", {
-        originalDate: date,
-        time: time,
-        hours: hours,
-        minutes: minutes,
-        combinedDate: combinedDate,
-        combinedDateISO: combinedDate.toISOString(),
-      });
 
       const payload = {
         petId,
@@ -122,22 +118,21 @@ export default function NewReminder() {
         await createReminder(payload);
       }
 
-      console.log("✅ Reminder created successfully:", payload);
       router.back();
     } catch (error) {
       console.error("❌ Error in submit:", error);
 
       // הצגת הודעת שגיאה מפורטת יותר
-      let errorMessage = "שמירה נכשלה";
+      let errorMessage = t("reminders.save_failed");
 
       if (error.response?.status === 400) {
-        errorMessage = "נתונים לא תקינים - בדוק את המידע שהזנת";
+        errorMessage = t("reminders.invalid_data_error");
       } else if (error.response?.status === 401) {
-        errorMessage = "אין הרשאה - התחבר מחדש";
+        errorMessage = t("reminders.unauthorized_error");
       } else if (error.response?.status === 500) {
-        errorMessage = "שגיאת שרת - נסה שוב מאוחר יותר";
+        errorMessage = t("reminders.server_error");
       } else if (error.message) {
-        errorMessage = `שגיאה: ${error.message}`;
+        errorMessage = `${t("common.error")}: ${error.message}`;
       }
 
       setErr(errorMessage);
@@ -149,19 +144,21 @@ export default function NewReminder() {
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.white, padding: 16 }}>
       <Text style={FONTS.h2}>
-        {reminderId ? "עריכת תזכורת" : "תזכורת חדשה"}
+        {reminderId
+          ? t("reminders.edit_reminder")
+          : t("reminders.new_reminder")}
       </Text>
 
       <TextInput
         mode="outlined"
-        label="כותרת"
+        label={t("reminders.title")}
         value={title}
         onChangeText={setTitle}
         style={{ marginTop: 12 }}
       />
       <TextInput
         mode="outlined"
-        label="תיאור (אופציונלי)"
+        label={t("reminders.description_optional")}
         value={desc}
         onChangeText={setDesc}
         multiline
@@ -173,7 +170,7 @@ export default function NewReminder() {
         onPress={() => setShowDate(true)}
         style={{ marginTop: 12 }}
       >
-        בחר תאריך: {date.toLocaleDateString("he-IL")} • {time}
+        {t("reminders.select_date")}: {date.toLocaleDateString("he-IL")}
       </Button>
       {showDate && (
         <DateTimePicker
@@ -192,7 +189,7 @@ export default function NewReminder() {
         onPress={() => setShowTime(true)}
         style={{ marginTop: 12 }}
       >
-        בחר שעה: {time}
+        {t("reminders.select_time")}: {time}
       </Button>
       {showTime && (
         <DateTimePicker
@@ -212,7 +209,7 @@ export default function NewReminder() {
 
       <View style={{ marginTop: 12 }}>
         <Text style={{ marginBottom: 8, fontSize: 16, color: COLORS.dark }}>
-          תכיפות
+          {t("reminders.frequency")}
         </Text>
         <FlatList
           data={INTERVALS}
@@ -249,7 +246,7 @@ export default function NewReminder() {
           disabled={!googleCalendarAvailable}
           color={COLORS.primary}
         />
-        <Text style={{ marginLeft: 8 }}>סנכרן עם Google Calendar</Text>
+        <Text style={{ marginLeft: 8 }}>{t("reminders.sync_with_google")}</Text>
       </View>
 
       {!googleCalendarAvailable && (
@@ -261,7 +258,7 @@ export default function NewReminder() {
             fontStyle: "italic",
           }}
         >
-          יומן גוגל לא זמין. התחבר עם גוגל בהגדרות כדי להפעיל
+          {t("reminders.google_calendar_not_available")}
         </Text>
       )}
 
@@ -271,7 +268,7 @@ export default function NewReminder() {
         loading={loading}
         style={{ marginTop: 16, backgroundColor: COLORS.primary }}
       >
-        {reminderId ? "שמור שינויים" : "שמור"}
+        {reminderId ? t("reminders.save_changes") : t("reminders.save")}
       </Button>
 
       <Snackbar

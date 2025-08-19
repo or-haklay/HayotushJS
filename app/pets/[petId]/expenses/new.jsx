@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { View, Platform, FlatList } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   TextInput,
   Button,
@@ -17,16 +18,8 @@ import {
 } from "../../../../services/expensesService";
 import { COLORS, FONTS } from "../../../../theme/theme";
 
-const CATEGORIES = [
-  { value: "Vet", label: "Vet" },
-  { value: "Food", label: "Food" },
-  { value: "Grooming", label: "Grooming" },
-  { value: "Toys", label: "Toys" },
-  { value: "Insurance", label: "Insurance" },
-  { value: "Other", label: "Other" },
-];
-
 export default function ExpenseFormScreen() {
+  const { t } = useTranslation();
   const { petId, expenseId } = useLocalSearchParams();
   const router = useRouter();
 
@@ -39,6 +32,18 @@ export default function ExpenseFormScreen() {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Vet");
   const [vendor, setVendor] = useState("");
+
+  const CATEGORIES = useMemo(
+    () => [
+      { value: "Vet", label: t("expenses.categories.vet") },
+      { value: "Food", label: t("expenses.categories.food") },
+      { value: "Grooming", label: t("expenses.categories.grooming") },
+      { value: "Toys", label: t("expenses.categories.toys") },
+      { value: "Insurance", label: t("expenses.categories.insurance") },
+      { value: "Other", label: t("expenses.categories.other") },
+    ],
+    [t]
+  );
 
   useEffect(() => {
     (async () => {
@@ -54,15 +59,17 @@ export default function ExpenseFormScreen() {
           setDate(new Date(found.date));
         }
       } catch {
-        setErr("שגיאה בטעינת הוצאה לעריכה");
+        setErr(t("expenses.edit_load_error"));
       }
     })();
-  }, [expenseId, petId]);
+  }, [expenseId, petId, t]);
 
   const submit = async () => {
-    if (!description.trim()) return setErr("תיאור חובה");
+    if (!description.trim())
+      return setErr(t("expenses.validation.description_required"));
     const amt = Number(amount);
-    if (isNaN(amt) || amt < 0) return setErr("סכום לא תקין");
+    if (isNaN(amt) || amt < 0)
+      return setErr(t("expenses.validation.amount_invalid"));
 
     setLoading(true);
     try {
@@ -92,7 +99,7 @@ export default function ExpenseFormScreen() {
       router.back();
     } catch (e) {
       console.error("❌ Error in submit:", e);
-      setErr(e?.response?.data?.message || "שמירה נכשלה");
+      setErr(e?.response?.data?.message || t("expenses.save_error"));
     } finally {
       setLoading(false);
     }
@@ -100,21 +107,25 @@ export default function ExpenseFormScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.white, padding: 16 }}>
-      <Text style={FONTS.h2}>{expenseId ? "עריכת הוצאה" : "הוספת הוצאה"}</Text>
+      <Text style={FONTS.h2}>
+        {expenseId ? t("expenses.edit_title") : t("expenses.add_title")}
+      </Text>
 
       <TextInput
-        label="תיאור"
+        label={t("expenses.fields.description")}
         value={description}
         onChangeText={setDescription}
         mode="outlined"
         style={{ marginTop: 12 }}
       />
       <HelperText type="error" visible={!description.trim()}>
-        {!description.trim() ? "תיאור חובה" : ""}
+        {!description.trim()
+          ? t("expenses.validation.description_required")
+          : ""}
       </HelperText>
 
       <TextInput
-        label="סכום"
+        label={t("expenses.fields.amount")}
         value={amount}
         onChangeText={setAmount}
         keyboardType="numeric"
@@ -124,7 +135,7 @@ export default function ExpenseFormScreen() {
 
       <View style={{ marginTop: 12 }}>
         <Text style={{ marginBottom: 8, fontSize: 16, color: COLORS.dark }}>
-          קטגוריה
+          {t("expenses.fields.category")}
         </Text>
         <FlatList
           data={CATEGORIES}
@@ -153,7 +164,7 @@ export default function ExpenseFormScreen() {
       </View>
 
       <TextInput
-        label="ספק (אופציונלי)"
+        label={t("expenses.fields.vendor")}
         value={vendor}
         onChangeText={setVendor}
         mode="outlined"
@@ -165,7 +176,7 @@ export default function ExpenseFormScreen() {
         onPress={() => setShowPicker(true)}
         style={{ marginTop: 12 }}
       >
-        בחר תאריך: {date.toLocaleDateString("he-IL")}
+        {t("expenses.fields.select_date")}: {date.toLocaleDateString("he-IL")}
       </Button>
       {showPicker && (
         <DateTimePicker
@@ -185,7 +196,9 @@ export default function ExpenseFormScreen() {
         loading={loading}
         style={{ marginTop: 16, backgroundColor: COLORS.primary }}
       >
-        {expenseId ? "שמור שינויים" : "שמור הוצאה"}
+        {expenseId
+          ? t("expenses.actions.save_changes")
+          : t("expenses.actions.save_expense")}
       </Button>
 
       <Snackbar

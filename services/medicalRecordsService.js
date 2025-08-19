@@ -17,13 +17,21 @@ export async function listMedicalRecords({
   return data?.records ?? [];
 }
 
+export async function getMedicalRecord(recordId) {
+  const { data } = await httpServices.get(`/medical-records/${recordId}`);
+  return data?.record;
+}
+
 export async function createMedicalRecord(payload) {
   const { data } = await httpServices.post("/medical-records", payload);
   return data?.record;
 }
 
 export async function updateMedicalRecord(recordId, patch) {
-  const { data } = await httpServices.put(`/medical-records/${recordId}`, patch);
+  const { data } = await httpServices.put(
+    `/medical-records/${recordId}`,
+    patch
+  );
   return data?.record;
 }
 

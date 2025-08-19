@@ -7,28 +7,22 @@ import { Alert } from "react-native";
 const TOKEN_KEY = "token";
 const API_URL = config.URL;
 
-console.log("🌐 HTTP Services initialized with API_URL:", API_URL);
-
 axios.defaults.baseURL = API_URL;
 axios.defaults.headers.common["Content-Type"] = "application/json";
+axios.defaults.timeout = 30000; // 30 seconds timeout
+axios.defaults.retry = 3; // retry 3 times
 
 // --- Request Interceptor ---
 axios.interceptors.request.use(
   async (config) => {
+    console.log("🌐 Request to:", config.url);
+    console.log("🌐 Request data:", config.data);
+
     const token = await AsyncStorage.getItem(TOKEN_KEY);
     if (token && config.headers) {
       config.headers["authorization"] = token;
-      console.log("🔑 Request with token:", token.substring(0, 20) + "...");
-    } else {
-      console.log("⚠️ Request without token");
+      console.log("🌐 Token added to headers");
     }
-
-    console.log("📤 Request:", {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      data: config.data,
-      params: config.params,
-    });
 
     return config;
   },
@@ -41,11 +35,6 @@ axios.interceptors.request.use(
 // --- Response Interceptor ---
 axios.interceptors.response.use(
   (response) => {
-    console.log("✅ Response:", {
-      status: response.status,
-      url: response.config.url,
-      data: response.data,
-    });
     return response;
   },
   async (error) => {
@@ -72,12 +61,30 @@ axios.interceptors.response.use(
   }
 );
 
+// Retry logic for network errors
+const retryRequest = async (fn, retries = 3, delay = 1000) => {
+  try {
+    return await fn();
+  } catch (error) {
+    if (
+      retries > 0 &&
+      (error.message === "Network Error" || error.code === "ECONNABORTED")
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return retryRequest(fn, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+};
+
 const httpServices = {
-  get: axios.get,
-  post: axios.post,
-  put: axios.put,
-  delete: axios.delete,
-  patch: axios.patch,
+  get: (url, config) => retryRequest(() => axios.get(url, config)),
+  post: (url, data, config) =>
+    retryRequest(() => axios.post(url, data, config)),
+  put: (url, data, config) => retryRequest(() => axios.put(url, data, config)),
+  delete: (url, config) => retryRequest(() => axios.delete(url, config)),
+  patch: (url, data, config) =>
+    retryRequest(() => axios.patch(url, data, config)),
   defaults: axios.defaults,
 };
 

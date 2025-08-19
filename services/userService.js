@@ -31,6 +31,11 @@ export async function updateMe(patch) {
   }
 }
 
+// Alias לשמירה על תאימות לקוד הקיים
+export async function updateProfile(patch) {
+  return updateMe(patch);
+}
+
 export async function changePassword({ currentPassword, newPassword }) {
   const { data } = await httpServices.post("/users/change-password", {
     currentPassword,
@@ -39,4 +44,4 @@ export async function changePassword({ currentPassword, newPassword }) {
   return data;
 }
 
-export default { getMe, updateMe, changePassword };
+export default { getMe, updateMe, updateProfile, changePassword };

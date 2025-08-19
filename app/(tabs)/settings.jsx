@@ -42,21 +42,21 @@ export default function SettingsScreen() {
         setCalendarLoading(true);
         await calendarService.disable();
         setGoogleCalendarEnabled(false);
-        Alert.alert("הצלחה", "יומן גוגל בוטל בהצלחה");
+        Alert.alert(t("settings.calendar.disabled_success"), t("settings.calendar.disabled_success"));
       } catch (error) {
-        Alert.alert("שגיאה", "שגיאה בביטול יומן גוגל");
+        Alert.alert(t("settings.calendar.disable_error"), t("settings.calendar.disable_error"));
       } finally {
         setCalendarLoading(false);
       }
     } else {
       // הפעלת יומן גוגל - צריך OAuth
       Alert.alert(
-        "הפעלת יומן גוגל",
-        "כדי להפעיל את יומן גוגל, עליך להתחבר מחדש עם גוגל",
+        t("settings.calendar.enable_title"),
+        t("settings.calendar.enable_message"),
         [
-          { text: "ביטול", style: "cancel" },
+          { text: t("action.cancel"), style: "cancel" },
           {
-            text: "התחבר מחדש",
+            text: t("settings.calendar.reconnect"),
             onPress: () => {
               // logout and redirect to login
               logout();
@@ -71,9 +71,9 @@ export default function SettingsScreen() {
     try {
       setCalendarLoading(true);
       const response = await calendarService.syncReminders();
-      Alert.alert("הצלחה", response.message);
+      Alert.alert(t("settings.calendar.sync_success"), response.message);
     } catch (error) {
-      Alert.alert("שגיאה", "שגיאה בסנכרון התזכורות");
+              Alert.alert(t("settings.calendar.sync_error"), t("settings.calendar.sync_error"));
     } finally {
       setCalendarLoading(false);
     }
@@ -90,20 +90,20 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>הגדרות</Text>
+      <Text style={styles.title}>{t("settings.title")}</Text>
 
       <List.Item
-        title="התראות Push"
+        title={t("settings.notifications.title")}
         right={() => <Switch value={true} onValueChange={() => {}} />}
       />
 
       <Divider style={styles.divider} />
 
-      <Text style={styles.sectionTitle}>יומן גוגל</Text>
+      <Text style={styles.sectionTitle}>{t("settings.calendar.title")}</Text>
 
       <List.Item
-        title="סנכרון עם יומן גוגל"
-        description="תזכורות ייכנסו אוטומטית ליומן שלך"
+        title={t("settings.calendar.sync_title")}
+        description={t("settings.calendar.sync_description")}
         right={() => (
           <Switch
             value={googleCalendarEnabled}
@@ -121,31 +121,31 @@ export default function SettingsScreen() {
           style={styles.syncButton}
           loading={calendarLoading}
         >
-          סנכרן תזכורות קיימות
+          {t("settings.calendar.sync_existing")}
         </Button>
       )}
 
       <Divider style={styles.divider} />
 
       <List.Item
-        title="שפה"
-        description="עברית"
+        title={t("settings.language.title")}
+        description={t("settings.language.current")}
         right={() => (
           <Menu
             visible={languageMenuVisible}
             onDismiss={() => setLanguageMenuVisible(false)}
             anchor={
-              <Button onPress={() => setLanguageMenuVisible(true)}>שפה</Button>
+              <Button onPress={() => setLanguageMenuVisible(true)}>{t("settings.language.title")}</Button>
             }
           >
-            <Menu.Item onPress={() => setLanguage("he")} title="עברית" />
-            <Menu.Item onPress={() => setLanguage("en")} title="English" />
+            <Menu.Item onPress={() => setLanguage("he")} title={t("settings.language.hebrew")} />
+            <Menu.Item onPress={() => setLanguage("en")} title={t("settings.language.english")} />
           </Menu>
         )}
       />
 
-      <Button onPress={() => setLanguage("he")}>עברית</Button>
-      <Button onPress={() => setLanguage("en")}>English</Button>
+      <Button onPress={() => setLanguage("he")}>{t("settings.language.hebrew")}</Button>
+      <Button onPress={() => setLanguage("en")}>{t("settings.language.english")}</Button>
 
       <Button
         mode="outlined"

@@ -14,12 +14,14 @@ import { useRouter } from "expo-router";
 import LogoWithName from "../components/ui/LogoWithName";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useTranslation } from "react-i18next";
 
 const image = require("../assets/images/dog-sit-removebg.png"); // ודא שהנתיב נכון
 
 const WelcomeScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={[styles.safeArea, { paddingTop: insets.top }]}>
@@ -32,7 +34,7 @@ const WelcomeScreen = () => {
         </View>
         <View style={styles.footer}>
           <Text style={styles.welcomeTitle}>
-            Join And Get{"\n"}Control{"\n"}On Your Pets
+            {t("welcome.title")}
           </Text>
           <Button
             mode="contained"
@@ -41,7 +43,7 @@ const WelcomeScreen = () => {
             style={styles.button}
             buttonColor={COLORS.accent}
           >
-            Start To Join{" "}
+            {t("welcome.start_button")}{" "}
             {<FontAwesome name="long-arrow-right" size={24} color="black" />}
           </Button>
         </View>

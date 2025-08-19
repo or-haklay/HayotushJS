@@ -1,7 +1,23 @@
 import httpServices from "./httpServices";
 
-export async function sendMessage(message) {
-  const { data } = await httpServices.post("/chat", { prompt: message });
+export async function sendMessage(message, petInfo = null) {
+  const payload = { prompt: message };
+  
+  // אם יש מידע על חיית המחמד, נוסיף אותו לשליחה
+  if (petInfo) {
+    payload.petInfo = {
+      name: petInfo.name,
+      species: petInfo.species,
+      breed: petInfo.breed,
+      sex: petInfo.sex,
+      weightKg: petInfo.weightKg,
+      color: petInfo.color,
+      birthDate: petInfo.birthDate,
+      notes: petInfo.notes
+    };
+  }
+  
+  const { data } = await httpServices.post("/chat", payload);
   return data?.reply;
 }
 

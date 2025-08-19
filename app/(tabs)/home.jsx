@@ -71,7 +71,7 @@ const HomeScreen = () => {
         <Text variant="bodyLarge" style={styles.centerText}>
           {t("home.no_pets_yet")}
         </Text>
-        <Button mode="contained" onPress={() => router.push("/add-pet")}>
+        <Button mode="contained" onPress={() => router.push("/pets/new")}>
           {t("home.add_first_pet")}
         </Button>
       </View>
@@ -98,7 +98,14 @@ const HomeScreen = () => {
           reminderText3={t("home.reminder_text_annual_checkup")}
           petName={pets[0]?.name}
           buttonText={t("home.reminder_button")}
-          onButtonPress={() => router.push("/add-event-modal")}
+          onButtonPress={() => {
+            if (pets && pets.length > 0) {
+              router.push(`/pets/${pets[0].id || pets[0]._id}/reminders/new`);
+            } else {
+              // אם אין חיות, נשלח לרשימת החיות
+              router.push("/pets");
+            }
+          }}
         />
 
         <Text style={styles.sectionTitle}>{t("home.my_pets")}</Text>
@@ -116,7 +123,14 @@ const HomeScreen = () => {
               />
             }
             color={COLORS.primary}
-            onPress={() => router.push("/reminders")}
+            onPress={() => {
+              if (pets && pets.length > 0) {
+                router.push(`/pets/${pets[0].id || pets[0]._id}/reminders`);
+              } else {
+                // אם אין חיות, נשלח לרשימת החיות
+                router.push("/pets");
+              }
+            }}
           />
           <QuickActionButton
             title={t("home.expenses")}
@@ -128,7 +142,14 @@ const HomeScreen = () => {
               />
             }
             color={COLORS.accent}
-            onPress={() => router.push("/expenses")}
+            onPress={() => {
+              if (pets && pets.length > 0) {
+                router.push(`/pets/${pets[0].id || pets[0]._id}/expenses`);
+              } else {
+                // אם אין חיות, נשלח לרשימת החיות
+                router.push("/pets");
+              }
+            }}
           />
           <QuickActionButton
             title={t("home.medical_records")}
@@ -136,7 +157,16 @@ const HomeScreen = () => {
               <Ionicons name="heart-outline" size={30} color={COLORS.white} />
             }
             color={COLORS.neutral}
-            onPress={() => router.push("/medical-records")}
+            onPress={() => {
+              if (pets && pets.length > 0) {
+                router.push(
+                  `/pets/${pets[0].id || pets[0]._id}/medical-records`
+                );
+              } else {
+                // אם אין חיות, נשלח לרשימת החיות
+                router.push("/pets");
+              }
+            }}
           />
         </View>
       </ScrollView>

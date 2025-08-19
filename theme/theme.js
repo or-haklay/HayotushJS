@@ -37,6 +37,10 @@ export const COLORS = {
   onWhite: "#212121", // צבע טקסט על white
   onBlack: "#FFFFFF", // צבע טקסט על black
   secondary: "#FFC107", // צבע משני (זהה ל-accent)
+  
+  // צבעים נוספים לאווטר תמונת פרופיל
+  lightGray: "#F5F5F5", // אפור בהיר לרקע
+  errorLight: "#FFEBEE", // אדום בהיר לרקע כפתור מחיקה
 };
 
 export const FONTS = {

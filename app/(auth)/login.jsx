@@ -25,6 +25,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LogoWithName from "../../components/ui/LogoWithName";
 import GoogleAuthButton from "../../components/auth/GoogleAuthButton";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useTranslation } from "react-i18next";
 
 const image = require("../../assets/images/dog-strach.jpg");
 
@@ -45,6 +46,7 @@ const loginSchema = Joi.object({
 const LoginScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -87,9 +89,9 @@ const LoginScreen = () => {
       router.replace("/home"); // keep as your routing setup
     } catch (err) {
       const errorMessage =
-        err?.response?.data?.message || "Incorrect email or password.";
+        err?.response?.data?.message || t("auth.login.error.incorrect_credentials");
       console.error("Login error:", err);
-      Alert.alert("Login failed", errorMessage);
+      Alert.alert(t("auth.login.title"), errorMessage);
     } finally {
       setLoading(false);
     }
@@ -118,15 +120,15 @@ const LoginScreen = () => {
 
             <View style={styles.dividerContainer}>
               <Divider style={styles.divider} />
-              <Text style={styles.dividerText}>או</Text>
+              <Text style={styles.dividerText}>{t("auth.login.or")}</Text>
               <Divider style={styles.divider} />
             </View>
 
-            <Text style={styles.welcomeTitle}>התחברות</Text>
-            <Text style={styles.loginText}>התחבר לחשבון שלך</Text>
+            <Text style={styles.welcomeTitle}>{t("auth.login.title")}</Text>
+            <Text style={styles.loginText}>{t("auth.login.subtitle")}</Text>
 
             <TextInput
-              label="אימייל"
+              label={t("auth.login.email")}
               value={email}
               onChangeText={(v) => {
                 setEmail(v);
@@ -145,7 +147,7 @@ const LoginScreen = () => {
             </HelperText>
 
             <TextInput
-              label="סיסמה"
+              label={t("auth.login.password")}
               value={password}
               onChangeText={(v) => {
                 setPassword(v);
@@ -171,7 +173,7 @@ const LoginScreen = () => {
               labelStyle={styles.buttonLabel}
               disabled={loading}
             >
-              {loading ? "מתחבר..." : "התחבר"}
+              {loading ? t("auth.login.loading") : t("auth.login.button")}
             </Button>
 
             <Button
@@ -180,7 +182,7 @@ const LoginScreen = () => {
               style={styles.registerButton}
               labelStyle={{ color: COLORS.primary, fontWeight: "600" }}
             >
-              אין לך חשבון? הירשם
+              {t("auth.login.no_account")}
             </Button>
           </View>
         </View>
