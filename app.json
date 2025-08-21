@@ -8,7 +8,11 @@
     "scheme": "hayotushjs",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "plugins": ["expo-router", "expo-web-browser", "expo-localization"],
+    "plugins": [
+      "expo-router",
+      "expo-web-browser",
+      "expo-localization"
+    ],
     "experiments": {
       "typedRoutes": true
     },
@@ -20,6 +24,9 @@
         "projectId": "cdbae1c1-512e-4e25-814b-5571a946762b"
       }
     },
-    "owner": "orhaklay"
+    "owner": "orhaklay",
+    "android": {
+      "package": "com.orhaklay.hayotush"
+    }
   }
 }

@@ -61,7 +61,7 @@ const HomeScreen = () => {
     return (
       <View style={[styles.centerContainer, { marginTop: insets.top }]}>
         <Image
-          source={require("../../assets/images/dog-think.png")}
+          source={require("../../assets/images/dogs/dog-think.png")}
           style={styles.placeholderImage}
           resizeMode="contain"
         />
@@ -71,7 +71,10 @@ const HomeScreen = () => {
         <Text variant="bodyLarge" style={styles.centerText}>
           {t("home.no_pets_yet")}
         </Text>
-        <Button mode="contained" onPress={() => router.push("/pets/new")}>
+        <Button
+          mode="contained"
+          onPress={() => router.push("/pets/create/Step1")}
+        >
           {t("home.add_first_pet")}
         </Button>
       </View>

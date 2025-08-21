@@ -21,7 +21,7 @@ import { listMedicalRecords } from "../../services/medicalRecordsService";
 import { COLORS, FONTS } from "../../theme/theme";
 import { useTranslation } from "react-i18next";
 
-const PlaceholderImage = require("../../assets/images/dog-think.png");
+const PlaceholderImage = require("../../assets/images/dogs/dog-think.png");
 const isObjectId = (v) => typeof v === "string" && /^[0-9a-fA-F]{24}$/.test(v);
 
 // העברת הפונקציה לתוך הקומפוננטה כדי ש-t יהיה זמין
@@ -32,19 +32,24 @@ export default function PetProfile() {
   const { t } = useTranslation();
 
   // העברת הפונקציה לתוך הקומפוננטה כדי ש-t יהיה זמין
-  const getAgeString = useCallback((birthDateStr) => {
-    if (!birthDateStr) return "—";
-    const d = new Date(birthDateStr);
-    if (Number.isNaN(d.getTime())) return "—";
-    const now = new Date();
-    let years = now.getFullYear() - d.getFullYear();
-    let months = now.getMonth() - d.getMonth();
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-    return years > 0 ? `${years}${t("common.years")} ${months}${t("common.months")}` : `${months} ${t("common.months")}`;
-  }, [t]);
+  const getAgeString = useCallback(
+    (birthDateStr) => {
+      if (!birthDateStr) return "—";
+      const d = new Date(birthDateStr);
+      if (Number.isNaN(d.getTime())) return "—";
+      const now = new Date();
+      let years = now.getFullYear() - d.getFullYear();
+      let months = now.getMonth() - d.getMonth();
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+      return years > 0
+        ? `${years}${t("common.years")} ${months}${t("common.months")}`
+        : `${months} ${t("common.months")}`;
+    },
+    [t]
+  );
 
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -143,10 +148,10 @@ export default function PetProfile() {
     const letter = pet?.name?.[0]?.toUpperCase?.() || "?";
     if (photoUrl) {
       return (
-        <Avatar.Image 
-          size={56} 
-          source={{ uri: photoUrl }} 
-          defaultSource={require("../../assets/images/dog-think.png")}
+        <Avatar.Image
+          size={56}
+          source={{ uri: photoUrl }}
+          defaultSource={require("../../assets/images/dogs/dog-think.png")}
           onError={(error) => {
             console.log("Error loading pet profile image:", error);
           }}
@@ -157,18 +162,18 @@ export default function PetProfile() {
       );
     } else {
       // תמונת ברירת מחדל לפי סוג החיה
-      if (pet?.species === 'cat') {
+      if (pet?.species === "cat") {
         return (
-          <Avatar.Image 
-            size={56} 
-            source={require("../../assets/images/cat-sit.png")} 
+          <Avatar.Image
+            size={56}
+            source={require("../../assets/images/cats/cat-sit.png")}
           />
         );
       } else {
         return (
-          <Avatar.Image 
-            size={56} 
-            source={require("../../assets/images/dog-sit.jpg")} 
+          <Avatar.Image
+            size={56}
+            source={require("../../assets/images/dogs/dog-sit.jpg")}
           />
         );
       }
@@ -250,7 +255,9 @@ export default function PetProfile() {
                 <Chip icon="cake-variant">{getAgeString(pet.birthDate)}</Chip>
               ) : null}
               {pet?.weightKg ? (
-                <Chip icon="scale">{pet.weightKg} {t("common.kg")}</Chip>
+                <Chip icon="scale">
+                  {pet.weightKg} {t("common.kg")}
+                </Chip>
               ) : null}
               {pet?.color ? <Chip icon="palette">{pet.color}</Chip> : null}
               {pet?.chipNumber ? (
@@ -383,7 +390,8 @@ export default function PetProfile() {
               right={(props) =>
                 lastExpense ? (
                   <Badge {...props}>
-                    {Number(lastExpense.amount).toFixed(0)}{t("common.currency")}
+                    {Number(lastExpense.amount).toFixed(0)}
+                    {t("common.currency")}
                   </Badge>
                 ) : null
               }
@@ -426,7 +434,8 @@ export default function PetProfile() {
               left={(props) => <List.Icon {...props} icon="calendar-month" />}
               right={(props) => (
                 <Text style={[FONTS.h3, { color: COLORS.primary }]}>
-                  {monthTotal.toFixed(0)}{t("common.currency")}
+                  {monthTotal.toFixed(0)}
+                  {t("common.currency")}
                 </Text>
               )}
             />
@@ -437,7 +446,8 @@ export default function PetProfile() {
               left={(props) => <List.Icon {...props} icon="calendar" />}
               right={(props) => (
                 <Text style={[FONTS.h3, { color: COLORS.primary }]}>
-                  {yearTotal.toFixed(0)}{t("common.currency")}
+                  {yearTotal.toFixed(0)}
+                  {t("common.currency")}
                 </Text>
               )}
             />

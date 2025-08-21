@@ -29,7 +29,7 @@ import GoogleAuthButton from "../../components/auth/GoogleAuthButton";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useTranslation } from "react-i18next";
 
-const image = require("../../assets/images/dog-happy.jpg");
+const image = require("../../assets/images/dogs/dog-happy.jpg");
 
 const signUpSchema = Joi.object({
   name: Joi.string().min(2).required().messages({
@@ -99,7 +99,7 @@ const SignUpScreen = () => {
     try {
       await authService.createUser({ name, email, password });
       Alert.alert(t("auth.signup.title"), t("auth.signup.success"));
-      router.push("/(auth)/login");
+      router.push("/(tabs)/home");
     } catch (e) {
       console.error("Sign-up error:", e);
       Alert.alert(t("auth.signup.title"), t("auth.signup.error.general"));

@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useTranslation } from "react-i18next";
 
-const image = require("../assets/images/dog-sit-removebg.png"); // ודא שהנתיב נכון
+const image = require("../assets/images/dogs/dog-sit-removebg.png"); // ודא שהנתיב נכון
 
 const WelcomeScreen = () => {
   const router = useRouter();
@@ -33,9 +33,7 @@ const WelcomeScreen = () => {
           <Image source={image} style={styles.image} resizeMode="contain" />
         </View>
         <View style={styles.footer}>
-          <Text style={styles.welcomeTitle}>
-            {t("welcome.title")}
-          </Text>
+          <Text style={styles.welcomeTitle}>{t("welcome.title")}</Text>
           <Button
             mode="contained"
             onPress={() => router.push("/(auth)/signup")}

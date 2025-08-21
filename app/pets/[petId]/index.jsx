@@ -33,8 +33,8 @@ import uploadService from "../../../services/uploadService";
 import { COLORS, FONTS } from "../../../theme/theme";
 import { useTranslation } from "react-i18next";
 
-const PlaceholderImageDog = require("../../../assets/images/default-avatar-dog.png");
-const PlaceholderImageCat = require("../../../assets/images/default-avatar-cat.png");
+const PlaceholderImageDog = require("../../../assets/images/dogs/dog-play.png");
+const PlaceholderImageCat = require("../../../assets/images/cats/cat-play.png");
 const CoverPlaceholder = require("../../../assets/images/cover.png");
 const isObjectId = (v) => typeof v === "string" && /^[0-9a-fA-F]{24}$/.test(v);
 
@@ -215,7 +215,7 @@ export default function PetProfile() {
             <View style={{ position: "relative" }}>
               <Avatar.Image
                 size={56}
-                source={require("../../../assets/images/cat-sit.png")}
+                source={require("../../../assets/images/cats/cat-sit.png")}
               />
               <View
                 style={{
@@ -246,7 +246,7 @@ export default function PetProfile() {
             <View style={{ position: "relative" }}>
               <Avatar.Image
                 size={56}
-                source={require("../../../assets/images/dog-sit.jpg")}
+                source={require("../../../assets/images/dogs/dog-sit.jpg")}
               />
               <View
                 style={{
@@ -437,7 +437,6 @@ export default function PetProfile() {
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
       >
         <Card>
-          {" "}
           {coverUrl ? (
             <TouchableOpacity onPress={() => openImageOptions("cover")}>
               <View style={{ position: "relative" }}>

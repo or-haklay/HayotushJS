@@ -17,7 +17,7 @@ async function setToken(token) {
   // Keep Authorization header on httpServices in sync (best-effort)
   try {
     if (token) {
-      httpServices.defaults.headers.common.Authorization = `Bearer ${token}`;
+      httpServices.defaults.headers.common.Authorization = token;
     } else {
       delete httpServices.defaults.headers.common.Authorization;
     }
@@ -90,7 +90,7 @@ async function refreshAuthHeaderFromStorage() {
   const token = await getJWT();
   if (token) {
     try {
-      httpServices.defaults.headers.common.Authorization = `Bearer ${token}`;
+      httpServices.defaults.headers.common.Authorization = token;
     } catch {}
   }
   return token;

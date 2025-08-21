@@ -261,7 +261,7 @@ export default function ProfileScreen() {
     if (form.profilePicture) {
       return { uri: form.profilePicture };
     }
-    return require("../../assets/images/default-avatar-profile.png");
+    return require("../../assets/images/avatars/default-avatar-profile.png");
   };
 
   // פונקציה לטעינה מחדש של הפרופיל
@@ -645,7 +645,7 @@ export default function ProfileScreen() {
                       size={120}
                       source={getProfileImageSource()}
                       style={styles.profileAvatar}
-                      defaultSource={require("../../assets/images/default-avatar-profile.png")}
+                      defaultSource={require("../../assets/images/avatars/default-avatar-profile.png")}
                       onError={(error) => {
                         console.log("Error loading profile image:", error);
                         setForm((prev) => ({ ...prev, profilePicture: "" }));
@@ -1159,17 +1159,21 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: SIZING.padding,
-    backgroundColor: "#F5F7F8", // עדין יותר
+    backgroundColor: "#F5F7F8",
+    marginTop: SIZING.padding,
   },
 
   /* --- HERO --- */
   hero: {
-    height: 220,
+    height: 150,
     marginHorizontal: -SIZING.padding,
-    marginTop: -SIZING.padding,
+    marginBottom: -SIZING.margin * 2,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     overflow: "hidden",
+    zIndex: 0,
   },
   heroShade: {
     flex: 1,
@@ -1182,9 +1186,9 @@ const styles = StyleSheet.create({
   headerCard: {
     backgroundColor: COLORS.white,
     borderRadius: 24,
-    padding: SIZING.padding,
+    paddingHorizontal: SIZING.padding,
+    paddingBottom: SIZING.padding,
     marginBottom: SIZING.margin,
-    marginTop: -64, // ציפה מעל ה־hero
     elevation: 6,
     shadowColor: "#000",
     shadowOpacity: 0.1,

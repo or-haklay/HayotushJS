@@ -28,9 +28,9 @@ const PetCard = ({ pet, onPress = null }) => {
     }
     // תמונת ברירת מחדל לפי סוג החיה
     if (pet?.species === "cat") {
-      return require("../../../assets/images/cat-sit.png");
+      return require("../../../assets/images/cats/cat-sit.png");
     } else {
-      return require("../../../assets/images/dog-sit.jpg");
+      return require("../../../assets/images/dogs/dog-sit.jpg");
     }
   };
 
@@ -39,7 +39,7 @@ const PetCard = ({ pet, onPress = null }) => {
       <Image
         source={getPetImageSource()}
         style={styles.petImage}
-        defaultSource={require("../../../assets/images/dog-think.png")}
+        defaultSource={require("../../../assets/images/dogs/dog-think.png")}
         onError={(error) => {
           console.error("Error loading pet image:", error);
           // אם יש שגיאה בטעינת התמונה, השתמש בתמונת ברירת מחדל
