@@ -7,13 +7,16 @@ export const PetCreationProvider = ({ children }) => {
     name: "",
     type: "",
     breed: "",
-    birthDate: "",
+    birthDate: null,
     weight: "",
     chipNumber: "",
     image: null,
-    personality: "",
+    vaccineBookImage: null,
+    vaccineBookMime: null, // הוספת MIME type לפנקס חיסונים
+    personalities: [],
     favoriteFood: "",
     notes: "",
+    createdPetId: null,
   });
 
   return (

@@ -29,7 +29,7 @@ import GoogleAuthButton from "../../components/auth/GoogleAuthButton";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useTranslation } from "react-i18next";
 
-const image = require("../../assets/images/dogs/dog-happy.jpg");
+const image = require("../../assets/images/dogs/dog-happy.png");
 
 const signUpSchema = Joi.object({
   name: Joi.string().min(2).required().messages({

@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { ScrollView, View, StyleSheet, Image } from "react-native";
+import {
+  ScrollView,
+  View,
+  StyleSheet,
+  Image,
+  ImageBackground,
+} from "react-native";
 import { Text, useTheme, ActivityIndicator, Button } from "react-native-paper";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -189,6 +195,7 @@ const styles = StyleSheet.create({
     borderRadius: SIZING.radius_md,
     elevation: 2,
   },
+
   centerText: {
     marginVertical: SIZING.margin,
     textAlign: "center",

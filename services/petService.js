@@ -30,8 +30,21 @@ async function getPetById(petId) {
  * POST /api/pets
  */
 async function createPet(petData) {
-  const { data } = await httpServices.post(apiEndpoint, petData);
-  return data.pet;
+  try {
+    console.log("🐾 Creating pet with data:", petData);
+    console.log("🐾 API endpoint:", `${apiEndpoint}`);
+    console.log("🐾 Full request data:", JSON.stringify(petData, null, 2));
+    
+    const { data } = await httpServices.post(apiEndpoint, petData);
+    
+    console.log("✅ Pet created successfully:", data);
+    return data.pet;
+  } catch (error) {
+    console.error("❌ Error creating pet:", error);
+    console.error("❌ Error response:", error.response?.data);
+    console.error("❌ Error status:", error.response?.status);
+    throw error;
+  }
 }
 
 /**

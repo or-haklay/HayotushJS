@@ -68,12 +68,17 @@ class UploadService {
   // העלאת קובץ לשרת
   async uploadFile(file, type, onProgress) {
     try {
+      console.log("📁 מתחיל העלאת קובץ:", { type, file });
+
       const formData = new FormData();
       formData.append("file", {
         uri: file.uri,
         type: file.mimeType || "image/jpeg",
         name: file.name || "file.jpg",
       });
+
+      console.log("📁 FormData נוצר:", formData);
+      console.log("📁 URL להעלאה:", `/upload/${type}`);
 
       const response = await httpServices.post(`/upload/${type}`, formData, {
         headers: {
@@ -87,9 +92,16 @@ class UploadService {
         },
       });
 
+      console.log("📁 תגובה מהשרת:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("❌ שגיאה בהעלאת קובץ:", error);
+      console.error("❌ פרטי השגיאה:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config,
+      });
       throw error;
     }
   }
@@ -138,7 +150,18 @@ class UploadService {
   async uploadPetPicture(image, onProgress) {
     if (image) {
       try {
+        console.log("📤 מתחיל העלאת תמונת חיה:", image);
+        console.log("📤 פרטי התמונה:", {
+          uri: image.uri,
+          type: image.type,
+          name: image.name,
+          width: image.width,
+          height: image.height,
+        });
+
         const result = await this.uploadFile(image, "pet-picture", onProgress);
+
+        console.log("📤 תוצאת ההעלאה:", result);
 
         // בדוק שהתמונה נגישה
         if (result && result.fileUrl) {
@@ -152,7 +175,12 @@ class UploadService {
 
         return result;
       } catch (error) {
-        console.error("Error uploading pet picture:", error);
+        console.error("❌ שגיאה בהעלאת תמונת חיה:", error);
+        console.error("❌ פרטי השגיאה:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
         throw error;
       }
     }

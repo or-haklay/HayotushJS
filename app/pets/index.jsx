@@ -173,7 +173,7 @@ export default function PetProfile() {
         return (
           <Avatar.Image
             size={56}
-            source={require("../../assets/images/dogs/dog-sit.jpg")}
+            source={require("../../assets/images/dogs/dog-sit.png")}
           />
         );
       }
@@ -189,7 +189,7 @@ export default function PetProfile() {
         onPress: async () => {
           try {
             await petService.deletePet(petId);
-            router.replace("/(tabs)/pets");
+            router.replace("/(tabs)/home");
           } catch {
             setErr(t("pets.delete_error"));
           }

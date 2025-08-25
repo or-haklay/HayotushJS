@@ -16,12 +16,17 @@ axios.defaults.retry = 3; // retry 3 times
 axios.interceptors.request.use(
   async (config) => {
     console.log("🌐 Request to:", config.url);
+    console.log("🌐 Request method:", config.method?.toUpperCase());
+    console.log("🌐 Request headers:", config.headers);
     console.log("🌐 Request data:", config.data);
+    console.log("🌐 Full config:", config);
 
     const token = await AsyncStorage.getItem(TOKEN_KEY);
     if (token && config.headers) {
       config.headers["authorization"] = token;
-      console.log("🌐 Token added to headers");
+      console.log("🌐 Token added to headers:", token.substring(0, 20) + "...");
+    } else {
+      console.log("🌐 No token found in AsyncStorage");
     }
 
     return config;

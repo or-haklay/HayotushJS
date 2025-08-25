@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useTranslation } from "react-i18next";
 
-const image = require("../assets/images/dogs/dog-sit-removebg.png"); // ודא שהנתיב נכון
+const image = require("../assets/images/dogs/dog-sit.png"); // ודא שהנתיב נכון
 
 const WelcomeScreen = () => {
   const router = useRouter();

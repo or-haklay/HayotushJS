@@ -27,7 +27,7 @@ import GoogleAuthButton from "../../components/auth/GoogleAuthButton";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useTranslation } from "react-i18next";
 
-const image = require("../../assets/images/dogs/dog-strach.jpg");
+const image = require("../../assets/images/dogs/dog-strach.png");
 
 // Joi validation schema (EN messages)
 const loginSchema = Joi.object({

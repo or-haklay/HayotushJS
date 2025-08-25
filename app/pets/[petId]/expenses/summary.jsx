@@ -3,7 +3,6 @@ import {
   View,
   RefreshControl,
   ScrollView,
-  ImageBackground,
 } from "react-native";
 import { useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -18,7 +17,7 @@ import {
   Chip,
   Button,
 } from "react-native-paper";
-import { CartesianChart, Line, Bar, PolarChart, Pie } from "victory-native";
+import { CartesianChart, Line, PolarChart, Pie } from "victory-native";
 import { listExpenses } from "../../../../services/expensesService";
 import { COLORS, FONTS, SIZING } from "../../../../theme/theme";
 
@@ -31,6 +30,7 @@ export default function ExpensesSummaryScreen() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const [chartError, setChartError] = useState("");
 
   // סינונים חדשים
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -72,26 +72,32 @@ export default function ExpensesSummaryScreen() {
 
   // תרגומים לקטגוריות
   const getCategoryLabel = (category) => {
-    switch (category) {
-      case "Vet":
-        return t("expenses.categories.vet");
-      case "Food":
-        return t("expenses.categories.food");
-      case "Grooming":
-        return t("expenses.categories.grooming");
-      case "Toys":
-        return t("expenses.categories.toys");
-      case "Insurance":
-        return t("expenses.categories.insurance");
-      case "Other":
-        return t("expenses.categories.other");
-      default:
-        return category;
+    try {
+      switch (category) {
+        case "Vet":
+          return t("expenses.categories.vet");
+        case "Food":
+          return t("expenses.categories.food");
+        case "Grooming":
+          return t("expenses.categories.grooming");
+        case "Toys":
+          return t("expenses.categories.toys");
+        case "Insurance":
+          return t("expenses.categories.insurance");
+        case "Other":
+          return t("expenses.categories.other");
+        default:
+          return category;
+      }
+    } catch (error) {
+      console.error('Category label error:', error);
+      return category || "Unknown";
     }
   };
 
   const load = useCallback(async () => {
     setLoading(true);
+    setChartError("");
     try {
       let from, to;
 
@@ -116,7 +122,9 @@ export default function ExpensesSummaryScreen() {
       });
       setRows(data || []);
     } catch (e) {
-      setErr(e?.response?.data?.message || t("expenses.load_error"));
+      const errorMessage = e?.response?.data?.message || t("expenses.load_error") || "שגיאה בטעינת נתונים";
+      setErr(errorMessage);
+      console.error('Load expenses error:', e);
     } finally {
       setLoading(false);
     }
@@ -130,99 +138,157 @@ export default function ExpensesSummaryScreen() {
 
   // פונקציה לסינון הנתונים
   const filteredRows = useMemo(() => {
-    let filtered = [...rows];
+    try {
+      if (!rows || !Array.isArray(rows)) return [];
+      
+      let filtered = [...rows];
 
-    if (selectedCategory) {
-      filtered = filtered.filter(
-        (expense) => expense.category === selectedCategory
-      );
+      if (selectedCategory) {
+        filtered = filtered.filter(
+          (expense) => expense && expense.category === selectedCategory
+        );
+      }
+
+      if (selectedPet) {
+        filtered = filtered.filter((expense) => expense && expense.petId === selectedPet);
+      }
+
+      return filtered;
+    } catch (error) {
+      console.error('Filter rows error:', error);
+      return [];
     }
-
-    if (selectedPet) {
-      filtered = filtered.filter((expense) => expense.petId === selectedPet);
-    }
-
-    return filtered;
   }, [rows, selectedCategory, selectedPet]);
 
   // קבלת רשימת חיות ייחודיות מהוצאות
   const uniquePets = useMemo(() => {
-    const pets = [
-      ...new Set(rows.map((expense) => expense.petId).filter(Boolean)),
-    ];
-    return pets;
+    try {
+      if (!rows || !Array.isArray(rows)) return [];
+      
+      const pets = [
+        ...new Set(rows.map((expense) => expense?.petId).filter(Boolean)),
+      ];
+      return pets;
+    } catch (error) {
+      console.error('Unique pets error:', error);
+      return [];
+    }
   }, [rows]);
 
   // הכנת נתונים לגרף Line (חודשי או שנתי)
   const lineChartData = useMemo(() => {
-    if (summaryType === "yearly") {
-      // נתונים שנתיים - כל חודש הוא נקודה
-      const monthData = Array.from({ length: 12 }, (_, m) => ({
-        x: MONTHS[m],
-        y: 0,
-      }));
-
-      for (const expense of filteredRows) {
-        const d = new Date(expense.date);
-        if (d.getFullYear() === year) {
-          const m = d.getMonth();
-          monthData[m].y += Number(expense.amount || 0);
-        }
+    try {
+      if (!filteredRows || !Array.isArray(filteredRows) || filteredRows.length === 0) {
+        return [];
       }
 
-      return monthData;
-    } else {
-      // נתונים חודשיים - כל יום הוא נקודה
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const dayData = Array.from({ length: daysInMonth }, (_, d) => ({
-        x: String(d + 1),
-        y: 0,
-      }));
+      if (summaryType === "yearly") {
+        // נתונים שנתיים - כל חודש הוא נקודה
+        const monthData = Array.from({ length: 12 }, (_, m) => ({
+          x: MONTHS[m],
+          y: 0,
+        }));
 
-      for (const expense of filteredRows) {
-        const d = new Date(expense.date);
-        if (d.getFullYear() === year && d.getMonth() === month) {
-          const day = d.getDate() - 1;
-          dayData[day].y += Number(expense.amount || 0);
+        for (const expense of filteredRows) {
+          if (!expense || !expense.date) continue;
+          
+          try {
+            const d = new Date(expense.date);
+            if (isNaN(d.getTime())) continue; // בדיקה שהתאריך תקין
+            
+            if (d.getFullYear() === year) {
+              const m = d.getMonth();
+              if (m >= 0 && m < 12) {
+                monthData[m].y += Number(expense.amount || 0) || 0;
+              }
+            }
+          } catch (dateError) {
+            console.error('Date parsing error:', dateError);
+            continue;
+          }
         }
-      }
 
-      // בחירת סוג הגרף: רציף או יומי
-      if (lineChartMode === "cumulative") {
-        // הפוך את הגרף לרציף - כל יום מציג את הסכום המצטבר עד לאותו יום
-        let cumulativeTotal = 0;
-        const continuousData = dayData.map((day, index) => {
-          cumulativeTotal += day.y;
-          return {
-            x: day.x,
-            y: cumulativeTotal,
-          };
-        });
-        return continuousData;
+        return monthData;
       } else {
-        // גרף יומי רגיל - כל יום מציג את ההוצאות של אותו יום
-        return dayData;
+        // נתונים חודשיים - כל יום הוא נקודה
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const dayData = Array.from({ length: daysInMonth }, (_, d) => ({
+          x: String(d + 1),
+          y: 0,
+        }));
+
+        for (const expense of filteredRows) {
+          if (!expense || !expense.date) continue;
+          
+          try {
+            const d = new Date(expense.date);
+            if (isNaN(d.getTime())) continue; // בדיקה שהתאריך תקין
+            
+            if (d.getFullYear() === year && d.getMonth() === month) {
+              const day = d.getDate() - 1;
+              if (day >= 0 && day < daysInMonth) {
+                dayData[day].y += Number(expense.amount || 0) || 0;
+              }
+            }
+          } catch (dateError) {
+            console.error('Date parsing error:', dateError);
+            continue;
+          }
+        }
+
+        // בחירת סוג הגרף: רציף או יומי
+        if (lineChartMode === "cumulative") {
+          // הפוך את הגרף לרציף - כל יום מציג את הסכום המצטבר עד לאותו יום
+          let cumulativeTotal = 0;
+          const continuousData = dayData.map((day, index) => {
+            cumulativeTotal += day.y;
+            return {
+              x: day.x,
+              y: cumulativeTotal,
+            };
+          });
+          return continuousData;
+        } else {
+          // גרף יומי רגיל - כל יום מציג את ההוצאות של אותו יום
+          return dayData;
+        }
       }
+    } catch (error) {
+      console.error('Line chart data error:', error);
+      setChartError('שגיאה בהכנת נתוני הגרף');
+      return [];
     }
   }, [filteredRows, year, month, summaryType, MONTHS, lineChartMode]);
 
   // הכנת נתונים לגרף Pie (חודשי או שנתי)
   const pieChartData = useMemo(() => {
-    const categoryTotals = {};
+    try {
+      if (!filteredRows || !Array.isArray(filteredRows) || filteredRows.length === 0) {
+        return [];
+      }
 
-    for (const expense of filteredRows) {
-      const category = CATEGORIES.includes(expense.category)
-        ? expense.category
-        : "Other";
-      categoryTotals[category] =
-        (categoryTotals[category] || 0) + Number(expense.amount || 0);
+      const categoryTotals = {};
+
+      for (const expense of filteredRows) {
+        if (!expense || !expense.category) continue;
+        
+        const category = CATEGORIES.includes(expense.category)
+          ? expense.category
+          : "Other";
+        categoryTotals[category] =
+          (categoryTotals[category] || 0) + (Number(expense.amount || 0) || 0);
+      }
+
+      return Object.entries(categoryTotals).map(([category, value]) => ({
+        label: category,
+        value: value || 0,
+        color: CAT_COLORS[category] || "#FF7043",
+      }));
+    } catch (error) {
+      console.error('Pie chart data error:', error);
+      setChartError('שגיאה בהכנת נתוני הגרף');
+      return [];
     }
-
-    return Object.entries(categoryTotals).map(([category, value]) => ({
-      label: category,
-      value,
-      color: CAT_COLORS[category],
-    }));
   }, [filteredRows]);
 
   // פונקציה לאיפוס הסינונים
@@ -233,370 +299,523 @@ export default function ExpensesSummaryScreen() {
 
   // פונקציה לדפדוף בין חודשים
   const changeMonth = (direction) => {
-    if (direction === "next") {
-      if (month === 11) {
-        setMonth(0);
-        setYear(year + 1);
+    try {
+      if (direction === "next") {
+        if (month === 11) {
+          setMonth(0);
+          setYear(year + 1);
+        } else {
+          setMonth(month + 1);
+        }
       } else {
-        setMonth(month + 1);
+        if (month === 0) {
+          setMonth(11);
+          setYear(year - 1);
+        } else {
+          setMonth(month - 1);
+        }
       }
-    } else {
-      if (month === 0) {
-        setMonth(11);
-        setYear(year - 1);
-      } else {
-        setMonth(month - 1);
-      }
+    } catch (error) {
+      console.error('Change month error:', error);
     }
   };
 
   // פונקציה לדפדוף בין שנים
   const changeYear = (direction) => {
-    setYear(direction === "next" ? year + 1 : year - 1);
+    try {
+      setYear(direction === "next" ? year + 1 : year - 1);
+    } catch (error) {
+      console.error('Change year error:', error);
+    }
   };
 
   // חישוב סה"כ לתקופה הנוכחית
   const currentTotal = useMemo(() => {
-    return filteredRows.reduce(
-      (sum, expense) => sum + Number(expense.amount || 0),
-      0
-    );
+    try {
+      if (!filteredRows || !Array.isArray(filteredRows)) return 0;
+      
+      return filteredRows.reduce(
+        (sum, expense) => sum + (Number(expense?.amount || 0) || 0),
+        0
+      );
+    } catch (error) {
+      console.error('Current total error:', error);
+      return 0;
+    }
   }, [filteredRows]);
 
-  // רכיב הגרף
+  // רכיב הגרף עם Error Boundary
   const renderChart = () => {
-    if (chartType === "line") {
-      return (
-        <View style={{ height: 380 }}>
-          <CartesianChart
-            data={lineChartData}
-            xKey="x"
-            yKeys={["y"]}
-            domainPadding={{ left: 20, right: 20, top: 20, bottom: 20 }}
-            domain={{ y: [0, null] }}
-          >
-            {({ points, chartBounds }) => (
-              <Line
-                points={points.y}
-                color={COLORS.primary}
-                strokeWidth={3}
-                animate={{ type: "timing", duration: 300 }}
-              />
-            )}
-          </CartesianChart>
-
-          {/* סימוני צירים מפורטים */}
-          <View
-            style={{
-              position: "absolute",
-              bottom: 5,
-              left: 20,
-              right: 20,
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            {/* כותרות הצירים הוסרו - רק הנתונים נשארו */}
+    try {
+      if (chartError) {
+        return (
+          <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ color: COLORS.error, textAlign: 'center' }}>
+              {chartError}
+            </Text>
+            <Button 
+              mode="outlined" 
+              onPress={() => setChartError("")}
+              style={{ marginTop: 16 }}
+            >
+              נסה שוב
+            </Button>
           </View>
+        );
+      }
 
-          {/* סימון ציר Y עם כמויות */}
-          <View
-            style={{
-              position: "absolute",
-              left: 5,
-              top: 20,
-              bottom: 40,
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            {/* כותרות הציר Y הוסרו - רק הנתונים נשארו */}
-          </View>
+      if (chartType === "line") {
+        if (!lineChartData || lineChartData.length === 0) {
+          return (
+            <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ color: COLORS.neutral, textAlign: 'center' }}>
+                אין נתונים להצגה
+              </Text>
+            </View>
+          );
+        }
 
-          {/* סימון תאריכים/חודשים בציר X */}
-          <View
-            style={{
-              position: "absolute",
-              bottom: 25,
-              left: 20,
-              right: 20,
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            {(() => {
-              // חישוב איזה תאריכים להציג
-              const totalPoints = lineChartData.length;
-              let step = 1;
+        return (
+          <View style={{ height: 380 }}>
+            <CartesianChart
+              data={lineChartData}
+              xKey="x"
+              yKeys={["y"]}
+              domainPadding={{ left: 20, right: 20, top: 20, bottom: 20 }}
+              domain={{ y: [0, null] }}
+            >
+              {({ points, chartBounds }) => (
+                <Line
+                  points={points.y}
+                  color={COLORS.primary}
+                  strokeWidth={3}
+                  animate={{ type: "timing", duration: 300 }}
+                />
+              )}
+            </CartesianChart>
 
-              if (totalPoints > 12) {
-                step = Math.ceil(totalPoints / 12); // מקסימום 12 תאריכים
-              } else if (totalPoints > 6) {
-                step = Math.ceil(totalPoints / 6); // מקסימום 6 תאריכים
-              }
-
-              return lineChartData.map((item, index) => {
-                if (index % step !== 0) return null;
-
-                return (
-                  <Text
-                    key={index}
-                    style={[
-                      FONTS.caption,
-                      {
-                        color: COLORS.neutral,
-                        fontSize: 10,
-                        textAlign: "center",
-                        width: 35,
-                        fontWeight: "500",
-                      },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {
-                      summaryType === "yearly"
-                        ? item.x.substring(0, 3) // רק 3 אותיות ראשונות של החודש
-                        : `${item.x}/${month + 1}` // יום/חודש
-                    }
-                  </Text>
-                );
-              });
-            })()}
-          </View>
-
-          {/* סימון כמויות בציר Y */}
-          <View
-            style={{
-              position: "absolute",
-              left: 25,
-              top: 20,
-              bottom: 40,
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-            }}
-          >
-            {(() => {
-              const maxValue = Math.max(...lineChartData.map((item) => item.y));
-              const minValue = 0; // תמיד מתחילים מ-0
-
-              // אם אין נתונים
-              if (maxValue === 0) {
-                return (
-                  <Text
-                    style={[
-                      FONTS.caption,
-                      {
-                        color: COLORS.neutral,
-                        fontSize: 10,
-                        textAlign: "left",
-                        width: 50,
-                        fontWeight: "500",
-                      },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    0 ₪
-                  </Text>
-                );
-              }
-
-              // חישוב חלוקה יפה של הציר
-              const roundToNice = (value) => {
-                const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
-                const normalized = value / magnitude;
-
-                if (normalized <= 1) return magnitude;
-                if (normalized <= 2) return 2 * magnitude;
-                if (normalized <= 5) return 5 * magnitude;
-                return 10 * magnitude;
-              };
-
-              const niceMax = roundToNice(maxValue);
-              const step = niceMax / 4; // 5 נקודות: 0, step, 2*step, 3*step, niceMax
-
-              return Array.from({ length: 5 }, (_, i) => {
-                const value = i * step;
-                return (
-                  <Text
-                    key={i}
-                    style={[
-                      FONTS.caption,
-                      {
-                        color: COLORS.neutral,
-                        fontSize: 10,
-                        textAlign: "left",
-                        width: 50,
-                        fontWeight: "500",
-                      },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {value >= 1000
-                      ? `${(value / 1000).toFixed(1)}K ₪`
-                      : `${value.toFixed(0)} ₪`}
-                  </Text>
-                );
-              }).reverse(); // הפוך כדי שהערך הגבוה יהיה למעלה
-            })()}
-          </View>
-
-          {/* Legend לגרף הקו */}
-          {selectedCategory && (
+            {/* סימוני צירים מפורטים */}
             <View
               style={{
+                position: "absolute",
+                bottom: 5,
+                left: 20,
+                right: 20,
                 flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              {/* כותרות הצירים הוסרו - רק הנתונים נשארו */}
+            </View>
+
+            {/* סימון ציר Y עם כמויות */}
+            <View
+              style={{
+                position: "absolute",
+                left: 5,
+                top: 20,
+                bottom: 40,
+                justifyContent: "space-between",
                 alignItems: "center",
-                justifyContent: "center",
-                marginTop: 16,
+              }}
+            >
+              {/* כותרות הציר Y הוסרו - רק הנתונים נשארו */}
+            </View>
+
+            {/* סימון תאריכים/חודשים בציר X */}
+            <View
+              style={{
+                position: "absolute",
+                bottom: 25,
+                left: 20,
+                right: 20,
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              {(() => {
+                try {
+                  // חישוב איזה תאריכים להציג
+                  const totalPoints = lineChartData.length;
+                  let step = 1;
+
+                  if (totalPoints > 12) {
+                    step = Math.ceil(totalPoints / 12); // מקסימום 12 תאריכים
+                  } else if (totalPoints > 6) {
+                    step = Math.ceil(totalPoints / 6); // מקסימום 6 תאריכים
+                  }
+
+                  return lineChartData.map((item, index) => {
+                    if (!item || index % step !== 0) return null;
+
+                    return (
+                      <Text
+                        key={index}
+                        style={[
+                          FONTS.caption,
+                          {
+                            color: COLORS.neutral,
+                            fontSize: 10,
+                            textAlign: "center",
+                            width: 35,
+                            fontWeight: "500",
+                          },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {
+                          summaryType === "yearly"
+                            ? (item.x && item.x.substring ? item.x.substring(0, 3) : item.x) // רק 3 אותיות ראשונות של החודש
+                            : `${item.x}/${month + 1}` // יום/חודש
+                        }
+                      </Text>
+                    );
+                  });
+                } catch (error) {
+                  console.error('X axis labels error:', error);
+                  return null;
+                }
+              })()}
+            </View>
+
+            {/* סימון כמויות בציר Y */}
+            <View
+              style={{
+                position: "absolute",
+                left: 25,
+                top: 20,
+                bottom: 40,
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
+              {(() => {
+                try {
+                  if (!lineChartData || lineChartData.length === 0) {
+                    return (
+                      <Text
+                        style={[
+                          FONTS.caption,
+                          {
+                            color: COLORS.neutral,
+                            fontSize: 10,
+                            textAlign: "left",
+                            width: 50,
+                            fontWeight: "500",
+                          },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        0 ₪
+                      </Text>
+                    );
+                  }
+
+                  const validData = lineChartData.filter(item => item && typeof item.y === 'number' && !isNaN(item.y));
+                  if (validData.length === 0) {
+                    return (
+                      <Text
+                        style={[
+                          FONTS.caption,
+                          {
+                            color: COLORS.neutral,
+                            fontSize: 10,
+                            textAlign: "left",
+                            width: 50,
+                            fontWeight: "500",
+                          },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        0 ₪
+                      </Text>
+                    );
+                  }
+
+                  const maxValue = Math.max(...validData.map((item) => item.y));
+                  const minValue = 0; // תמיד מתחילים מ-0
+
+                  // אם אין נתונים
+                  if (maxValue === 0) {
+                    return (
+                      <Text
+                        style={[
+                          FONTS.caption,
+                          {
+                            color: COLORS.neutral,
+                            fontSize: 10,
+                            textAlign: "left",
+                            width: 50,
+                            fontWeight: "500",
+                          },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        0 ₪
+                      </Text>
+                    );
+                  }
+
+                  // חישוב חלוקה יפה של הציר
+                  const roundToNice = (value) => {
+                    try {
+                      if (value <= 0) return 1;
+                      const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
+                      const normalized = value / magnitude;
+
+                      if (normalized <= 1) return magnitude;
+                      if (normalized <= 2) return 2 * magnitude;
+                      if (normalized <= 5) return 5 * magnitude;
+                      return 10 * magnitude;
+                    } catch (error) {
+                      console.error('Round to nice error:', error);
+                      return value;
+                    }
+                  };
+
+                  const niceMax = roundToNice(maxValue);
+                  const step = niceMax / 4; // 5 נקודות: 0, step, 2*step, 3*step, niceMax
+
+                  return Array.from({ length: 5 }, (_, i) => {
+                    const value = i * step;
+                    return (
+                      <Text
+                        key={i}
+                        style={[
+                          FONTS.caption,
+                          {
+                            color: COLORS.neutral,
+                            fontSize: 10,
+                            textAlign: "left",
+                            width: 50,
+                            fontWeight: "500",
+                          },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {value >= 1000
+                          ? `${(value / 1000).toFixed(1)}K ₪`
+                          : `${value.toFixed(0)} ₪`}
+                      </Text>
+                    );
+                  }).reverse(); // הפוך כדי שהערך הגבוה יהיה למעלה
+                } catch (error) {
+                  console.error('Y axis labels error:', error);
+                  return (
+                    <Text
+                      style={[
+                        FONTS.caption,
+                        {
+                          color: COLORS.neutral,
+                          fontSize: 10,
+                          textAlign: "left",
+                          width: 50,
+                          fontWeight: "500",
+                        },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      0 ₪
+                    </Text>
+                  );
+                }
+              })()}
+            </View>
+
+            {/* Legend לגרף הקו */}
+            {selectedCategory && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: 16,
+                  paddingHorizontal: 16,
+                }}
+              >
+                <View
+                  style={{
+                    width: 16,
+                    height: 16,
+                    backgroundColor: CAT_COLORS[selectedCategory] || "#FF7043",
+                    borderRadius: 8,
+                    marginRight: 8,
+                  }}
+                />
+                <Text style={[FONTS.body, { color: COLORS.neutral }]}>
+                  {getCategoryLabel(selectedCategory)}
+                </Text>
+              </View>
+            )}
+          </View>
+        );
+      } else {
+        if (!pieChartData || pieChartData.length === 0) {
+          return (
+            <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ color: COLORS.neutral, textAlign: 'center' }}>
+                אין נתונים להצגה
+              </Text>
+            </View>
+          );
+        }
+
+        return (
+          <View style={{ height: 380 }}>
+            <PolarChart
+              data={pieChartData}
+              labelKey="label"
+              valueKey="value"
+              colorKey="color"
+            >
+              <Pie.Chart />
+            </PolarChart>
+
+            {/* Legend לגרף העוגה עם סכומים - בשורה מתחת לגרף */}
+            <View
+              style={{
+                marginTop: 24,
                 paddingHorizontal: 16,
               }}
             >
+              {/* שורת כותרות */}
               <View
-                style={{
-                  width: 16,
-                  height: 16,
-                  backgroundColor: CAT_COLORS[selectedCategory],
-                  borderRadius: 8,
-                  marginRight: 8,
-                }}
-              />
-              <Text style={[FONTS.body, { color: COLORS.neutral }]}>
-                {getCategoryLabel(selectedCategory)}
-              </Text>
-            </View>
-          )}
-        </View>
-      );
-    } else {
-      return (
-        <View style={{ height: 380 }}>
-          <PolarChart
-            data={pieChartData}
-            labelKey="label"
-            valueKey="value"
-            colorKey="color"
-          >
-            <Pie.Chart />
-          </PolarChart>
-
-          {/* Legend לגרף העוגה עם סכומים - בשורה מתחת לגרף */}
-          <View
-            style={{
-              marginTop: 24,
-              paddingHorizontal: 16,
-            }}
-          >
-            {/* שורת כותרות */}
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingBottom: 8,
-                borderBottomWidth: 1,
-                borderBottomColor: COLORS.neutral + "20",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={[FONTS.h4, { color: COLORS.primary, flex: 2 }]}>
-                קטגוריה
-              </Text>
-              <Text
-                style={[
-                  FONTS.h4,
-                  { color: COLORS.primary, flex: 1, textAlign: "center" },
-                ]}
-              >
-                סכום
-              </Text>
-              <Text
-                style={[
-                  FONTS.h4,
-                  { color: COLORS.primary, flex: 1, textAlign: "center" },
-                ]}
-              >
-                אחוז
-              </Text>
-            </View>
-
-            {/* שורות הנתונים */}
-            {pieChartData.map((item, index) => (
-              <View
-                key={index}
                 style={{
                   flexDirection: "row",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  paddingVertical: 8,
-                  borderBottomWidth: index < pieChartData.length - 1 ? 1 : 0,
-                  borderBottomColor: COLORS.neutral + "10",
+                  paddingBottom: 8,
+                  borderBottomWidth: 1,
+                  borderBottomColor: COLORS.neutral + "20",
+                  marginBottom: 12,
                 }}
               >
-                {/* צבע + שם הקטגוריה */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    flex: 2,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 12,
-                      height: 12,
-                      backgroundColor: item.color,
-                      borderRadius: 6,
-                      marginRight: 8,
-                    }}
-                  />
-                  <Text
-                    style={[
-                      FONTS.body,
-                      {
-                        color: COLORS.neutral,
-                        fontWeight: "500",
-                      },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {getCategoryLabel(item.label)}
-                  </Text>
-                </View>
-
-                {/* הסכום */}
-                <Text
-                  style={[
-                    FONTS.body,
-                    {
-                      color: COLORS.primary,
-                      fontWeight: "bold",
-                      flex: 1,
-                      textAlign: "center",
-                    },
-                  ]}
-                >
-                  {item.value >= 1000
-                    ? `${(item.value / 1000).toFixed(1)}K ₪`
-                    : `${item.value.toFixed(0)} ₪`}
+                <Text style={[FONTS.h4, { color: COLORS.primary, flex: 2 }]}>
+                  קטגוריה
                 </Text>
-
-                {/* אחוז מהסה"כ */}
                 <Text
                   style={[
-                    FONTS.body,
-                    {
-                      color: COLORS.neutral,
-                      fontWeight: "500",
-                      flex: 1,
-                      textAlign: "center",
-                    },
+                    FONTS.h4,
+                    { color: COLORS.primary, flex: 1, textAlign: "center" },
                   ]}
                 >
-                  {((item.value / currentTotal) * 100).toFixed(1)}%
+                  סכום
+                </Text>
+                <Text
+                  style={[
+                    FONTS.h4,
+                    { color: COLORS.primary, flex: 1, textAlign: "center" },
+                  ]}
+                >
+                  אחוז
                 </Text>
               </View>
-            ))}
+
+              {/* שורות הנתונים */}
+              {pieChartData.map((item, index) => {
+                try {
+                  if (!item || !item.label || typeof item.value !== 'number') return null;
+                  
+                  return (
+                    <View
+                      key={index}
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        paddingVertical: 8,
+                        borderBottomWidth: index < pieChartData.length - 1 ? 1 : 0,
+                        borderBottomColor: COLORS.neutral + "10",
+                      }}
+                    >
+                      {/* צבע + שם הקטגוריה */}
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          flex: 2,
+                        }}
+                      >
+                        <View
+                          style={{
+                            width: 12,
+                            height: 12,
+                            backgroundColor: item.color || "#FF7043",
+                            borderRadius: 6,
+                            marginRight: 8,
+                          }}
+                        />
+                        <Text
+                          style={[
+                            FONTS.body,
+                            {
+                              color: COLORS.neutral,
+                              fontWeight: "500",
+                            },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {getCategoryLabel(item.label)}
+                        </Text>
+                      </View>
+
+                      {/* הסכום */}
+                      <Text
+                        style={[
+                          FONTS.body,
+                          {
+                            color: COLORS.primary,
+                            fontWeight: "bold",
+                            flex: 1,
+                            textAlign: "center",
+                          },
+                        ]}
+                      >
+                        {item.value >= 1000
+                          ? `${(item.value / 1000).toFixed(1)}K ₪`
+                          : `${item.value.toFixed(0)} ₪`}
+                      </Text>
+
+                      {/* אחוז מהסה"כ */}
+                      <Text
+                        style={[
+                          FONTS.body,
+                          {
+                            color: COLORS.neutral,
+                            fontWeight: "500",
+                            flex: 1,
+                            textAlign: "center",
+                          },
+                        ]}
+                      >
+                        {currentTotal > 0 ? ((item.value / currentTotal) * 100).toFixed(1) : "0.0"}%
+                      </Text>
+                    </View>
+                  );
+                } catch (error) {
+                  console.error('Pie chart item error:', error);
+                  return null;
+                }
+              })}
+            </View>
           </View>
+        );
+      }
+    } catch (error) {
+      console.error('Render chart error:', error);
+      setChartError('שגיאה בטעינת הגרף');
+      return (
+        <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: COLORS.error, textAlign: 'center' }}>
+            שגיאה בטעינת הגרף
+          </Text>
+          <Button 
+            mode="outlined" 
+            onPress={() => setChartError("")}
+            style={{ marginTop: 16 }}
+          >
+            נסה שוב
+          </Button>
         </View>
       );
     }
@@ -604,43 +823,57 @@ export default function ExpensesSummaryScreen() {
 
   // כותרת הגרף
   const getChartTitle = () => {
-    if (chartType === "line") {
-      if (summaryType === "yearly") {
-        return `הוצאות שנתיות - ${year}`;
+    try {
+      if (chartType === "line") {
+        if (summaryType === "yearly") {
+          return `הוצאות שנתיות - ${year}`;
+        } else {
+          const modeText = lineChartMode === "cumulative" ? "מצטבר" : "יומי";
+          return `הוצאות חודשיות ${modeText} - ${MONTHS[month]} ${year}`;
+        }
       } else {
-        const modeText = lineChartMode === "cumulative" ? "מצטבר" : "יומי";
-        return `הוצאות חודשיות ${modeText} - ${MONTHS[month]} ${year}`;
+        if (summaryType === "yearly") {
+          return `התפלגות הוצאות שנתיות - ${year}`;
+        } else {
+          return `התפלגות הוצאות חודשיות - ${MONTHS[month]} ${year}`;
+        }
       }
-    } else {
-      if (summaryType === "yearly") {
-        return `התפלגות הוצאות שנתיות - ${year}`;
-      } else {
-        return `התפלגות הוצאות חודשיות - ${MONTHS[month]} ${year}`;
-      }
+    } catch (error) {
+      console.error('Chart title error:', error);
+      return "סיכום הוצאות";
     }
   };
 
   // כפתורי דפדוף
   const renderNavigationButtons = () => {
-    if (summaryType === "yearly") {
+    try {
+      if (summaryType === "yearly") {
+        return (
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <IconButton icon="chevron-right" onPress={() => changeYear("prev")} />
+            <Text style={FONTS.h3}>{year}</Text>
+            <IconButton icon="chevron-left" onPress={() => changeYear("next")} />
+          </View>
+        );
+      } else {
+        return (
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <IconButton
+              icon="chevron-right"
+              onPress={() => changeMonth("prev")}
+            />
+            <Text style={FONTS.h3}>
+              {MONTHS[month]} {year}
+            </Text>
+            <IconButton icon="chevron-left" onPress={() => changeMonth("next")} />
+          </View>
+        );
+      }
+    } catch (error) {
+      console.error('Navigation buttons error:', error);
       return (
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <IconButton icon="chevron-right" onPress={() => changeYear("prev")} />
           <Text style={FONTS.h3}>{year}</Text>
-          <IconButton icon="chevron-left" onPress={() => changeYear("next")} />
-        </View>
-      );
-    } else {
-      return (
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <IconButton
-            icon="chevron-right"
-            onPress={() => changeMonth("prev")}
-          />
-          <Text style={FONTS.h3}>
-            {MONTHS[month]} {year}
-          </Text>
-          <IconButton icon="chevron-left" onPress={() => changeMonth("next")} />
         </View>
       );
     }
@@ -807,21 +1040,21 @@ export default function ExpensesSummaryScreen() {
                           style={[
                             {
                               marginRight: 8,
-                              borderColor: CAT_COLORS[category],
+                              borderColor: CAT_COLORS[category] || "#FF7043",
                               borderWidth: 2,
                             },
                             selectedCategory === category && {
-                              backgroundColor: CAT_COLORS[category],
+                              backgroundColor: CAT_COLORS[category] || "#FF7043",
                             },
                           ]}
                           textStyle={
                             selectedCategory === category
                               ? { color: COLORS.white, fontWeight: "bold" }
-                              : { color: CAT_COLORS[category] }
+                              : { color: CAT_COLORS[category] || "#FF7043" }
                           }
                           mode="outlined"
                         >
-                          {getCategoryLabel(category)}
+                          {getCategoryLabel(category) || category}
                         </Chip>
                       ))}
                     </ScrollView>
@@ -829,7 +1062,7 @@ export default function ExpensesSummaryScreen() {
                 )}
 
                 {/* סינון לפי בעל חיים */}
-                {uniquePets.length > 1 && (
+                {uniquePets && uniquePets.length > 1 && (
                   <View style={{ marginBottom: 16 }}>
                     <Text style={[FONTS.h4, { marginBottom: 8 }]}>
                       בעל חיים:
@@ -875,7 +1108,7 @@ export default function ExpensesSummaryScreen() {
                           }
                           mode="outlined"
                         >
-                          {petId}
+                          {petId || "Unknown"}
                         </Chip>
                       ))}
                     </ScrollView>
@@ -905,13 +1138,13 @@ export default function ExpensesSummaryScreen() {
             <Text
               style={[FONTS.body, { color: COLORS.neutral, marginBottom: 8 }]}
             >
-              {filteredRows.length} {t("expenses.summary.records_found")}
-              {selectedCategory || selectedPet ? ` (מתוך ${rows.length})` : ""}
+              {filteredRows ? filteredRows.length : 0} {t("expenses.summary.records_found")}
+              {selectedCategory || selectedPet ? ` (מתוך ${rows ? rows.length : 0})` : ""}
             </Text>
             <Divider style={{ marginVertical: 8 }} />
             {loading ? (
               <ActivityIndicator style={{ marginTop: 16 }} />
-            ) : filteredRows.length === 0 ? (
+            ) : !filteredRows || filteredRows.length === 0 ? (
               <Text style={{ marginTop: 8 }}>
                 {selectedCategory || selectedPet
                   ? "לא נמצאו הוצאות לפי הסינונים שנבחרו"
@@ -924,7 +1157,7 @@ export default function ExpensesSummaryScreen() {
         </Card>
 
         {/* סה"כ לתקופה הנוכחית */}
-        {!loading && filteredRows.length > 0 && (
+        {!loading && filteredRows && filteredRows.length > 0 && (
           <Card style={{ marginTop: 16, borderRadius: 12 }}>
             <Card.Content>
               <View
@@ -948,7 +1181,7 @@ export default function ExpensesSummaryScreen() {
                     { color: COLORS.primary, fontWeight: "bold" },
                   ]}
                 >
-                  {currentTotal.toFixed(2)} ₪
+                  {currentTotal ? currentTotal.toFixed(2) : "0.00"} ₪
                 </Text>
               </View>
 
@@ -971,7 +1204,7 @@ export default function ExpensesSummaryScreen() {
                       { color: COLORS.primary, fontWeight: "bold" },
                     ]}
                   >
-                    {filteredRows.length > 0
+                    {filteredRows && filteredRows.length > 0 && currentTotal
                       ? (currentTotal / filteredRows.length).toFixed(2)
                       : "0.00"}{" "}
                     ₪
@@ -988,11 +1221,19 @@ export default function ExpensesSummaryScreen() {
                       { color: COLORS.primary, fontWeight: "bold" },
                     ]}
                   >
-                    {summaryType === "yearly"
-                      ? (currentTotal / 12).toFixed(2)
-                      : (
-                          currentTotal / new Date(year, month + 1, 0).getDate()
-                        ).toFixed(2)}{" "}
+                    {(() => {
+                      try {
+                        if (summaryType === "yearly") {
+                          return currentTotal ? (currentTotal / 12).toFixed(2) : "0.00";
+                        } else {
+                          const daysInMonth = new Date(year, month + 1, 0).getDate();
+                          return currentTotal ? (currentTotal / daysInMonth).toFixed(2) : "0.00";
+                        }
+                      } catch (error) {
+                        console.error('Average calculation error:', error);
+                        return "0.00";
+                      }
+                    })()}{" "}
                     ₪
                   </Text>
                 </View>
@@ -1007,7 +1248,7 @@ export default function ExpensesSummaryScreen() {
                       { color: COLORS.primary, fontWeight: "bold" },
                     ]}
                   >
-                    {filteredRows.length}
+                    {filteredRows ? filteredRows.length : 0}
                   </Text>
                 </View>
               </View>

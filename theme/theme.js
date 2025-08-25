@@ -37,7 +37,7 @@ export const COLORS = {
   onWhite: "#212121", // צבע טקסט על white
   onBlack: "#FFFFFF", // צבע טקסט על black
   secondary: "#FFC107", // צבע משני (זהה ל-accent)
-  
+
   // צבעים נוספים לאווטר תמונת פרופיל
   lightGray: "#F5F5F5", // אפור בהיר לרקע
   errorLight: "#FFEBEE", // אדום בהיר לרקע כפתור מחיקה
@@ -139,15 +139,21 @@ export const SIZING = {
   xxlarge: 48,
 
   // ריווחים נוספים
-  padding_small: 8,
-  padding_medium: 16,
-  padding_large: 24,
-  padding_xlarge: 32,
+  padding_xs: 4,
+  padding_sm: 8,
+  padding_md: 16,
+  padding_lg: 24,
+  padding_xl: 32,
+  padding_2xl: 48,
+  padding_3xl: 64,
 
-  margin_small: 8,
-  margin_medium: 16,
-  margin_large: 24,
-  margin_xlarge: 32,
+  margin_xs: 4,
+  margin_sm: 8,
+  margin_md: 16,
+  margin_lg: 24,
+  margin_xl: 32,
+  margin_2xl: 48,
+  margin_3xl: 64,
 
   // גדלי טקסט
   text_small: 12,
