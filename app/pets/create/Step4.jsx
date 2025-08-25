@@ -41,9 +41,9 @@ export default function Step4() {
   const [updateProgress, setUpdateProgress] = useState(0);
   const [updateStatus, setUpdateStatus] = useState("");
 
-  // מצב לעריכת תמונות
-  const [showImageOptions, setShowImageOptions] = useState(false);
-  const [showUploadOptions, setShowUploadOptions] = useState(false);
+  // מצב לדיאלוגים
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const requestPermissions = async () => {
     if (Platform.OS !== "web") {
@@ -68,8 +68,7 @@ export default function Step4() {
 
       if (image) {
         setSelectedVaccineBookImage(image);
-        setShowImageOptions(false);
-        setShowUploadOptions(false); // הסתר את אפשרויות ההעלאה
+        setShowUploadDialog(false); // הסתר את אפשרויות ההעלאה
 
         try {
           // העלאת המסמך הרפואי באמצעות uploadService
@@ -112,8 +111,7 @@ export default function Step4() {
 
       if (document) {
         setSelectedVaccineBookImage(document);
-        setShowImageOptions(false);
-        setShowUploadOptions(false); // הסתר את אפשרויות ההעלאה
+        setShowUploadDialog(false); // הסתר את אפשרויות ההעלאה
 
         try {
           // העלאת המסמך הרפואי באמצעות uploadService
@@ -172,8 +170,7 @@ export default function Step4() {
       if (!result.canceled && result.assets[0]) {
         const image = result.assets[0];
         setSelectedVaccineBookImage(image);
-        setShowImageOptions(false);
-        setShowUploadOptions(false); // הסתר את אפשרויות ההעלאה
+        setShowUploadDialog(false); // הסתר את אפשרויות ההעלאה
 
         try {
           // העלאת התמונה שצולמה
@@ -224,8 +221,7 @@ export default function Step4() {
               setPetData({ ...petData, vaccineBookImage: null });
               setSelectedVaccineBookImage(null);
 
-              setShowImageOptions(false);
-              setShowUploadOptions(false); // הסתר את אפשרויות ההעלאה
+              setShowUploadDialog(false); // הסתר את אפשרויות ההעלאה
 
               Alert.alert("הצלחה", "תמונת פנקס החיסונים הוסרה בהצלחה");
             } catch (error) {
@@ -238,37 +234,13 @@ export default function Step4() {
     );
   };
 
-  const openImageOptions = () => {
-    setShowImageOptions(true);
-  };
-
   const toggleUploadOptions = () => {
-    // אם יש כבר תמונה מועלית, הצג Alert עם אפשרויות עריכה
+    // אם יש כבר תמונה מועלית, הצג דיאלוג עם אפשרויות עריכה
     if (petData.vaccineBookImage) {
-      Alert.alert(
-        "עריכת מסמך",
-        "בחר מה ברצונך לעשות:",
-        [
-          {
-            text: "שנה תמונה",
-            onPress: () => {
-              setShowUploadOptions(true);
-            },
-          },
-          {
-            text: "הסר מסמך",
-            onPress: handleRemoveVaccineBookImage,
-            style: "destructive",
-          },
-          {
-            text: "ביטול",
-            style: "cancel",
-          },
-        ]
-      );
+      setShowEditDialog(true);
     } else {
-      // אם אין תמונה, הצג את אפשרויות ההעלאה
-      setShowUploadOptions(!showUploadOptions);
+      // אם אין תמונה, הצג דיאלוג עם אפשרויות ההעלאה
+      setShowUploadDialog(true);
     }
   };
 
@@ -419,7 +391,7 @@ export default function Step4() {
           {/* כפתור עריכה */}
           <Button
             mode="outlined"
-            onPress={openImageOptions}
+            onPress={toggleUploadOptions}
             icon="pencil"
             style={{ marginBottom: 8 }}
           >
@@ -571,36 +543,7 @@ export default function Step4() {
               </Text>
 
               {/* כפתורים נפרדים לכל אפשרות */}
-              {showUploadOptions && (
-                <View style={{ alignItems: "center", marginBottom: 16 }}>
-                  <Button
-                    mode="contained"
-                    onPress={handlePickVaccineBookImage}
-                    icon="image"
-                    style={{ marginBottom: 8, width: 200 }}
-                  >
-                    בחר תמונה מהגלריה
-                  </Button>
-
-                  <Button
-                    mode="contained"
-                    onPress={handleTakePhoto}
-                    icon="camera"
-                    style={{ marginBottom: 8, width: 200 }}
-                  >
-                    צלם תמונה
-                  </Button>
-
-                  <Button
-                    mode="contained"
-                    onPress={handlePickPDFDocument}
-                    icon="file-pdf-box"
-                    style={{ marginBottom: 8, width: 200 }}
-                  >
-                    בחר מסמך PDF
-                  </Button>
-                </View>
-              )}
+              {/* הכפתורים הוסרו מכאן והם יופיעו בדיאלוג */}
 
               {/* הצגת המסמך שנבחר */}
               <View style={{ alignItems: "center" }}>{vaccineBookImage}</View>
@@ -648,50 +591,95 @@ export default function Step4() {
         </View>
       </ScrollView>
 
-      {/* Image Options Modal */}
       <Portal>
+        {/* Upload Options Dialog */}
         <Dialog
-          visible={showImageOptions}
-          onDismiss={() => setShowImageOptions(false)}
+          visible={showUploadDialog}
+          onDismiss={() => setShowUploadDialog(false)}
         >
-          <Dialog.Title>
-            {petData.vaccineBookImage ? "ערוך מסמך" : "בחר מסמך"}
-          </Dialog.Title>
+          <Dialog.Title>אפשרויות העלאה</Dialog.Title>
           <Dialog.Content>
             <View style={{ padding: 16 }}>
               <Button
                 mode="contained"
-                onPress={handlePickVaccineBookImage}
+                onPress={() => {
+                  setShowUploadDialog(false);
+                  handlePickVaccineBookImage();
+                }}
                 icon="image"
                 style={{ marginBottom: 16 }}
               >
-                {petData.vaccineBookImage
-                  ? "שנה לתמונה מהגלריה"
-                  : "בחר תמונה מהגלריה"}
+                בחר תמונה מהגלריה
               </Button>
 
               <Button
                 mode="contained"
-                onPress={handleTakePhoto}
+                onPress={() => {
+                  setShowUploadDialog(false);
+                  handleTakePhoto();
+                }}
                 icon="camera"
                 style={{ marginBottom: 16 }}
               >
-                {petData.vaccineBookImage ? "צלם תמונה חדשה" : "צלם תמונה"}
+                צלם תמונה
               </Button>
 
               <Button
                 mode="contained"
-                onPress={handlePickPDFDocument}
+                onPress={() => {
+                  setShowUploadDialog(false);
+                  handlePickPDFDocument();
+                }}
                 icon="file-pdf-box"
                 style={{ marginBottom: 16 }}
               >
-                {petData.vaccineBookImage ? "שנה למסמך PDF" : "בחר מסמך PDF"}
+                בחר מסמך PDF
               </Button>
 
               <Button
                 mode="outlined"
-                onPress={() => setShowImageOptions(false)}
+                onPress={() => setShowUploadDialog(false)}
               >
+                ביטול
+              </Button>
+            </View>
+          </Dialog.Content>
+        </Dialog>
+
+        {/* Edit Document Dialog */}
+        <Dialog
+          visible={showEditDialog}
+          onDismiss={() => setShowEditDialog(false)}
+        >
+          <Dialog.Title>עריכת מסמך</Dialog.Title>
+          <Dialog.Content>
+            <View style={{ padding: 16 }}>
+              <Button
+                mode="contained"
+                onPress={() => {
+                  setShowEditDialog(false);
+                  setShowUploadDialog(true);
+                }}
+                icon="image-edit"
+                style={{ marginBottom: 16 }}
+              >
+                שנה תמונה
+              </Button>
+
+              <Button
+                mode="outlined"
+                onPress={() => {
+                  setShowEditDialog(false);
+                  handleRemoveVaccineBookImage();
+                }}
+                icon="delete"
+                textColor={COLORS.error}
+                style={{ marginBottom: 16 }}
+              >
+                הסר מסמך
+              </Button>
+
+              <Button mode="outlined" onPress={() => setShowEditDialog(false)}>
                 ביטול
               </Button>
             </View>
