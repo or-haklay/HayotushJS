@@ -87,9 +87,7 @@ export default function Step2() {
       setCreateProgress(30);
       setCreateStatus("שולח נתונים לשרת...");
 
-      console.log("📋 יוצר חיה חדשה...");
       const newPet = await petService.createPet(petDataToSend);
-      console.log("✅ חיה נוצרה בהצלחה:", newPet);
 
       // שמירת החיה שנוצרה ב-context
       setPetData({ ...petData, createdPetId: newPet._id || newPet.id });
@@ -139,7 +137,7 @@ export default function Step2() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
+      <View
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
@@ -278,7 +276,7 @@ export default function Step2() {
             )}
           </View>
         </View>
-      </ScrollView>
+      </View>
 
       {/* כפתורי ניווט */}
       <StepNavigationHeader

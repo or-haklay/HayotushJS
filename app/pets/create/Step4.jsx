@@ -64,7 +64,7 @@ export default function Step4() {
     let image;
 
     try {
-      image = await uploadService.pickCoverImage(); // שימוש ב-cover image כי זה מלבני
+      image = await uploadService.pickMedicalDocument(); // שימוש ב-cover image כי זה מלבני
 
       if (image) {
         setSelectedVaccineBookImage(image);
@@ -74,18 +74,10 @@ export default function Step4() {
           // העלאת המסמך הרפואי באמצעות uploadService
           const uploadResult = await uploadService.uploadMedicalDocument(image);
 
-          console.log("📋 תוצאת העלאת המסמך הרפואי:", uploadResult);
-
           if (uploadResult && uploadResult.success) {
             // עדכון ה-context עם התמונה
             setPetData({
               ...petData,
-              vaccineBookImage: uploadResult.fileUrl,
-              vaccineBookMime:
-                uploadResult.fileMime || image.mimeType || "image/jpeg",
-            });
-
-            console.log("📋 עדכון ה-context עם התמונה:", {
               vaccineBookImage: uploadResult.fileUrl,
               vaccineBookMime:
                 uploadResult.fileMime || image.mimeType || "image/jpeg",
@@ -119,18 +111,10 @@ export default function Step4() {
             document
           );
 
-          console.log("📋 תוצאת העלאת המסמך PDF:", uploadResult);
-
           if (uploadResult && uploadResult.success) {
             // עדכון ה-context עם המסמך
             setPetData({
               ...petData,
-              vaccineBookImage: uploadResult.fileUrl,
-              vaccineBookMime:
-                uploadResult.fileMime || document.mimeType || "application/pdf",
-            });
-
-            console.log("📋 עדכון ה-context עם המסמך PDF:", {
               vaccineBookImage: uploadResult.fileUrl,
               vaccineBookMime:
                 uploadResult.fileMime || document.mimeType || "application/pdf",
@@ -176,18 +160,10 @@ export default function Step4() {
           // העלאת התמונה שצולמה
           const uploadResult = await uploadService.uploadMedicalDocument(image);
 
-          console.log("📋 תוצאת העלאת התמונה שצולמה:", uploadResult);
-
           if (uploadResult && uploadResult.success) {
             // עדכון ה-context עם התמונה
             setPetData({
               ...petData,
-              vaccineBookImage: uploadResult.fileUrl,
-              vaccineBookMime:
-                uploadResult.fileMime || image.mimeType || "image/jpeg",
-            });
-
-            console.log("📋 עדכון ה-context עם התמונה שצולמה:", {
               vaccineBookImage: uploadResult.fileUrl,
               vaccineBookMime:
                 uploadResult.fileMime || image.mimeType || "image/jpeg",
@@ -273,7 +249,6 @@ export default function Step4() {
         setUpdateStatus("מעדכן פרטי החיה...");
 
         await petService.updatePet(petData.createdPetId, updateData);
-        console.log("✅ החיה עודכנה עם הפרטים הנוספים");
       }
 
       // יצירת רישום רפואי עם פנקס החיסונים אם נבחר
@@ -294,10 +269,7 @@ export default function Step4() {
           clinic: undefined,
         };
 
-        console.log("📋 יצירת רישום רפואי עם הנתונים:", medicalRecordData);
-
         await createMedicalRecord(medicalRecordData);
-        console.log("✅ רישום רפואי נוצר בהצלחה");
       }
 
       setUpdateProgress(100);
@@ -459,7 +431,7 @@ export default function Step4() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
+      <View
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
@@ -517,7 +489,7 @@ export default function Step4() {
             />
 
             <View style={{ marginTop: 16, marginBottom: 16 }}>
-              <Text
+              {/* <Text
                 variant="titleSmall"
                 style={{
                   fontWeight: "600",
@@ -540,7 +512,7 @@ export default function Step4() {
                 }}
               >
                 העלה תמונה או מסמך PDF של פנקס החיסונים של החיה שלך
-              </Text>
+              </Text> */}
 
               {/* כפתורים נפרדים לכל אפשרות */}
               {/* הכפתורים הוסרו מכאן והם יופיעו בדיאלוג */}
@@ -589,7 +561,7 @@ export default function Step4() {
             )}
           </View>
         </View>
-      </ScrollView>
+      </View>
 
       <Portal>
         {/* Upload Options Dialog */}

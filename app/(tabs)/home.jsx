@@ -93,7 +93,7 @@ const HomeScreen = () => {
         title="Hayotush"
         showLogo={true}
         rightIcon="bell"
-        onRightPress={() => console.log("Notifications")}
+        onRightPress={() => {}}
       />
 
       <ScrollView contentContainerStyle={styles.scrollViewContent}>

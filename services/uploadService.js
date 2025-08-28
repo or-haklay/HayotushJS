@@ -47,6 +47,45 @@ class UploadService {
     return this.pickImage([16, 9]); // יחס 16:9 שמתאים לתמונת רקע
   }
 
+  // בחירת תמונת פנקס של חיה - עם צורה גמישה
+  async pickMedicalDocument() {
+    return this.pickImageWithFlexibleAspect();
+  }
+
+  // בחירת תמונה עם צורה גמישה - המשתמש יכול לשנות את הצורה באופן חופשי
+  async pickImageWithFlexibleAspect() {
+    try {
+      // בדיקה שהמודול זמין
+      if (!ImagePicker || !ImagePicker.MediaTypeOptions) {
+        console.error("ImagePicker module not properly loaded:", ImagePicker);
+        throw new Error("ImagePicker module not available");
+      }
+
+      // בדיקת הרשאות
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        console.error("Media library permission not granted:", status);
+        throw new Error("Media library permission not granted");
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        // לא נגדיר aspect כדי לאפשר צורה גמישה לחלוטין
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        return result.assets[0];
+      }
+      return null;
+    } catch (error) {
+      console.error("Error picking image with flexible aspect:", error);
+      return null;
+    }
+  }
+
   // בחירת מסמך PDF
   async pickDocument() {
     try {
@@ -68,17 +107,12 @@ class UploadService {
   // העלאת קובץ לשרת
   async uploadFile(file, type, onProgress) {
     try {
-      console.log("📁 מתחיל העלאת קובץ:", { type, file });
-
       const formData = new FormData();
       formData.append("file", {
         uri: file.uri,
         type: file.mimeType || "image/jpeg",
         name: file.name || "file.jpg",
       });
-
-      console.log("📁 FormData נוצר:", formData);
-      console.log("📁 URL להעלאה:", `/upload/${type}`);
 
       const response = await httpServices.post(`/upload/${type}`, formData, {
         headers: {
@@ -92,7 +126,6 @@ class UploadService {
         },
       });
 
-      console.log("📁 תגובה מהשרת:", response.data);
       return response.data;
     } catch (error) {
       console.error("❌ שגיאה בהעלאת קובץ:", error);
@@ -150,18 +183,7 @@ class UploadService {
   async uploadPetPicture(image, onProgress) {
     if (image) {
       try {
-        console.log("📤 מתחיל העלאת תמונת חיה:", image);
-        console.log("📤 פרטי התמונה:", {
-          uri: image.uri,
-          type: image.type,
-          name: image.name,
-          width: image.width,
-          height: image.height,
-        });
-
         const result = await this.uploadFile(image, "pet-picture", onProgress);
-
-        console.log("📤 תוצאת ההעלאה:", result);
 
         // בדוק שהתמונה נגישה
         if (result && result.fileUrl) {
@@ -209,6 +231,41 @@ class UploadService {
         return result;
       } catch (error) {
         console.error("Error uploading pet cover picture:", error);
+        throw error;
+      }
+    }
+    return null;
+  }
+
+  // העלאת תמונת פנקס של חיה
+  async uploadPetVaccinationRegisterPicture(image, onProgress) {
+    if (image) {
+      try {
+        const result = await this.uploadFile(
+          image,
+          "pet-vaccination-register",
+          onProgress
+        );
+
+        // בדוק שהתמונה נגישה
+        if (result && result.fileUrl) {
+          const isAccessible = await this.checkImageAccessibility(
+            result.fileUrl
+          );
+          if (!isAccessible) {
+            console.warn(
+              "Uploaded pet vaccination register image is not accessible:",
+              result.fileUrl
+            );
+          }
+        }
+
+        return result;
+      } catch (error) {
+        console.error(
+          "Error uploading pet vaccination register picture:",
+          error
+        );
         throw error;
       }
     }

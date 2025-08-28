@@ -50,18 +50,10 @@ export default function GoogleAuthButton() {
               Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
           });
           // router.replace("/(tabs)/home")
-        } catch (e) {
-          console.log("Google OAuth failed", e?.response?.data || e.message);
-        }
+        } catch (e) {}
       }
     })();
   }, [response]);
-
-  console.log({
-    clientId,
-    codeVerifierExists: !!request?.codeVerifier,
-    redirectUri,
-  });
 
   if (!clientId) {
     console.error("Google Client ID not found!");

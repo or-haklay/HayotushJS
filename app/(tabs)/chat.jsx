@@ -53,7 +53,6 @@ export default function ChatBotScreen() {
       const pets = await petService.getMyPets();
       if (pets && pets.length > 0) {
         setPetInfo(pets[0]); // לוקח את חיית המחמד הראשונה
-        console.log("Pet info loaded for chat:", pets[0]);
       }
     } catch (error) {
       console.error("Error loading pet info:", error);
@@ -167,7 +166,6 @@ export default function ChatBotScreen() {
         await chatServices.resetConversation();
       }
     } catch (e) {
-      console.log("Server reset failed (clearing client only):", e?.message);
     } finally {
       // טעינה מחדש של המידע על חיית המחמד
       await loadPetInfo();

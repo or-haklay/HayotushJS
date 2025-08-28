@@ -2,7 +2,7 @@ import httpServices from "./httpServices";
 
 export async function sendMessage(message, petInfo = null) {
   const payload = { prompt: message };
-  
+
   // אם יש מידע על חיית המחמד, נוסיף את כל המידע האפשרי
   if (petInfo) {
     payload.petInfo = {
@@ -16,48 +16,50 @@ export async function sendMessage(message, petInfo = null) {
       chipNumber: petInfo.chipNumber,
       notes: petInfo.notes,
       birthDate: petInfo.birthDate,
-      
+
       // תמונות
       profilePictureUrl: petInfo.profilePictureUrl,
       coverPictureUrl: petInfo.coverPictureUrl,
-      
+
       // מידע נוסף אם קיים
       owner: petInfo.owner,
       createdAt: petInfo.createdAt,
       updatedAt: petInfo.updatedAt,
-      
+
       // שדות נוספים שעשויים להיות רלוונטיים לצ'אט
       age: petInfo.age,
       lastVaccination: petInfo.lastVaccination,
       medicalConditions: petInfo.medicalConditions,
       dietaryRestrictions: petInfo.dietaryRestrictions,
       behavioralNotes: petInfo.behavioralNotes,
-      
+
       // מידע על בעלים אם קיים
       ownerName: petInfo.ownerName,
       ownerPhone: petInfo.ownerPhone,
       ownerEmail: petInfo.ownerEmail,
-      
+
       // מיקום אם קיים
       location: petInfo.location,
       address: petInfo.address,
-      
+
       // הערות נוספות
       emergencyContact: petInfo.emergencyContact,
       vetInfo: petInfo.vetInfo,
-      insuranceInfo: petInfo.insuranceInfo
+      insuranceInfo: petInfo.insuranceInfo,
     };
-    
+
     // ניקוי שדות ריקים או undefined
-    Object.keys(payload.petInfo).forEach(key => {
-      if (payload.petInfo[key] === null || payload.petInfo[key] === undefined || payload.petInfo[key] === '') {
+    Object.keys(payload.petInfo).forEach((key) => {
+      if (
+        payload.petInfo[key] === null ||
+        payload.petInfo[key] === undefined ||
+        payload.petInfo[key] === ""
+      ) {
         delete payload.petInfo[key];
       }
     });
-    
-    console.log("🐾 Sending pet info to chat:", JSON.stringify(payload.petInfo, null, 2));
   }
-  
+
   const { data } = await httpServices.post("/chat", payload);
   return data?.reply;
 }

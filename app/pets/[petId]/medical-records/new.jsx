@@ -24,11 +24,23 @@ import { COLORS, FONTS, SIZING } from "../../../../theme/theme";
 
 const RECORD_TYPES = [
   { value: "vaccine", label: "medical_records.types.vaccine", icon: "needle" },
-  { value: "checkup", label: "medical_records.types.checkup", icon: "stethoscope" },
+  {
+    value: "checkup",
+    label: "medical_records.types.checkup",
+    icon: "stethoscope",
+  },
   { value: "lab", label: "medical_records.types.lab", icon: "test-tube" },
-  { value: "surgery", label: "medical_records.types.surgery", icon: "scissors-cutting" },
+  {
+    value: "surgery",
+    label: "medical_records.types.surgery",
+    icon: "scissors-cutting",
+  },
   { value: "doc", label: "medical_records.types.doc", icon: "file-document" },
-  { value: "medication", label: "medical_records.types.medication", icon: "pill" },
+  {
+    value: "medication",
+    label: "medical_records.types.medication",
+    icon: "pill",
+  },
   { value: "other", label: "medical_records.types.other", icon: "plus" },
 ];
 
@@ -179,7 +191,10 @@ export default function NewMedicalRecord() {
       router.back();
     } catch (error) {
       console.error("Error saving medical record:", error);
-      setErr(error?.response?.data?.message || t("medical_records.errors.save_failed"));
+      setErr(
+        error?.response?.data?.message ||
+          t("medical_records.errors.save_failed")
+      );
     } finally {
       setLoading(false);
     }
@@ -209,7 +224,9 @@ export default function NewMedicalRecord() {
           <Card style={styles.card}>
             <Card.Content>
               <Text style={styles.title}>
-                {isEditing ? t("medical_records.edit_title") : t("medical_records.new_title")}
+                {isEditing
+                  ? t("medical_records.edit_title")
+                  : t("medical_records.new_title")}
               </Text>
 
               {/* שם המסמך */}
@@ -232,7 +249,8 @@ export default function NewMedicalRecord() {
                 style={styles.typeButton}
                 icon={getRecordTypeIcon(recordType)}
               >
-                {t("medical_records.fields.type")}: {getRecordTypeLabel(recordType)}
+                {t("medical_records.fields.type")}:{" "}
+                {getRecordTypeLabel(recordType)}
               </Button>
 
               {/* תאריך */}
@@ -242,7 +260,8 @@ export default function NewMedicalRecord() {
                 style={styles.dateButton}
                 icon="calendar"
               >
-                {t("medical_records.fields.date")}: {date.toLocaleDateString("he-IL")}
+                {t("medical_records.fields.date")}:{" "}
+                {date.toLocaleDateString("he-IL")}
               </Button>
 
               {/* תיאור */}
@@ -276,12 +295,15 @@ export default function NewMedicalRecord() {
 
               {/* העלאת מסמך */}
               <View style={styles.fileSection}>
-                <Text style={styles.sectionTitle}>{t("medical_records.fields.attached_document")}</Text>
+                <Text style={styles.sectionTitle}>
+                  {t("medical_records.fields.attached_document")}
+                </Text>
 
                 {selectedFile ? (
                   <View style={styles.fileInfo}>
                     <Text style={styles.fileName} numberOfLines={1}>
-                      {selectedFile.name || t("medical_records.file.selected_document")}
+                      {selectedFile.name ||
+                        t("medical_records.file.selected_document")}
                     </Text>
                     <View style={styles.fileActions}>
                       <Button
@@ -382,7 +404,9 @@ export default function NewMedicalRecord() {
           onDismiss={() => setShowTypeSelector(false)}
           style={styles.dialog}
         >
-          <Dialog.Title>{t("medical_records.type_selector.title")}</Dialog.Title>
+          <Dialog.Title>
+            {t("medical_records.type_selector.title")}
+          </Dialog.Title>
           <Dialog.Content>
             <View style={styles.typeGrid}>
               {RECORD_TYPES.map((type) => (
@@ -402,7 +426,9 @@ export default function NewMedicalRecord() {
             </View>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setShowTypeSelector(false)}>{t("common.cancel")}</Button>
+            <Button onPress={() => setShowTypeSelector(false)}>
+              {t("common.cancel")}
+            </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

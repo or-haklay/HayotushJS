@@ -31,16 +31,11 @@ export async function searchPlaces({
     params.radius = radius;
   }
 
-  console.log("🔍 Searching places with params:", params);
-
   try {
     const { data } = await httpServices.get(`${apiEndpoint}/search`, {
       params,
     });
-    console.log(
-      "✅ Places search successful, found:",
-      data?.places?.length || 0
-    );
+
     return data?.places ?? [];
   } catch (error) {
     console.error("❌ Places search failed:", error);
@@ -78,16 +73,11 @@ export async function getNearbyPlaces({
     params.category = category;
   }
 
-  console.log("🔍 Getting nearby places with params:", params);
-
   try {
     const { data } = await httpServices.get(`${apiEndpoint}/nearby`, {
       params,
     });
-    console.log(
-      "✅ Nearby places search successful, found:",
-      data?.places?.length || 0
-    );
+
     return data?.places ?? [];
   } catch (error) {
     console.error("❌ Nearby places search failed:", error);

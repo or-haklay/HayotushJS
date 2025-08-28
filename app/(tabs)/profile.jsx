@@ -647,7 +647,7 @@ export default function ProfileScreen() {
                       style={styles.profileAvatar}
                       defaultSource={require("../../assets/images/avatars/default-avatar-profile.png")}
                       onError={(error) => {
-                        console.log("Error loading profile image:", error);
+                        console.error("Error loading profile image:", error);
                         setForm((prev) => ({ ...prev, profilePicture: "" }));
                       }}
                     />

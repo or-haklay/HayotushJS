@@ -49,7 +49,6 @@ export default function NewReminder() {
 
   // בדיקה שה-petId קיים
   React.useEffect(() => {
-    console.log("🔍 NewReminder mounted with petId:", petId);
     if (!petId) {
       console.error("❌ No petId provided!");
       setErr(t("reminders.no_pet_id"));
@@ -86,7 +85,6 @@ export default function NewReminder() {
       const response = await calendarService.checkAccess();
       setGoogleCalendarAvailable(response.success);
     } catch (error) {
-      console.log("Google Calendar not available:", error);
       setGoogleCalendarAvailable(false);
     }
   };
@@ -95,8 +93,6 @@ export default function NewReminder() {
     if (!title.trim()) return setErr(t("reminders.title_required"));
     setLoading(true);
     try {
-      console.log("🚀 Submitting reminder for petId:", petId);
-
       // יצירת תאריך משולב עם השעה שנבחרה
       const [hours, minutes] = time.split(":").map(Number);
       const combinedDate = new Date(date);

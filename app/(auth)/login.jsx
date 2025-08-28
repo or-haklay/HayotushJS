@@ -82,9 +82,6 @@ const LoginScreen = () => {
 
     setLoading(true);
     try {
-      console.log("====================================");
-      console.log("Attempting to login with:", { email, password });
-      console.log("====================================");
       await authService.login(email, password); // if your service expects {email, password}, change accordingly
       router.replace("/home"); // keep as your routing setup
     } catch (err) {

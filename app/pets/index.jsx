@@ -14,7 +14,7 @@ import {
   Badge,
 } from "react-native-paper";
 
-import { petService } from "../../services/petService";
+import petService from "../../services/petService";
 import { listExpenses } from "../../services/expensesService";
 import { listReminders } from "../../services/remindersService";
 import { listMedicalRecords } from "../../services/medicalRecordsService";
@@ -153,11 +153,9 @@ export default function PetProfile() {
           source={{ uri: photoUrl }}
           defaultSource={require("../../assets/images/dogs/dog-think.png")}
           onError={(error) => {
-            console.log("Error loading pet profile image:", error);
+            console.error("Error loading pet profile image:", error);
           }}
-          onLoad={() => {
-            console.log("Pet profile image loaded successfully");
-          }}
+          onLoad={() => {}}
         />
       );
     } else {

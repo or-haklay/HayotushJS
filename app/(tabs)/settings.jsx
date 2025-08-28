@@ -30,9 +30,7 @@ export default function SettingsScreen() {
     try {
       const response = await calendarService.checkAccess();
       setGoogleCalendarEnabled(response.success);
-    } catch (error) {
-      console.log("Calendar status check failed:", error);
-    }
+    } catch (error) {}
   };
 
   const toggleGoogleCalendar = async () => {
@@ -42,9 +40,15 @@ export default function SettingsScreen() {
         setCalendarLoading(true);
         await calendarService.disable();
         setGoogleCalendarEnabled(false);
-        Alert.alert(t("settings.calendar.disabled_success"), t("settings.calendar.disabled_success"));
+        Alert.alert(
+          t("settings.calendar.disabled_success"),
+          t("settings.calendar.disabled_success")
+        );
       } catch (error) {
-        Alert.alert(t("settings.calendar.disable_error"), t("settings.calendar.disable_error"));
+        Alert.alert(
+          t("settings.calendar.disable_error"),
+          t("settings.calendar.disable_error")
+        );
       } finally {
         setCalendarLoading(false);
       }
@@ -73,7 +77,10 @@ export default function SettingsScreen() {
       const response = await calendarService.syncReminders();
       Alert.alert(t("settings.calendar.sync_success"), response.message);
     } catch (error) {
-              Alert.alert(t("settings.calendar.sync_error"), t("settings.calendar.sync_error"));
+      Alert.alert(
+        t("settings.calendar.sync_error"),
+        t("settings.calendar.sync_error")
+      );
     } finally {
       setCalendarLoading(false);
     }
@@ -82,9 +89,7 @@ export default function SettingsScreen() {
   const logout = async () => {
     try {
       await authService.logout?.();
-    } catch (e) {
-      console.log(e);
-    }
+    } catch (e) {}
     router.replace("/(auth)/login");
   };
 
@@ -135,17 +140,29 @@ export default function SettingsScreen() {
             visible={languageMenuVisible}
             onDismiss={() => setLanguageMenuVisible(false)}
             anchor={
-              <Button onPress={() => setLanguageMenuVisible(true)}>{t("settings.language.title")}</Button>
+              <Button onPress={() => setLanguageMenuVisible(true)}>
+                {t("settings.language.title")}
+              </Button>
             }
           >
-            <Menu.Item onPress={() => setLanguage("he")} title={t("settings.language.hebrew")} />
-            <Menu.Item onPress={() => setLanguage("en")} title={t("settings.language.english")} />
+            <Menu.Item
+              onPress={() => setLanguage("he")}
+              title={t("settings.language.hebrew")}
+            />
+            <Menu.Item
+              onPress={() => setLanguage("en")}
+              title={t("settings.language.english")}
+            />
           </Menu>
         )}
       />
 
-      <Button onPress={() => setLanguage("he")}>{t("settings.language.hebrew")}</Button>
-      <Button onPress={() => setLanguage("en")}>{t("settings.language.english")}</Button>
+      <Button onPress={() => setLanguage("he")}>
+        {t("settings.language.hebrew")}
+      </Button>
+      <Button onPress={() => setLanguage("en")}>
+        {t("settings.language.english")}
+      </Button>
 
       <Button
         mode="outlined"

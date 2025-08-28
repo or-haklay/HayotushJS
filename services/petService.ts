@@ -2,16 +2,64 @@ import httpServices from "./httpServices";
 
 const apiEndpoint = "/pets";
 
+interface Pet {
+  _id: string;
+  name: string;
+  species: string;
+  breed?: string;
+  sex?: string;
+  weightKg?: number;
+  color?: string;
+  chipNumber?: string;
+  notes?: string;
+  birthDate?: string;
+  profilePictureUrl?: string;
+  coverPictureUrl?: string;
+  owner: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface CreatePetData {
+  name: string;
+  species: string;
+  breed?: string;
+  sex?: string;
+  weightKg?: number;
+  color?: string;
+  chipNumber?: string;
+  notes?: string;
+  birthDate?: string;
+}
+
+interface UpdatePetData {
+  name?: string;
+  species?: string;
+  breed?: string;
+  sex?: string;
+  weightKg?: number;
+  color?: string;
+  chipNumber?: string;
+  notes?: string;
+  birthDate?: string;
+  profilePictureUrl?: string;
+  coverPictureUrl?: string;
+}
+
 /**
  * מביא את כל חיות המחמד של המשתמש המחובר
  * GET /api/pets
  */
-async function getMyPets() {
+async function getMyPets(): Promise<Pet[]> {
   try {
     const response = await httpServices.get(`${apiEndpoint}/my-pets`);
-
-    return response.data.pets;
-  } catch (error) {
+    return response.data.pets || [];
+  } catch (error: any) {
+    console.error("Error fetching pets:", error);
+    // Return empty array instead of throwing error for 404 cases
+    if (error.response?.status === 404) {
+      return [];
+    }
     throw error;
   }
 }
@@ -20,7 +68,7 @@ async function getMyPets() {
  * מביא חיית מחמד ספציפית לפי ID
  * GET /api/pets/:petId
  */
-async function getPetById(petId) {
+async function getPetById(petId: string): Promise<Pet> {
   const { data } = await httpServices.get(`${apiEndpoint}/${petId}`);
   return data.pet;
 }
@@ -29,17 +77,11 @@ async function getPetById(petId) {
  * יוצר חיית מחמד חדשה
  * POST /api/pets
  */
-async function createPet(petData) {
+async function createPet(petData: CreatePetData): Promise<Pet> {
   try {
-    console.log("🐾 Creating pet with data:", petData);
-    console.log("🐾 API endpoint:", `${apiEndpoint}`);
-    console.log("🐾 Full request data:", JSON.stringify(petData, null, 2));
-    
     const { data } = await httpServices.post(apiEndpoint, petData);
-    
-    console.log("✅ Pet created successfully:", data);
     return data.pet;
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error creating pet:", error);
     console.error("❌ Error response:", error.response?.data);
     console.error("❌ Error status:", error.response?.status);
@@ -51,11 +93,11 @@ async function createPet(petData) {
  * מעדכן חיית מחמד קיימת
  * PUT /api/pets/:petId
  */
-async function updatePet(petId, petData) {
+async function updatePet(petId: string, petData: UpdatePetData): Promise<Pet> {
   try {
     const { data } = await httpServices.put(`${apiEndpoint}/${petId}`, petData);
     return data.pet;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating pet:", error);
     throw error;
   }
@@ -65,7 +107,10 @@ async function updatePet(petId, petData) {
  * מעדכן תמונת פרופיל של חיית מחמד
  * PUT /api/pets/:petId
  */
-async function updatePetProfilePicture(petId, profilePictureUrl) {
+async function updatePetProfilePicture(
+  petId: string,
+  profilePictureUrl: string | null
+): Promise<Pet> {
   try {
     const updateData =
       profilePictureUrl === null
@@ -76,7 +121,7 @@ async function updatePetProfilePicture(petId, profilePictureUrl) {
       updateData
     );
     return data.pet;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating pet profile picture:", error);
     throw error;
   }
@@ -86,7 +131,10 @@ async function updatePetProfilePicture(petId, profilePictureUrl) {
  * מעדכן תמונת רקע של חיית מחמד
  * PUT /api/pets/:petId
  */
-async function updatePetCoverPicture(petId, coverPictureUrl) {
+async function updatePetCoverPicture(
+  petId: string,
+  coverPictureUrl: string | null
+): Promise<Pet> {
   try {
     const updateData =
       coverPictureUrl === null
@@ -97,7 +145,7 @@ async function updatePetCoverPicture(petId, coverPictureUrl) {
       updateData
     );
     return data.pet;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating pet cover picture:", error);
     throw error;
   }
@@ -107,11 +155,16 @@ async function updatePetCoverPicture(petId, coverPictureUrl) {
  * מוחק חיית מחמד
  * DELETE /api/pets/:petId
  */
-async function deletePet(petId) {
-  await httpServices.delete(`${apiEndpoint}/${petId}`);
+async function deletePet(petId: string): Promise<void> {
+  try {
+    await httpServices.delete(`${apiEndpoint}/${petId}`);
+  } catch (error: any) {
+    console.error("Error deleting pet:", error);
+    throw error;
+  }
 }
 
-const petService = {
+export default {
   getMyPets,
   getPetById,
   createPet,
@@ -121,4 +174,5 @@ const petService = {
   deletePet,
 };
 
-export default petService;
+export type { Pet, CreatePetData, UpdatePetData };
+

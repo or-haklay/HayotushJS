@@ -82,17 +82,6 @@ export default function ExpenseFormScreen() {
         vendor: vendor?.trim() || undefined,
       };
 
-      console.log("💰 Frontend expense payload:", {
-        petId,
-        description: description.trim(),
-        amount: amt,
-        category,
-        date: date.toISOString(),
-        vendor: vendor?.trim() || undefined,
-        originalDate: date,
-        dateType: typeof date,
-      });
-
       if (expenseId) await updateExpense(expenseId, payload);
       else await createExpense(payload);
 
