@@ -18,11 +18,13 @@ import {
 import calendarService from "../../../../services/calendarService";
 import { COLORS, FONTS } from "../../../../theme/theme";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../../../../context/ToastContext";
 
 export default function NewReminder() {
   const { petId, reminderId } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
 
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
@@ -108,15 +110,26 @@ export default function NewReminder() {
         syncWithGoogle: googleCalendarAvailable ? syncWithGoogle : false,
       };
 
+      let pointsAdded = 0;
       if (reminderId) {
         await updateReminder(reminderId, payload);
+        showSuccess(t("toast.success.reminder_updated"));
       } else {
-        await createReminder(payload);
+        const result = await createReminder(payload);
+        pointsAdded = Number(result?.pointsAdded || 0);
+        showSuccess(t("toast.success.reminder_created"));
       }
 
-      router.back();
+      if (pointsAdded > 0) {
+        showSuccess(
+          t("toast.success.points_earned_reminder", { count: pointsAdded })
+        );
+      }
+
+      setTimeout(() => router.back(), 600);
     } catch (error) {
       console.error("❌ Error in submit:", error);
+      showError(t("toast.error.save_failed"));
 
       // הצגת הודעת שגיאה מפורטת יותר
       let errorMessage = t("reminders.save_failed");

@@ -27,9 +27,12 @@ import {
   Dialog,
   IconButton,
 } from "react-native-paper";
+import { Ionicons } from "@expo/vector-icons";
 import Joi from "joi";
 import { COLORS, FONTS, SIZING } from "../../theme/theme";
 import userService from "../../services/userService";
+import petService from "../../services/petService";
+import * as gamificationService from "../../services/gamificationService";
 import { useTranslation } from "react-i18next";
 import uploadService from "../../services/uploadService";
 
@@ -127,6 +130,20 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [pwdSaving, setPwdSaving] = useState(false);
+  const [pets, setPets] = useState([]);
+  const [gSummary, setGSummary] = useState(null);
+  const last7 = useMemo(() => {
+    const arr = Array.isArray(gSummary?.last7Days) ? gSummary.last7Days : [];
+    const todayKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD format
+    return arr
+      .slice()
+      .reverse()
+      .map((day, index) => ({
+        ...day,
+        isToday: day.dateKey === todayKey,
+        isFirst: index === 0,
+      }));
+  }, [gSummary]);
   const EDITABLE_KEYS = [
     "name",
     "email",
@@ -380,6 +397,14 @@ export default function ProfileScreen() {
           createdAt: me.createdAt || null,
           updatedAt: me.updatedAt || null,
         });
+        try {
+          const myPets = await petService.getMyPets();
+          setPets(Array.isArray(myPets) ? myPets : []);
+        } catch {}
+        try {
+          const summary = await gamificationService.getSummary();
+          setGSummary(summary);
+        } catch {}
       } catch (e) {
         console.error("Failed to load profile", e);
         Alert.alert(
@@ -771,6 +796,200 @@ export default function ProfileScreen() {
               </Dialog.Content>
             </Dialog>
           </Portal>
+
+          {/* Gamification: Points & Streak */}
+          <List.Section>
+            <List.Subheader style={styles.sectionHeader}>
+              {t("profile.my_points") || "הניקוד שלי"}
+            </List.Subheader>
+            <View
+              style={[
+                styles.card,
+                gSummary?.levelInfo &&
+                  styles[`rankCard_${gSummary.levelInfo.rank}`],
+              ]}
+            >
+              {/* Level and Rank Display */}
+              {gSummary?.levelInfo && (
+                <View
+                  style={[
+                    styles.levelDisplay,
+                    { backgroundColor: gSummary.levelInfo.rankColor + "20" },
+                  ]}
+                >
+                  <View style={styles.levelInfo}>
+                    <Text
+                      style={[
+                        styles.rankText,
+                        { color: gSummary.levelInfo.rankColor },
+                      ]}
+                    >
+                      {gSummary.levelInfo.rankIcon}{" "}
+                      {t(`gamification.ranks.${gSummary.levelInfo.rank}`)}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.levelText,
+                        { color: gSummary.levelInfo.rankColor },
+                      ]}
+                    >
+                      {t("gamification.level")} {gSummary.levelInfo.level}
+                    </Text>
+                  </View>
+                  {gSummary.levelInfo.pointsToNextLevel > 0 && (
+                    <View style={styles.progressContainer}>
+                      <Text style={styles.progressText}>
+                        {gSummary.levelInfo.pointsToNextLevel}{" "}
+                        {t("gamification.points_to_next")}
+                      </Text>
+                      <View style={styles.progressBar}>
+                        <View
+                          style={[
+                            styles.progressFill,
+                            {
+                              width: `${Math.min(
+                                100,
+                                (gSummary.levelInfo.pointsInCurrentLevel /
+                                  gSummary.levelInfo
+                                    .totalPointsForCurrentLevel) *
+                                  100
+                              )}%`,
+                              backgroundColor: gSummary.levelInfo.rankColor,
+                            },
+                          ]}
+                        />
+                      </View>
+                    </View>
+                  )}
+                </View>
+              )}
+
+              <View style={styles.rowWrap}>
+                <Chip icon="star-circle">{`${t("gamification.points")}: ${
+                  gSummary?.points ?? 0
+                }`}</Chip>
+                <Chip icon="trophy">{`${t("profile.coins") || "מטבעות"}: ${
+                  gSummary?.coins ?? 0
+                }`}</Chip>
+                <Chip icon="fire">{`${
+                  t("profile.daily_streak") || "רצף יומי"
+                }: ${gSummary?.dailyStreak ?? 0}`}</Chip>
+              </View>
+              {(gSummary?.dailyCompletionBonusToday ||
+                gSummary?.weeklyPerfectBonusToday) && (
+                <View style={{ marginTop: 8 }}>
+                  {gSummary?.dailyCompletionBonusToday ? (
+                    <Text style={styles.metaText}>
+                      {t("gamification.toast_daily_completion_bonus")}
+                    </Text>
+                  ) : null}
+                  {gSummary?.weeklyPerfectBonusToday ? (
+                    <Text style={styles.metaText}>
+                      {t("gamification.toast_weekly_perfect_bonus")}
+                    </Text>
+                  ) : null}
+                </View>
+              )}
+              {last7 && last7.length > 0 ? (
+                <View style={{ marginTop: 10 }}>
+                  <Text style={[styles.metaText, { marginBottom: 6 }]}>
+                    7 הימים האחרונים
+                  </Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 4 }}
+                    style={{ marginHorizontal: -4 }}
+                  >
+                    {last7.map((d, index) => (
+                      <View
+                        key={d.dateKey}
+                        style={[
+                          styles.dayCard,
+                          d.isToday && styles.todayCard,
+                          {
+                            marginLeft: index === 0 ? 0 : 8,
+                            backgroundColor: d.isToday
+                              ? COLORS.primary
+                              : d.allDone
+                              ? COLORS.primary + "15"
+                              : COLORS.white,
+                            borderColor: d.isToday
+                              ? COLORS.primary
+                              : d.allDone
+                              ? COLORS.primary
+                              : COLORS.neutral + "44",
+                            borderWidth: d.isToday ? 2 : 1,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.dayDate,
+                            d.isToday && styles.todayText,
+                            {
+                              color: d.isToday
+                                ? COLORS.white
+                                : d.allDone
+                                ? COLORS.primary
+                                : COLORS.neutral,
+                            },
+                          ]}
+                        >
+                          {d.isToday ? "היום" : d.dateKey.slice(5)}
+                        </Text>
+                        <View style={styles.dayProgress}>
+                          <Text
+                            style={[
+                              styles.dayProgressText,
+                              d.isToday && styles.todayText,
+                              {
+                                color: d.isToday
+                                  ? COLORS.white
+                                  : d.allDone
+                                  ? COLORS.primary
+                                  : COLORS.neutral,
+                              },
+                            ]}
+                          >
+                            {d.completed}/{d.total}
+                          </Text>
+                          {d.allDone && (
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={16}
+                              color={d.isToday ? COLORS.white : COLORS.primary}
+                              style={{ marginLeft: 4 }}
+                            />
+                          )}
+                        </View>
+                      </View>
+                    ))}
+                  </ScrollView>
+                </View>
+              ) : null}
+            </View>
+          </List.Section>
+
+          {/* My Pets */}
+          <List.Section>
+            <List.Subheader style={styles.sectionHeader}>
+              {t("profile.my_pets") || "החיות שלי"}
+            </List.Subheader>
+            <View style={styles.card}>
+              {Array.isArray(pets) && pets.length > 0 ? (
+                pets.map((p) => (
+                  <View key={p._id || p.id} style={{ marginBottom: 10 }}>
+                    <Text style={styles.metaText}>{p.name}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.metaText}>
+                  {t("profile.no_pets") || "אין חיות להצגה"}
+                </Text>
+              )}
+            </View>
+          </List.Section>
 
           {/* Basic Info */}
           <List.Section>
@@ -1345,5 +1564,124 @@ const styles = StyleSheet.create({
     color: "#5B6670",
     marginTop: SIZING.base,
     fontStyle: "italic",
+  },
+
+  // Day cards for carousel
+  dayCard: {
+    width: 80,
+    height: 60,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  todayCard: {
+    elevation: 4,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    transform: [{ scale: 1.05 }],
+  },
+  dayDate: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  dayProgress: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dayProgressText: {
+    fontSize: 11,
+    fontWeight: "500",
+  },
+  todayText: {
+    fontWeight: "700",
+  },
+
+  // Level system styles
+  levelDisplay: {
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.1)",
+  },
+  levelInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  rankText: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  levelText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  progressContainer: {
+    marginTop: 4,
+  },
+  progressText: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 4,
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: "rgba(0,0,0,0.1)",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 3,
+  },
+
+  // Rank-specific card styles
+  rankCard_wood: {
+    borderColor: "#8B4513",
+    borderWidth: 2,
+    shadowColor: "#8B4513",
+  },
+  rankCard_bronze: {
+    borderColor: "#CD7F32",
+    borderWidth: 2,
+    shadowColor: "#CD7F32",
+  },
+  rankCard_silver: {
+    borderColor: "#C0C0C0",
+    borderWidth: 2,
+    shadowColor: "#C0C0C0",
+  },
+  rankCard_gold: {
+    borderColor: "#FFD700",
+    borderWidth: 2,
+    shadowColor: "#FFD700",
+    elevation: 4,
+    shadowOpacity: 0.3,
+  },
+  rankCard_diamond: {
+    borderColor: "#B9F2FF",
+    borderWidth: 2,
+    shadowColor: "#B9F2FF",
+    elevation: 6,
+    shadowOpacity: 0.4,
+  },
+  rankCard_legendary: {
+    borderColor: "#FF6B6B",
+    borderWidth: 3,
+    shadowColor: "#FF6B6B",
+    elevation: 8,
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
   },
 });

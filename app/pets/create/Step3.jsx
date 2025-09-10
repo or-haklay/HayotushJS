@@ -47,7 +47,7 @@ export default function Step3() {
       setUploadProgress(0);
       setUploadStatus("בוחר תמונה...");
 
-      const image = await uploadService.pickVaccinationRegisterImage();
+      const image = await uploadService.pickProfileImage();
 
       if (image) {
         // לוג כדי לראות מה יש לנו
@@ -61,16 +61,15 @@ export default function Step3() {
             throw new Error("לא ניתן להעלות תמונה ללא יצירת חיה");
           }
 
-          const uploadResult =
-            await uploadService.uploadPetVaccinationRegisterPicture(image);
-          console.log("uploadResult", uploadResult);
+          const uploadResult = await uploadService.uploadPetPicture(image);
+
           if (uploadResult && uploadResult.success) {
             setUploadProgress(60);
             setUploadStatus("מעדכן את החיה...");
             console.log("uploadResult", uploadResult);
             setPetData({
               ...petData,
-              vaccinationRegisterImage: uploadResult.fileUrl,
+              image: uploadResult.fileUrl,
             });
             console.log("petData.createdPetId", petData.createdPetId);
             console.log("uploadResult.fileUrl", uploadResult.fileUrl);

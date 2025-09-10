@@ -24,7 +24,7 @@ export async function getMedicalRecord(recordId) {
 
 export async function createMedicalRecord(payload) {
   const { data } = await httpServices.post("/medical-records", payload);
-  return data?.record;
+  return { record: data?.record, pointsAdded: data?.pointsAdded || 0 };
 }
 
 export async function updateMedicalRecord(recordId, patch) {

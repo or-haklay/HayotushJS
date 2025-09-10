@@ -30,7 +30,7 @@ export async function listExpenses({
 export async function createExpense(expenseData) {
   try {
     const { data } = await httpServices.post(apiEndpoint, expenseData);
-    return data.expense;
+    return { expense: data.expense, pointsAdded: data.pointsAdded || 0 };
   } catch (error) {
     console.error("❌ Error in createExpense:", error);
     throw error;
@@ -39,7 +39,10 @@ export async function createExpense(expenseData) {
 
 export async function updateExpense(expenseId, patch) {
   try {
-    const { data } = await httpServices.put(`${apiEndpoint}/${expenseId}`, patch);
+    const { data } = await httpServices.put(
+      `${apiEndpoint}/${expenseId}`,
+      patch
+    );
     return data.expense;
   } catch (error) {
     console.error("❌ Error in updateExpense:", error);

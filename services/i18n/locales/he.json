@@ -147,6 +147,7 @@
   "auth.signup.terms_of_service": "תנאי השימוש",
   "auth.signup.and": "ול",
   "auth.signup.privacy_policy": "מדיניות הפרטיות",
+  "auth.signup.privacy_agree": "אני מסכים ל",
   "auth.signup.error.name_required": "שם נדרש",
   "auth.signup.error.name_min_length": "שם חייב להיות לפחות 2 תווים",
   "auth.signup.error.email_required": "אימייל נדרש",
@@ -156,6 +157,17 @@
   "auth.signup.error.terms_required": "עליך לקבל את תנאי השימוש",
   "auth.signup.success": "ההרשמה הושלמה בהצלחה",
   "auth.signup.error.general": "ההרשמה נכשלה, אנא נסה שוב מאוחר יותר",
+
+  "consent.title": "הגדרות הסכמה",
+  "consent.subtitle": "נהל את ההסכמה שלך לתנאי השימוש ומדיניות הפרטיות",
+  "consent.loading": "טוען מידע הסכמה...",
+  "consent.button.update": "עדכן הסכמה",
+  "consent.success.updated": "ההסכמה עודכנה בהצלחה",
+  "consent.error.loading": "שגיאה בטעינת מידע ההסכמה",
+  "consent.error.updating": "שגיאה בעדכון ההסכמה",
+  "consent.info.title": "מידע על ההסכמה הנוכחית",
+  "consent.info.date": "תאריך הסכמה",
+  "consent.info.version": "גרסת תנאים",
 
   "chat.title": "צ'אט עם הבוט",
   "chat.welcome": "היי! איך אפשר לעזור לך היום? 🐾",
@@ -299,7 +311,6 @@
     "profile_picture_updated": "תמונת הפרופיל עודכנה בהצלחה",
     "profile_picture_update_error": "שגיאה בעדכון תמונת הפרופיל",
     "image_updated_successfully": "תמונת ה{{type}} עודכנה בהצלחה",
-    "image_upload_error": "שגיאה בהעלאת/שמירת התמונה",
     "image_pick_error": "שגיאה בבחירת התמונה",
     "remove_image_title": "הסרת תמונת {{type}}",
     "remove_image_message": "האם אתה בטוח שברצונך להסיר את תמונת ה{{type}}?",
@@ -474,6 +485,102 @@
       "toys": "משחקים",
       "insurance": "ביטוח",
       "other": "אחר"
+    }
+  },
+  "gamification": {
+    "daily_missions": "משימות יומיות",
+    "date": "תאריך",
+    "points": "נקודות",
+    "coins": "מטבעות",
+    "streak": "רצף",
+    "refresh": "רענון",
+    "toast_points_added": "+{{count}} נקודות נוספו",
+    "toast_daily_completion_bonus": "+5 בונוס: כל המשימות היומיות הושלמו",
+    "toast_weekly_perfect_bonus": "+30 בונוס: שבוע מושלם",
+    "level": "רמה",
+    "rank": "דרגה",
+    "next_level": "הרמה הבאה",
+    "points_to_next": "נקודות לרמה הבאה",
+    "ranks": {
+      "wood": "עץ",
+      "bronze": "ברונזה",
+      "silver": "כסף",
+      "gold": "זהב",
+      "diamond": "יהלום",
+      "legendary": "אגדי"
+    },
+    "missions": {
+      "SEARCH_PET_STORE": "חפש חנות חיות קרובה",
+      "READ_ARTICLE": "קרא מאמר",
+      "OPEN_EXPENSES_SUMMARY": "פתח סיכום הוצאות"
+    }
+  },
+  "profile": {
+    "my_points": "הניקוד שלי",
+    "coins": "מטבעות",
+    "daily_streak": "רצף יומי",
+    "my_pets": "החיות שלי",
+    "no_pets": "אין חיות להצגה"
+  },
+  "daily_tip": {
+    "title": "טיפ יומי",
+    "category": "קטגוריה",
+    "categories": {
+      "dog": "כלב",
+      "cat": "חתול",
+      "bird": "תוכי",
+      "general": "כללי"
+    }
+  },
+  "toast": {
+    "success": {
+      "pet_created": "חיה נוספה בהצלחה!",
+      "pet_updated": "פרטי החיה עודכנו",
+      "pet_deleted": "החיה נמחקה",
+      "expense_added": "הוצאה נוספה",
+      "expense_updated": "הוצאה עודכנה",
+      "expense_deleted": "הוצאה נמחקה",
+      "reminder_created": "תזכורת נוצרה",
+      "reminder_updated": "תזכורת עודכנה",
+      "reminder_deleted": "תזכורת נמחקה",
+      "medical_record_added": "תיעוד רפואי נוסף",
+      "medical_record_updated": "תיעוד רפואי עודכן",
+      "medical_record_deleted": "תיעוד רפואי נמחק",
+      "points_earned": "{{count}} נקודות נוספו!",
+      "points_earned_expense": "{{count}} נקודות נוספו על הוספת הוצאה",
+      "points_earned_reminder": "{{count}} נקודות נוספו על יצירת תזכורת",
+      "points_earned_medical": "{{count}} נקודות נוספו על תיעוד רפואי",
+      "points_earned_mission": "{{count}} נקודות נוספו על השלמת משימה",
+      "points_earned_daily_bonus": "{{count}} נקודות בונוס יומי!",
+      "points_earned_weekly_bonus": "{{count}} נקודות בונוס שבועי!",
+      "mission_completed": "משימה הושלמה!",
+      "profile_updated": "הפרופיל עודכן",
+      "settings_saved": "הגדרות נשמרו",
+      "data_synced": "הנתונים סונכרנו"
+    },
+    "error": {
+      "general": "אירעה שגיאה",
+      "network": "בעיית חיבור לאינטרנט",
+      "server": "שגיאת שרת",
+      "validation": "שגיאה בנתונים",
+      "permission": "אין הרשאה לפעולה זו",
+      "not_found": "הפריט לא נמצא",
+      "save_failed": "שמירה נכשלה",
+      "delete_failed": "מחיקה נכשלה",
+      "upload_failed": "העלאה נכשלה"
+    },
+    "warning": {
+      "unsaved_changes": "יש שינויים שלא נשמרו",
+      "low_storage": "מעט מקום אחסון",
+      "sync_required": "נדרש סנכרון",
+      "deprecated_feature": "תכונה זו תוסר בקרוב"
+    },
+    "info": {
+      "loading": "טוען...",
+      "saving": "שומר...",
+      "syncing": "מסנכרן...",
+      "new_version": "גרסה חדשה זמינה",
+      "maintenance": "תחזוקה מתוכננת"
     }
   }
 }

@@ -1,21 +1,21 @@
-import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
 import httpServices from "./httpServices";
 
-// הגדרת איך ההתראות ייראו כשהאפליקציה פתוחה
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// טוען את המודול של התראות רק כשצריך (כדי להימנע משגיאות ב-Expo Go)
+let notificationsModule = null;
+async function getNotificationsModule() {
+  if (!notificationsModule) {
+    notificationsModule = await import("expo-notifications");
+  }
+  return notificationsModule;
+}
 
 class NotificationService {
   // בקשת הרשאות
   async requestPermissions() {
     if (Device.isDevice) {
+      const Notifications = await getNotificationsModule();
       const { status: existingStatus } =
         await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
@@ -40,9 +40,34 @@ class NotificationService {
   // קבלת token להתראות
   async getPushToken() {
     try {
-      const token = await Notifications.getExpoPushTokenAsync({
-        projectId: Constants.expoConfig.extra.eas.projectId,
-      });
+      // אל תנסה לקבל token ב-Expo Go (store client) — זה אינו נתמך ויגרום לשגיאה
+      const isExpoGo =
+        Constants.executionEnvironment === "storeClient" ||
+        Constants.appOwnership === "expo";
+      if (isExpoGo) {
+        console.log(
+          "Skipping push token fetch in Expo Go (use a development build)."
+        );
+        return null;
+      }
+
+      // איתור projectId בצורה בטוחה (תומך גם ב-dev build וגם ב-production)
+      const projectId =
+        (Constants.expoConfig &&
+          Constants.expoConfig.extra &&
+          Constants.expoConfig.extra.eas &&
+          Constants.expoConfig.extra.eas.projectId) ||
+        (Constants.easConfig && Constants.easConfig.projectId);
+
+      if (!projectId) {
+        console.warn(
+          "EAS projectId not found; cannot fetch Expo push token right now."
+        );
+        return null;
+      }
+
+      const Notifications = await getNotificationsModule();
+      const token = await Notifications.getExpoPushTokenAsync({ projectId });
       return token.data;
     } catch (error) {
       console.error("Error getting push token:", error);
@@ -101,6 +126,7 @@ class NotificationService {
   // שליחת התראה מקומית
   async scheduleLocalNotification(title, body, trigger) {
     try {
+      const Notifications = await getNotificationsModule();
       await Notifications.scheduleNotificationAsync({
         content: {
           title,
@@ -129,6 +155,7 @@ class NotificationService {
   // ביטול התראה
   async cancelNotification(notificationId) {
     try {
+      const Notifications = await getNotificationsModule();
       await Notifications.cancelScheduledNotificationAsync(notificationId);
       console.log("Notification cancelled successfully");
     } catch (error) {
@@ -139,6 +166,7 @@ class NotificationService {
   // ביטול כל ההתראות
   async cancelAllNotifications() {
     try {
+      const Notifications = await getNotificationsModule();
       await Notifications.cancelAllScheduledNotificationsAsync();
       console.log("All notifications cancelled successfully");
     } catch (error) {

@@ -35,7 +35,7 @@ export async function createReminder({
     };
 
     const { data } = await httpServices.post("/reminders", payload);
-    return data?.reminder;
+    return { reminder: data?.reminder, pointsAdded: data?.pointsAdded || 0 };
   } catch (error) {
     console.error("❌ Error creating reminder:", error);
     throw error;

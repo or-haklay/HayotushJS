@@ -68,8 +68,22 @@ const TabsLayout = () => {
             ),
           }}
         />
-        {/* מסך הצ'אט */}
+        {/* טאב ידע */}
         <Tabs.Screen
+          name="learn"
+          options={{
+            title: "ידע",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="book-open-variant"
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+        {/* מסך הצ'אט */}
+        {/* <Tabs.Screen
           name="chat"
           options={{
             title: t("common.chat"),
@@ -77,7 +91,7 @@ const TabsLayout = () => {
               <Ionicons name="chatbubble-ellipses" size={size} color={color} />
             ),
           }}
-        />
+        /> */}
         {/* מסך הגדרות */}
         <Tabs.Screen
           name="settings"

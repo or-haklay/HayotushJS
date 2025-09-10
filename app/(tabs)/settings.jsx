@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Alert } from "react-native";
-import {
-  Text,
-  Button,
-  Switch,
-  List,
-  Menu,
-  languageMenuVisible,
-  Divider,
-} from "react-native-paper";
+import { Text, Button, Switch, List, Menu, Divider } from "react-native-paper";
 import { COLORS, SIZING, FONTS } from "../../theme/theme";
 import authService from "../../services/authService";
 import { useRouter } from "expo-router";
@@ -21,6 +13,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const [googleCalendarEnabled, setGoogleCalendarEnabled] = useState(false);
   const [calendarLoading, setCalendarLoading] = useState(false);
+  const [languageMenuVisible, setLanguageMenuVisible] = useState(false);
 
   useEffect(() => {
     checkCalendarStatus();
@@ -146,23 +139,22 @@ export default function SettingsScreen() {
             }
           >
             <Menu.Item
-              onPress={() => setLanguage("he")}
+              onPress={async () => {
+                setLanguageMenuVisible(false);
+                await setLanguage("he");
+              }}
               title={t("settings.language.hebrew")}
             />
             <Menu.Item
-              onPress={() => setLanguage("en")}
+              onPress={async () => {
+                setLanguageMenuVisible(false);
+                await setLanguage("en");
+              }}
               title={t("settings.language.english")}
             />
           </Menu>
         )}
       />
-
-      <Button onPress={() => setLanguage("he")}>
-        {t("settings.language.hebrew")}
-      </Button>
-      <Button onPress={() => setLanguage("en")}>
-        {t("settings.language.english")}
-      </Button>
 
       <Button
         mode="outlined"

@@ -44,4 +44,34 @@ export async function changePassword({ currentPassword, newPassword }) {
   return data;
 }
 
-export default { getMe, updateMe, updateProfile, changePassword };
+export async function getConsentStatus() {
+  try {
+    const { data } = await httpServices.get("/users/consent-status");
+    return data;
+  } catch (error) {
+    console.error("Error fetching consent status:", error);
+    throw error;
+  }
+}
+
+export async function updateConsent(termsAccepted, privacyAccepted) {
+  try {
+    const { data } = await httpServices.post("/users/update-consent", {
+      termsAccepted,
+      privacyAccepted,
+    });
+    return data;
+  } catch (error) {
+    console.error("Error updating consent:", error);
+    throw error;
+  }
+}
+
+export default {
+  getMe,
+  updateMe,
+  updateProfile,
+  changePassword,
+  getConsentStatus,
+  updateConsent,
+};

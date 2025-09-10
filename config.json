@@ -1,8 +1,8 @@
 {
-  "URL": "https://api.hayotush.com/api"
+  "URL": "http://192.168.1.14:3000/api"
 }
 /* "URL": "https://hayotush-93d3833b36d8.herokuapp.com/api" */
 /* "URL": "http://localhost:3000/api" */
-/* "URL": "http://192.168.1.13:3000/api" */
+/* "URL": "http://192.168.1.14:3000/api" */
 /* "URL": "http://63.178.97.156:3000/api" */
 /*   "URL": "https://api.hayotush.com/api"*/

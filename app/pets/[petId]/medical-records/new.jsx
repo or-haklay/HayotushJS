@@ -21,6 +21,7 @@ import {
 } from "../../../../services/medicalRecordsService";
 import uploadService from "../../../../services/uploadService";
 import { COLORS, FONTS, SIZING } from "../../../../theme/theme";
+import { useToast } from "../../../../context/ToastContext";
 
 const RECORD_TYPES = [
   { value: "vaccine", label: "medical_records.types.vaccine", icon: "needle" },
@@ -46,6 +47,7 @@ const RECORD_TYPES = [
 
 export default function NewMedicalRecord() {
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
   const { petId, recordId } = useLocalSearchParams();
   const router = useRouter();
   const isEditing = !!recordId;
@@ -162,6 +164,7 @@ export default function NewMedicalRecord() {
       }
 
       // צור או עדכן את הרישום הרפואי
+      let pointsAdded = 0;
       if (isEditing) {
         await updateMedicalRecord(recordId, {
           petId: petId,
@@ -174,8 +177,9 @@ export default function NewMedicalRecord() {
           veterinarianName: veterinarianName.trim() || undefined,
           clinic: clinic.trim() || undefined,
         });
+        showSuccess(t("toast.success.medical_record_updated"));
       } else {
-        await createMedicalRecord({
+        const result = await createMedicalRecord({
           petId: petId,
           recordName: recordName.trim(),
           recordType,
@@ -186,11 +190,20 @@ export default function NewMedicalRecord() {
           veterinarianName: veterinarianName.trim() || undefined,
           clinic: clinic.trim() || undefined,
         });
+        pointsAdded = Number(result?.pointsAdded || 0);
+        showSuccess(t("toast.success.medical_record_added"));
       }
 
-      router.back();
+      if (pointsAdded > 0) {
+        showSuccess(
+          t("toast.success.points_earned_medical", { count: pointsAdded })
+        );
+      }
+
+      setTimeout(() => router.back(), 600);
     } catch (error) {
       console.error("Error saving medical record:", error);
+      showError(t("toast.error.save_failed"));
       setErr(
         error?.response?.data?.message ||
           t("medical_records.errors.save_failed")

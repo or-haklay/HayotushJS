@@ -6,11 +6,13 @@ import uploadService from "../../services/uploadService";
 import { COLORS, FONTS } from "../../theme/theme";
 import petService from "../../services/petService";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../../context/ToastContext";
 
 export default function PetForm() {
   const { petId } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
   const [name, setName] = useState("");
   const [species, setSpecies] = useState("dog");
   const [breed, setBreed] = useState("");
@@ -82,14 +84,17 @@ export default function PetForm() {
 
       if (petId) {
         await petService.updatePet(petId, payload);
+        showSuccess(t("toast.success.pet_updated"));
       } else {
         await petService.createPet(payload);
+        showSuccess(t("toast.success.pet_created"));
       }
 
       // איפוס התמונה הנבחרת אחרי שמירה מוצלחת
       setSelectedImage(null);
       router.back();
     } catch (error) {
+      showError(t("toast.error.save_failed"));
       setErr(t("pets.save_error"));
       console.error(error);
     } finally {
@@ -99,7 +104,9 @@ export default function PetForm() {
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.white, padding: 16 }}>
-      <Text style={FONTS.h2}>{petId ? t("pets.edit_pet") : t("pets.add_pet")}</Text>
+      <Text style={FONTS.h2}>
+        {petId ? t("pets.edit_pet") : t("pets.add_pet")}
+      </Text>
 
       <TextInput
         label={t("pets.name")}

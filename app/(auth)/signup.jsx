@@ -62,6 +62,8 @@ const SignUpScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [checked, setChecked] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [termsError, setTermsError] = useState("");
@@ -87,17 +89,24 @@ const SignUpScreen = () => {
     const map = computeErrors({ name, email, password });
     setErrors(map);
 
-    if (!checked) {
+    if (!termsAccepted || !privacyAccepted) {
       setTermsError(t("auth.signup.error.terms_required"));
+      return;
     } else {
       setTermsError("");
     }
 
-    if (Object.keys(map).length > 0 || !checked) return;
+    if (Object.keys(map).length > 0) return;
 
     setLoading(true);
     try {
-      await authService.createUser({ name, email, password });
+      await authService.createUser({
+        name,
+        email,
+        password,
+        termsAccepted: true,
+        privacyAccepted: true,
+      });
       Alert.alert(t("auth.signup.title"), t("auth.signup.success"));
       router.push("/(tabs)/home");
     } catch (e) {
@@ -211,8 +220,8 @@ const SignUpScreen = () => {
 
               <View style={styles.termsContainer}>
                 <Checkbox
-                  status={checked ? "checked" : "unchecked"}
-                  onPress={() => setChecked((c) => !c)}
+                  status={termsAccepted ? "checked" : "unchecked"}
+                  onPress={() => setTermsAccepted(!termsAccepted)}
                   color={COLORS.primary}
                 />
                 <Text style={styles.termsText}>
@@ -223,8 +232,18 @@ const SignUpScreen = () => {
                     style={styles.link}
                   >
                     {t("auth.signup.terms_of_service")}
-                  </Text>{" "}
-                  {t("auth.signup.and")}{" "}
+                  </Text>
+                </Text>
+              </View>
+
+              <View style={styles.termsContainer}>
+                <Checkbox
+                  status={privacyAccepted ? "checked" : "unchecked"}
+                  onPress={() => setPrivacyAccepted(!privacyAccepted)}
+                  color={COLORS.primary}
+                />
+                <Text style={styles.termsText}>
+                  {t("auth.signup.privacy_agree")}{" "}
                   <Text
                     accessibilityRole="link"
                     onPress={() => openURL("https://example.com/privacy.html")}

@@ -1,9 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import {
-  View,
-  RefreshControl,
-  ScrollView,
-} from "react-native";
+import { View, RefreshControl, ScrollView } from "react-native";
 import { useLocalSearchParams, useFocusEffect } from "expo-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,6 +15,7 @@ import {
 } from "react-native-paper";
 import { CartesianChart, Line, PolarChart, Pie } from "victory-native";
 import { listExpenses } from "../../../../services/expensesService";
+import gamificationService from "../../../../services/gamificationService";
 import { COLORS, FONTS, SIZING } from "../../../../theme/theme";
 
 export default function ExpensesSummaryScreen() {
@@ -90,7 +87,7 @@ export default function ExpensesSummaryScreen() {
           return category;
       }
     } catch (error) {
-      console.error('Category label error:', error);
+      console.error("Category label error:", error);
       return category || "Unknown";
     }
   };
@@ -121,10 +118,21 @@ export default function ExpensesSummaryScreen() {
         limit: 5000,
       });
       setRows(data || []);
+
+      // Gamification: daily mission for opening expenses summary
+      try {
+        await gamificationService.sendEvent(
+          "OPEN_EXPENSES_SUMMARY",
+          String(petId || "summary")
+        );
+      } catch {}
     } catch (e) {
-      const errorMessage = e?.response?.data?.message || t("expenses.load_error") || "שגיאה בטעינת נתונים";
+      const errorMessage =
+        e?.response?.data?.message ||
+        t("expenses.load_error") ||
+        "שגיאה בטעינת נתונים";
       setErr(errorMessage);
-      console.error('Load expenses error:', e);
+      console.error("Load expenses error:", e);
     } finally {
       setLoading(false);
     }
@@ -140,7 +148,7 @@ export default function ExpensesSummaryScreen() {
   const filteredRows = useMemo(() => {
     try {
       if (!rows || !Array.isArray(rows)) return [];
-      
+
       let filtered = [...rows];
 
       if (selectedCategory) {
@@ -150,12 +158,14 @@ export default function ExpensesSummaryScreen() {
       }
 
       if (selectedPet) {
-        filtered = filtered.filter((expense) => expense && expense.petId === selectedPet);
+        filtered = filtered.filter(
+          (expense) => expense && expense.petId === selectedPet
+        );
       }
 
       return filtered;
     } catch (error) {
-      console.error('Filter rows error:', error);
+      console.error("Filter rows error:", error);
       return [];
     }
   }, [rows, selectedCategory, selectedPet]);
@@ -164,13 +174,13 @@ export default function ExpensesSummaryScreen() {
   const uniquePets = useMemo(() => {
     try {
       if (!rows || !Array.isArray(rows)) return [];
-      
+
       const pets = [
         ...new Set(rows.map((expense) => expense?.petId).filter(Boolean)),
       ];
       return pets;
     } catch (error) {
-      console.error('Unique pets error:', error);
+      console.error("Unique pets error:", error);
       return [];
     }
   }, [rows]);
@@ -178,7 +188,11 @@ export default function ExpensesSummaryScreen() {
   // הכנת נתונים לגרף Line (חודשי או שנתי)
   const lineChartData = useMemo(() => {
     try {
-      if (!filteredRows || !Array.isArray(filteredRows) || filteredRows.length === 0) {
+      if (
+        !filteredRows ||
+        !Array.isArray(filteredRows) ||
+        filteredRows.length === 0
+      ) {
         return [];
       }
 
@@ -191,11 +205,11 @@ export default function ExpensesSummaryScreen() {
 
         for (const expense of filteredRows) {
           if (!expense || !expense.date) continue;
-          
+
           try {
             const d = new Date(expense.date);
             if (isNaN(d.getTime())) continue; // בדיקה שהתאריך תקין
-            
+
             if (d.getFullYear() === year) {
               const m = d.getMonth();
               if (m >= 0 && m < 12) {
@@ -203,7 +217,7 @@ export default function ExpensesSummaryScreen() {
               }
             }
           } catch (dateError) {
-            console.error('Date parsing error:', dateError);
+            console.error("Date parsing error:", dateError);
             continue;
           }
         }
@@ -219,11 +233,11 @@ export default function ExpensesSummaryScreen() {
 
         for (const expense of filteredRows) {
           if (!expense || !expense.date) continue;
-          
+
           try {
             const d = new Date(expense.date);
             if (isNaN(d.getTime())) continue; // בדיקה שהתאריך תקין
-            
+
             if (d.getFullYear() === year && d.getMonth() === month) {
               const day = d.getDate() - 1;
               if (day >= 0 && day < daysInMonth) {
@@ -231,7 +245,7 @@ export default function ExpensesSummaryScreen() {
               }
             }
           } catch (dateError) {
-            console.error('Date parsing error:', dateError);
+            console.error("Date parsing error:", dateError);
             continue;
           }
         }
@@ -254,8 +268,8 @@ export default function ExpensesSummaryScreen() {
         }
       }
     } catch (error) {
-      console.error('Line chart data error:', error);
-      setChartError('שגיאה בהכנת נתוני הגרף');
+      console.error("Line chart data error:", error);
+      setChartError("שגיאה בהכנת נתוני הגרף");
       return [];
     }
   }, [filteredRows, year, month, summaryType, MONTHS, lineChartMode]);
@@ -263,7 +277,11 @@ export default function ExpensesSummaryScreen() {
   // הכנת נתונים לגרף Pie (חודשי או שנתי)
   const pieChartData = useMemo(() => {
     try {
-      if (!filteredRows || !Array.isArray(filteredRows) || filteredRows.length === 0) {
+      if (
+        !filteredRows ||
+        !Array.isArray(filteredRows) ||
+        filteredRows.length === 0
+      ) {
         return [];
       }
 
@@ -271,7 +289,7 @@ export default function ExpensesSummaryScreen() {
 
       for (const expense of filteredRows) {
         if (!expense || !expense.category) continue;
-        
+
         const category = CATEGORIES.includes(expense.category)
           ? expense.category
           : "Other";
@@ -285,8 +303,8 @@ export default function ExpensesSummaryScreen() {
         color: CAT_COLORS[category] || "#FF7043",
       }));
     } catch (error) {
-      console.error('Pie chart data error:', error);
-      setChartError('שגיאה בהכנת נתוני הגרף');
+      console.error("Pie chart data error:", error);
+      setChartError("שגיאה בהכנת נתוני הגרף");
       return [];
     }
   }, [filteredRows]);
@@ -316,7 +334,7 @@ export default function ExpensesSummaryScreen() {
         }
       }
     } catch (error) {
-      console.error('Change month error:', error);
+      console.error("Change month error:", error);
     }
   };
 
@@ -325,7 +343,7 @@ export default function ExpensesSummaryScreen() {
     try {
       setYear(direction === "next" ? year + 1 : year - 1);
     } catch (error) {
-      console.error('Change year error:', error);
+      console.error("Change year error:", error);
     }
   };
 
@@ -333,13 +351,13 @@ export default function ExpensesSummaryScreen() {
   const currentTotal = useMemo(() => {
     try {
       if (!filteredRows || !Array.isArray(filteredRows)) return 0;
-      
+
       return filteredRows.reduce(
         (sum, expense) => sum + (Number(expense?.amount || 0) || 0),
         0
       );
     } catch (error) {
-      console.error('Current total error:', error);
+      console.error("Current total error:", error);
       return 0;
     }
   }, [filteredRows]);
@@ -349,12 +367,18 @@ export default function ExpensesSummaryScreen() {
     try {
       if (chartError) {
         return (
-          <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ color: COLORS.error, textAlign: 'center' }}>
+          <View
+            style={{
+              height: 200,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: COLORS.error, textAlign: "center" }}>
               {chartError}
             </Text>
-            <Button 
-              mode="outlined" 
+            <Button
+              mode="outlined"
               onPress={() => setChartError("")}
               style={{ marginTop: 16 }}
             >
@@ -367,8 +391,14 @@ export default function ExpensesSummaryScreen() {
       if (chartType === "line") {
         if (!lineChartData || lineChartData.length === 0) {
           return (
-            <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ color: COLORS.neutral, textAlign: 'center' }}>
+            <View
+              style={{
+                height: 200,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: COLORS.neutral, textAlign: "center" }}>
                 אין נתונים להצגה
               </Text>
             </View>
@@ -465,14 +495,16 @@ export default function ExpensesSummaryScreen() {
                       >
                         {
                           summaryType === "yearly"
-                            ? (item.x && item.x.substring ? item.x.substring(0, 3) : item.x) // רק 3 אותיות ראשונות של החודש
+                            ? item.x && item.x.substring
+                              ? item.x.substring(0, 3)
+                              : item.x // רק 3 אותיות ראשונות של החודש
                             : `${item.x}/${month + 1}` // יום/חודש
                         }
                       </Text>
                     );
                   });
                 } catch (error) {
-                  console.error('X axis labels error:', error);
+                  console.error("X axis labels error:", error);
                   return null;
                 }
               })()}
@@ -511,7 +543,10 @@ export default function ExpensesSummaryScreen() {
                     );
                   }
 
-                  const validData = lineChartData.filter(item => item && typeof item.y === 'number' && !isNaN(item.y));
+                  const validData = lineChartData.filter(
+                    (item) =>
+                      item && typeof item.y === "number" && !isNaN(item.y)
+                  );
                   if (validData.length === 0) {
                     return (
                       <Text
@@ -560,7 +595,10 @@ export default function ExpensesSummaryScreen() {
                   const roundToNice = (value) => {
                     try {
                       if (value <= 0) return 1;
-                      const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
+                      const magnitude = Math.pow(
+                        10,
+                        Math.floor(Math.log10(value))
+                      );
                       const normalized = value / magnitude;
 
                       if (normalized <= 1) return magnitude;
@@ -568,7 +606,7 @@ export default function ExpensesSummaryScreen() {
                       if (normalized <= 5) return 5 * magnitude;
                       return 10 * magnitude;
                     } catch (error) {
-                      console.error('Round to nice error:', error);
+                      console.error("Round to nice error:", error);
                       return value;
                     }
                   };
@@ -600,7 +638,7 @@ export default function ExpensesSummaryScreen() {
                     );
                   }).reverse(); // הפוך כדי שהערך הגבוה יהיה למעלה
                 } catch (error) {
-                  console.error('Y axis labels error:', error);
+                  console.error("Y axis labels error:", error);
                   return (
                     <Text
                       style={[
@@ -652,8 +690,14 @@ export default function ExpensesSummaryScreen() {
       } else {
         if (!pieChartData || pieChartData.length === 0) {
           return (
-            <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ color: COLORS.neutral, textAlign: 'center' }}>
+            <View
+              style={{
+                height: 200,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: COLORS.neutral, textAlign: "center" }}>
                 אין נתונים להצגה
               </Text>
             </View>
@@ -714,8 +758,9 @@ export default function ExpensesSummaryScreen() {
               {/* שורות הנתונים */}
               {pieChartData.map((item, index) => {
                 try {
-                  if (!item || !item.label || typeof item.value !== 'number') return null;
-                  
+                  if (!item || !item.label || typeof item.value !== "number")
+                    return null;
+
                   return (
                     <View
                       key={index}
@@ -724,7 +769,8 @@ export default function ExpensesSummaryScreen() {
                         justifyContent: "space-between",
                         alignItems: "center",
                         paddingVertical: 8,
-                        borderBottomWidth: index < pieChartData.length - 1 ? 1 : 0,
+                        borderBottomWidth:
+                          index < pieChartData.length - 1 ? 1 : 0,
                         borderBottomColor: COLORS.neutral + "10",
                       }}
                     >
@@ -788,12 +834,15 @@ export default function ExpensesSummaryScreen() {
                           },
                         ]}
                       >
-                        {currentTotal > 0 ? ((item.value / currentTotal) * 100).toFixed(1) : "0.0"}%
+                        {currentTotal > 0
+                          ? ((item.value / currentTotal) * 100).toFixed(1)
+                          : "0.0"}
+                        %
                       </Text>
                     </View>
                   );
                 } catch (error) {
-                  console.error('Pie chart item error:', error);
+                  console.error("Pie chart item error:", error);
                   return null;
                 }
               })}
@@ -802,15 +851,21 @@ export default function ExpensesSummaryScreen() {
         );
       }
     } catch (error) {
-      console.error('Render chart error:', error);
-      setChartError('שגיאה בטעינת הגרף');
+      console.error("Render chart error:", error);
+      setChartError("שגיאה בטעינת הגרף");
       return (
-        <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: COLORS.error, textAlign: 'center' }}>
+        <View
+          style={{
+            height: 200,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ color: COLORS.error, textAlign: "center" }}>
             שגיאה בטעינת הגרף
           </Text>
-          <Button 
-            mode="outlined" 
+          <Button
+            mode="outlined"
             onPress={() => setChartError("")}
             style={{ marginTop: 16 }}
           >
@@ -839,7 +894,7 @@ export default function ExpensesSummaryScreen() {
         }
       }
     } catch (error) {
-      console.error('Chart title error:', error);
+      console.error("Chart title error:", error);
       return "סיכום הוצאות";
     }
   };
@@ -850,9 +905,15 @@ export default function ExpensesSummaryScreen() {
       if (summaryType === "yearly") {
         return (
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <IconButton icon="chevron-right" onPress={() => changeYear("prev")} />
+            <IconButton
+              icon="chevron-right"
+              onPress={() => changeYear("prev")}
+            />
             <Text style={FONTS.h3}>{year}</Text>
-            <IconButton icon="chevron-left" onPress={() => changeYear("next")} />
+            <IconButton
+              icon="chevron-left"
+              onPress={() => changeYear("next")}
+            />
           </View>
         );
       } else {
@@ -865,12 +926,15 @@ export default function ExpensesSummaryScreen() {
             <Text style={FONTS.h3}>
               {MONTHS[month]} {year}
             </Text>
-            <IconButton icon="chevron-left" onPress={() => changeMonth("next")} />
+            <IconButton
+              icon="chevron-left"
+              onPress={() => changeMonth("next")}
+            />
           </View>
         );
       }
     } catch (error) {
-      console.error('Navigation buttons error:', error);
+      console.error("Navigation buttons error:", error);
       return (
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Text style={FONTS.h3}>{year}</Text>
@@ -1044,7 +1108,8 @@ export default function ExpensesSummaryScreen() {
                               borderWidth: 2,
                             },
                             selectedCategory === category && {
-                              backgroundColor: CAT_COLORS[category] || "#FF7043",
+                              backgroundColor:
+                                CAT_COLORS[category] || "#FF7043",
                             },
                           ]}
                           textStyle={
@@ -1138,8 +1203,11 @@ export default function ExpensesSummaryScreen() {
             <Text
               style={[FONTS.body, { color: COLORS.neutral, marginBottom: 8 }]}
             >
-              {filteredRows ? filteredRows.length : 0} {t("expenses.summary.records_found")}
-              {selectedCategory || selectedPet ? ` (מתוך ${rows ? rows.length : 0})` : ""}
+              {filteredRows ? filteredRows.length : 0}{" "}
+              {t("expenses.summary.records_found")}
+              {selectedCategory || selectedPet
+                ? ` (מתוך ${rows ? rows.length : 0})`
+                : ""}
             </Text>
             <Divider style={{ marginVertical: 8 }} />
             {loading ? (
@@ -1224,13 +1292,21 @@ export default function ExpensesSummaryScreen() {
                     {(() => {
                       try {
                         if (summaryType === "yearly") {
-                          return currentTotal ? (currentTotal / 12).toFixed(2) : "0.00";
+                          return currentTotal
+                            ? (currentTotal / 12).toFixed(2)
+                            : "0.00";
                         } else {
-                          const daysInMonth = new Date(year, month + 1, 0).getDate();
-                          return currentTotal ? (currentTotal / daysInMonth).toFixed(2) : "0.00";
+                          const daysInMonth = new Date(
+                            year,
+                            month + 1,
+                            0
+                          ).getDate();
+                          return currentTotal
+                            ? (currentTotal / daysInMonth).toFixed(2)
+                            : "0.00";
                         }
                       } catch (error) {
-                        console.error('Average calculation error:', error);
+                        console.error("Average calculation error:", error);
                         return "0.00";
                       }
                     })()}{" "}

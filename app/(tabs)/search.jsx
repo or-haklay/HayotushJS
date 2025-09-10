@@ -3,7 +3,7 @@
 // Includes real device location via expo-location
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, FlatList, SafeAreaView, StyleSheet } from "react-native";
+import { View, FlatList, SafeAreaView, StyleSheet, Text } from "react-native";
 import * as Location from "expo-location";
 import {
   Searchbar,
@@ -17,6 +17,7 @@ import {
 import SearchResultCard from "../../components/search/SearchResultCard";
 import { COLORS, SIZING } from "../../theme/theme";
 import placesService from "../../services/placesService";
+import gamificationService from "../../services/gamificationService";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
@@ -62,6 +63,7 @@ export default function SearchScreen() {
   const [sessionToken, setSessionToken] = useState(genSessionToken());
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
@@ -73,7 +75,6 @@ export default function SearchScreen() {
       { value: "dog_parks", label: t("category.dog_parks") },
       { value: "groomers", label: t("category.groomers") },
       { value: "boarding", label: t("category.boarding") },
-      { value: "sitters", label: t("category.sitters") },
       { value: "trainers", label: t("category.trainers") },
       { value: "shelters", label: t("category.shelters") },
     ],
@@ -99,6 +100,14 @@ export default function SearchScreen() {
     })();
   }, []);
 
+  // Start loading immediately when we have coordinates (no debounce on first load)
+  useEffect(() => {
+    if (lat != null && lng != null) {
+      runSearch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lat, lng]);
+
   const runSearch = useCallback(
     async (opts = {}) => {
       if (lat == null || lng == null) return;
@@ -121,8 +130,26 @@ export default function SearchScreen() {
         const combined = opts.pageToken ? [...rawData, ...list] : list; // paging placeholder
         setRawData(combined);
         setNextPageToken(null); // (אח”כ נוסיף paging אם נרצה)
+        setErrorMsg("");
+
+        // Gamification: daily mission for searching pet stores
+        try {
+          if ((category || "all_pets") === "pet_stores") {
+            await gamificationService.sendEvent(
+              "SEARCH_PET_STORE",
+              "pet_stores"
+            );
+          }
+        } catch {}
       } catch (e) {
-        console.warn("Search failed", e?.response?.data || e?.message);
+        const serverData = e?.response?.data;
+        const msg =
+          (serverData && (serverData.error || serverData.message)) ||
+          e?.message ||
+          t("search.error_generic");
+        setErrorMsg(String(msg));
+        setRawData([]);
+        console.warn("Search failed", serverData || e?.message);
       } finally {
         setLoading(false);
       }
@@ -273,25 +300,46 @@ export default function SearchScreen() {
 
         <Divider />
 
-        <FlatList
-          data={data}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <SearchResultCard item={item} />}
-          onRefresh={handleRefresh}
-          refreshing={refreshing}
-          onEndReachedThreshold={0.6}
-          onEndReached={() => {
-            if (nextPageToken && !loading) {
-              runSearch({ pageToken: nextPageToken });
+        {loading && data.length === 0 ? (
+          <View
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          >
+            <ActivityIndicator />
+          </View>
+        ) : (
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <SearchResultCard item={item} category={category} />
+            )}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
+            onEndReachedThreshold={0.6}
+            onEndReached={() => {
+              if (nextPageToken && !loading) {
+                runSearch({ pageToken: nextPageToken });
+              }
+            }}
+            ListEmptyComponent={
+              !loading ? (
+                <View style={{ padding: 16 }}>
+                  <Text style={{ color: COLORS.neutral }}>
+                    {errorMsg
+                      ? `${t("search.no_results_error_prefix")}: ${errorMsg}`
+                      : t("search.no_results")}
+                  </Text>
+                </View>
+              ) : null
             }
-          }}
-          ListFooterComponent={
-            loading ? (
-              <ActivityIndicator style={{ marginVertical: 12 }} />
-            ) : null
-          }
-          contentContainerStyle={{ paddingBottom: 24 }}
-        />
+            ListFooterComponent={
+              loading ? (
+                <ActivityIndicator style={{ marginVertical: 12 }} />
+              ) : null
+            }
+            contentContainerStyle={{ paddingBottom: 24 }}
+          />
+        )}
 
         <View style={styles.clearButtonContainer}>
           <Button

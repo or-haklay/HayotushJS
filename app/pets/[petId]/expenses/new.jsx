@@ -17,9 +17,11 @@ import {
   listExpenses,
 } from "../../../../services/expensesService";
 import { COLORS, FONTS } from "../../../../theme/theme";
+import { useToast } from "../../../../context/ToastContext";
 
 export default function ExpenseFormScreen() {
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
   const { petId, expenseId } = useLocalSearchParams();
   const router = useRouter();
 
@@ -82,12 +84,26 @@ export default function ExpenseFormScreen() {
         vendor: vendor?.trim() || undefined,
       };
 
-      if (expenseId) await updateExpense(expenseId, payload);
-      else await createExpense(payload);
+      let pointsAdded = 0;
+      if (expenseId) {
+        await updateExpense(expenseId, payload);
+        showSuccess(t("toast.success.expense_updated"));
+      } else {
+        const result = await createExpense(payload);
+        pointsAdded = Number(result?.pointsAdded || 0);
+        showSuccess(t("toast.success.expense_added"));
+      }
 
-      router.back();
+      if (pointsAdded > 0) {
+        showSuccess(
+          t("toast.success.points_earned_expense", { count: pointsAdded })
+        );
+      }
+
+      setTimeout(() => router.back(), 600);
     } catch (e) {
       console.error("❌ Error in submit:", e);
+      showError(t("toast.error.save_failed"));
       setErr(e?.response?.data?.message || t("expenses.save_error"));
     } finally {
       setLoading(false);

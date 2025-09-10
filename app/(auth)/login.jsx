@@ -83,7 +83,7 @@ const LoginScreen = () => {
     setLoading(true);
     try {
       await authService.login(email, password); // if your service expects {email, password}, change accordingly
-      router.replace("/home"); // keep as your routing setup
+      router.replace("/(tabs)/home");
     } catch (err) {
       const errorMessage =
         err?.response?.data?.message ||

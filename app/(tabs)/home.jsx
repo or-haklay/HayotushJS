@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   ScrollView,
   View,
@@ -14,13 +14,17 @@ import petService from "../../services/petService";
 import authService from "../../services/authService";
 import { SIZING, FONTS, COLORS } from "../../theme/theme";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../../context/ToastContext";
 
 // Import our new components
 import ScreenContainer from "../../components/ui/ScreenContainer";
 import Header from "../../components/ui/Header";
 import ReminderCard from "../../components/home/ReminderCard";
+import DailyMissions from "../../components/home/DailyMissions";
+import DailyTipCard from "../../components/home/DailyTipCard";
 import PetCard from "../../components/home/PetCard";
 import QuickActionButton from "../../components/home/QuickActionButton";
+import * as gamificationService from "../../services/gamificationService";
 import NotificationBell from "../../components/ui/NotificationBell";
 
 const HomeScreen = () => {
@@ -28,9 +32,12 @@ const HomeScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { showSuccess } = useToast();
   const [user, setUser] = useState(null);
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [gSummary, setGSummary] = useState(null);
+  const hasShownBonusToast = useRef(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -41,6 +48,29 @@ const HomeScreen = () => {
             setUser(currentUser);
             const userPets = await petService.getMyPets();
             setPets(userPets.length > 0 ? userPets : []);
+            try {
+              const summary = await gamificationService.getSummary();
+              setGSummary(summary);
+              if (
+                summary?.dailyCompletionBonusToday &&
+                !hasShownBonusToast.current
+              ) {
+                hasShownBonusToast.current = true;
+                showSuccess(
+                  t("toast.success.points_earned_daily_bonus", { count: 5 })
+                );
+              } else if (
+                summary?.weeklyPerfectBonusToday &&
+                !hasShownBonusToast.current
+              ) {
+                hasShownBonusToast.current = true;
+                showSuccess(
+                  t("toast.success.points_earned_weekly_bonus", { count: 30 })
+                );
+              }
+            } catch (e) {
+              console.warn("gamification summary failed", e?.message || e);
+            }
           }
         } catch (error) {
           console.error("Error loading data:", error);
@@ -50,7 +80,7 @@ const HomeScreen = () => {
       };
 
       loadData();
-    }, [])
+    }, [isLoading, t, showSuccess])
   );
 
   // מצב טעינה ראשוני
@@ -101,25 +131,29 @@ const HomeScreen = () => {
           {t("home.welcome_back")} {user?.name?.split(" ")[0] || ""}!
         </Text>
 
-        <ReminderCard
-          reminderText1={t("home.reminder_text1")}
-          reminderText2={t("home.reminder_text2")}
-          reminderText3={t("home.reminder_text_annual_checkup")}
-          petName={pets[0]?.name}
-          buttonText={t("home.reminder_button")}
-          onButtonPress={() => {
-            if (pets && pets.length > 0) {
-              router.push(`/pets/${pets[0].id || pets[0]._id}/reminders/new`);
-            } else {
-              // אם אין חיות, נשלח לרשימת החיות
-              router.push("/pets");
-            }
-          }}
+        {/* Daily Tip / Fact */}
+        <DailyTipCard
+          petSpecies={pets?.[0]?.species || null}
+          userId={user?._id || user?.id || null}
         />
 
         <Text style={styles.sectionTitle}>{t("home.my_pets")}</Text>
         <PetCard pet={pets[0]} />
-
+        {gSummary ? (
+          <DailyMissions
+            points={gSummary.points}
+            streak={gSummary.dailyStreak}
+            missions={gSummary.missions}
+            dateKey={gSummary.dateKey}
+            onRefresh={async () => {
+              try {
+                const fresh = await gamificationService.getSummary();
+                setGSummary(fresh);
+                // Don't show bonus toasts on refresh - only on initial load
+              } catch {}
+            }}
+          />
+        ) : null}
         <Text style={styles.sectionTitle}>{t("home.quick_actions")}</Text>
         <View style={styles.quickActionsContainer}>
           <QuickActionButton

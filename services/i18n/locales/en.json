@@ -147,6 +147,7 @@
   "auth.signup.terms_of_service": "Terms of Service",
   "auth.signup.and": "and",
   "auth.signup.privacy_policy": "Privacy Policy",
+  "auth.signup.privacy_agree": "I agree to the",
   "auth.signup.error.name_required": "Name is required",
   "auth.signup.error.name_min_length": "Name must be at least 2 characters",
   "auth.signup.error.email_required": "Email is required",
@@ -156,6 +157,17 @@
   "auth.signup.error.terms_required": "You must accept the terms of service",
   "auth.signup.success": "Registration completed successfully",
   "auth.signup.error.general": "Registration failed, please try again later",
+
+  "consent.title": "Consent Settings",
+  "consent.subtitle": "Manage your consent to terms of service and privacy policy",
+  "consent.loading": "Loading consent information...",
+  "consent.button.update": "Update Consent",
+  "consent.success.updated": "Consent updated successfully",
+  "consent.error.loading": "Error loading consent information",
+  "consent.error.updating": "Error updating consent",
+  "consent.info.title": "Current Consent Information",
+  "consent.info.date": "Consent Date",
+  "consent.info.version": "Terms Version",
 
   "chat.title": "Chat with Bot",
   "chat.welcome": "Hi! How can I help you today? 🐾",
@@ -297,11 +309,9 @@
   "pets.profile_picture_updated": "Profile picture updated successfully",
   "pets.profile_picture_update_error": "Error updating profile picture",
   "pets.image_updated_successfully": "{{type}} image updated successfully",
-  "pets.image_upload_error": "Error uploading/saving image",
   "pets.image_pick_error": "Error picking image",
   "pets.remove_image_title": "Remove {{type}} Image",
   "pets.remove_image_message": "Are you sure you want to remove the {{type}} image?",
-  "pets.remove": "Remove",
   "pets.image_removed_successfully": "{{type}} image removed successfully",
   "pets.image_remove_error": "Error removing image",
   "pets.profile_image_options": "Profile Image Options",
@@ -467,6 +477,102 @@
       "toys": "Toys",
       "insurance": "Insurance",
       "other": "Other"
+    }
+  },
+  "gamification": {
+    "daily_missions": "Daily Missions",
+    "date": "Date",
+    "points": "Points",
+    "coins": "Coins",
+    "streak": "Streak",
+    "refresh": "Refresh",
+    "toast_points_added": "+{{count}} points added",
+    "toast_daily_completion_bonus": "+5 bonus: all daily missions completed",
+    "toast_weekly_perfect_bonus": "+30 bonus: perfect week streak",
+    "level": "Level",
+    "rank": "Rank",
+    "next_level": "Next Level",
+    "points_to_next": "Points to Next Level",
+    "ranks": {
+      "wood": "Wood",
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold",
+      "diamond": "Diamond",
+      "legendary": "Legendary"
+    },
+    "missions": {
+      "SEARCH_PET_STORE": "Find a nearby pet store",
+      "READ_ARTICLE": "Read an article",
+      "OPEN_EXPENSES_SUMMARY": "Open expenses summary"
+    }
+  },
+  "profile": {
+    "my_points": "My Points",
+    "coins": "Coins",
+    "daily_streak": "Daily Streak",
+    "my_pets": "My Pets",
+    "no_pets": "No pets to display"
+  },
+  "daily_tip": {
+    "title": "Daily Tip",
+    "category": "Category",
+    "categories": {
+      "dog": "Dog",
+      "cat": "Cat",
+      "bird": "Bird",
+      "general": "General"
+    }
+  },
+  "toast": {
+    "success": {
+      "pet_created": "Pet added successfully!",
+      "pet_updated": "Pet details updated",
+      "pet_deleted": "Pet deleted",
+      "expense_added": "Expense added",
+      "expense_updated": "Expense updated",
+      "expense_deleted": "Expense deleted",
+      "reminder_created": "Reminder created",
+      "reminder_updated": "Reminder updated",
+      "reminder_deleted": "Reminder deleted",
+      "medical_record_added": "Medical record added",
+      "medical_record_updated": "Medical record updated",
+      "medical_record_deleted": "Medical record deleted",
+      "points_earned": "{{count}} points earned!",
+      "points_earned_expense": "{{count}} points earned for adding expense",
+      "points_earned_reminder": "{{count}} points earned for creating reminder",
+      "points_earned_medical": "{{count}} points earned for medical record",
+      "points_earned_mission": "{{count}} points earned for completing mission",
+      "points_earned_daily_bonus": "{{count}} daily bonus points!",
+      "points_earned_weekly_bonus": "{{count}} weekly bonus points!",
+      "mission_completed": "Mission completed!",
+      "profile_updated": "Profile updated",
+      "settings_saved": "Settings saved",
+      "data_synced": "Data synced"
+    },
+    "error": {
+      "general": "An error occurred",
+      "network": "Network connection issue",
+      "server": "Server error",
+      "validation": "Data validation error",
+      "permission": "No permission for this action",
+      "not_found": "Item not found",
+      "save_failed": "Save failed",
+      "delete_failed": "Delete failed",
+      "upload_failed": "Upload failed"
+    },
+    "warning": {
+      "unsaved_changes": "You have unsaved changes",
+      "low_storage": "Low storage space",
+      "sync_required": "Sync required",
+      "deprecated_feature": "This feature will be removed soon"
+    },
+    "info": {
+      "loading": "Loading...",
+      "saving": "Saving...",
+      "syncing": "Syncing...",
+      "new_version": "New version available",
+      "maintenance": "Scheduled maintenance"
     }
   }
 }
