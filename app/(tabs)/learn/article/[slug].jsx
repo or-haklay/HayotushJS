@@ -1,5 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Image, ScrollView, Pressable, SafeAreaView } from "react-native";
+import {
+  View,
+  Image,
+  ScrollView,
+  Pressable,
+  SafeAreaView,
+  ImageBackground,
+} from "react-native";
 import { Text, ActivityIndicator } from "react-native-paper";
 import { useLocalSearchParams } from "expo-router";
 import { COLORS, SIZING, FONTS } from "../../../../theme/theme";
@@ -55,86 +62,141 @@ export default function LearnArticleScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+      <ImageBackground
+        source={require("../../../../assets/images/pet-new-background.png")}
+        style={{ flex: 1 }}
+        resizeMode="cover"
+      >
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.8)" }}
         >
-          <ActivityIndicator />
-        </View>
-      </SafeAreaView>
+          <View
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          >
+            <ActivityIndicator />
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
     );
   }
 
   if (!article) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+      <ImageBackground
+        source={require("../../../../assets/images/pet-new-background.png")}
+        style={{ flex: 1 }}
+        resizeMode="cover"
+      >
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.8)" }}
         >
-          <Text>לא נמצא מאמר</Text>
-        </View>
-      </SafeAreaView>
+          <View
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          >
+            <Text
+              style={{
+                textAlign: "right",
+                writingDirection: "rtl",
+              }}
+            >
+              לא נמצא מאמר
+            </Text>
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      <ScrollView
-        style={{ flex: 1, backgroundColor: COLORS.background }}
-        contentContainerStyle={{ paddingTop: SIZING.padding }}
+    <ImageBackground
+      source={require("../../../../assets/images/pet-new-background.png")}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.8)" }}
       >
-        {article.heroImage ? (
-          <Image
-            source={{ uri: article.heroImage }}
-            style={{ width: "100%", height: 200, backgroundColor: "#eaeaea" }}
-            resizeMode="cover"
-          />
-        ) : null}
-
-        <View
-          style={{
-            marginTop: 12,
-            marginHorizontal: SIZING.padding,
-            backgroundColor: COLORS.white,
-            borderRadius: 16,
-            padding: SIZING.padding,
-            borderWidth: 1,
-            borderColor: COLORS.neutral + "22",
-            elevation: 2,
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingTop: SIZING.padding,
+            direction: "rtl",
           }}
         >
-          <Text style={{ ...FONTS.h1, color: COLORS.dark }}>
-            {article.title}
-          </Text>
-          {article.summary ? (
-            <Text style={{ color: COLORS.neutral, marginTop: 6 }}>
-              {article.summary}
-            </Text>
+          {article.heroImage ? (
+            <Image
+              source={{ uri: article.heroImage }}
+              style={{ width: "100%", height: 200, backgroundColor: "#eaeaea" }}
+              resizeMode="cover"
+            />
           ) : null}
 
-          <Pressable
-            onPress={toggleSave}
+          <View
             style={{
-              marginTop: 8,
-              alignSelf: "flex-start",
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-              backgroundColor: saved ? COLORS.accent : COLORS.white,
-              borderRadius: 12,
+              marginTop: 12,
+              marginHorizontal: SIZING.padding,
+              backgroundColor: COLORS.white,
+              borderRadius: 16,
+              padding: SIZING.padding,
               borderWidth: 1,
-              borderColor: COLORS.neutral + "44",
+              borderColor: COLORS.neutral + "22",
+              elevation: 2,
+              direction: "rtl",
             }}
           >
-            <Text style={{ color: saved ? COLORS.white : COLORS.dark }}>
-              {saved ? "שמור מקומית ✓" : "שמור מקומית"}
+            <Text
+              style={{
+                ...FONTS.h1,
+                color: COLORS.dark,
+                textAlign: "right",
+                writingDirection: "rtl",
+              }}
+            >
+              {article.title}
             </Text>
-          </Pressable>
+            {article.summary ? (
+              <Text
+                style={{
+                  color: COLORS.neutral,
+                  marginTop: 6,
+                  textAlign: "right",
+                  writingDirection: "rtl",
+                }}
+              >
+                {article.summary}
+              </Text>
+            ) : null}
 
-          <View style={{ height: 12 }} />
+            <Pressable
+              onPress={toggleSave}
+              style={{
+                marginTop: 8,
+                alignSelf: "flex-end",
+                paddingVertical: 6,
+                paddingHorizontal: 12,
+                backgroundColor: saved ? COLORS.accent : COLORS.white,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: COLORS.neutral + "44",
+              }}
+            >
+              <Text
+                style={{
+                  color: saved ? COLORS.white : COLORS.dark,
+                  textAlign: "right",
+                  writingDirection: "rtl",
+                }}
+              >
+                {saved ? "שמור מקומית ✓" : "שמור מקומית"}
+              </Text>
+            </Pressable>
 
-          <ContentRenderer blocks={article.blocks || []} />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            <View style={{ height: 12 }} />
+
+            <ContentRenderer blocks={article.blocks || []} />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }

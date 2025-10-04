@@ -21,7 +21,17 @@ import { useToast } from "../../../../context/ToastContext";
 
 export default function ExpenseFormScreen() {
   const { t } = useTranslation();
-  const { showSuccess, showError } = useToast();
+  // Safe useToast with error handling
+  let showSuccess, showError;
+  try {
+    const toastContext = useToast();
+    showSuccess = toastContext.showSuccess;
+    showError = toastContext.showError;
+  } catch (error) {
+    console.warn("ToastProvider not available:", error.message);
+    showSuccess = () => {}; // Fallback function
+    showError = () => {}; // Fallback function
+  }
   const { petId, expenseId } = useLocalSearchParams();
   const router = useRouter();
 

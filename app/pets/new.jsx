@@ -12,7 +12,17 @@ export default function PetForm() {
   const { petId } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
-  const { showSuccess, showError } = useToast();
+  // Safe useToast with error handling
+  let showSuccess, showError;
+  try {
+    const toastContext = useToast();
+    showSuccess = toastContext.showSuccess;
+    showError = toastContext.showError;
+  } catch (error) {
+    console.warn("ToastProvider not available:", error.message);
+    showSuccess = () => {}; // Fallback function
+    showError = () => {}; // Fallback function
+  }
   const [name, setName] = useState("");
   const [species, setSpecies] = useState("dog");
   const [breed, setBreed] = useState("");

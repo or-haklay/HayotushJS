@@ -1,6 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, FlatList, Pressable, SafeAreaView } from "react-native";
-import { Searchbar, Text, ActivityIndicator, Chip } from "react-native-paper";
+import {
+  View,
+  FlatList,
+  Pressable,
+  SafeAreaView,
+  ImageBackground,
+} from "react-native";
+import { Text, ActivityIndicator, Chip } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { COLORS, SIZING, FONTS } from "../../../theme/theme";
 import * as contentService from "../../../services/contentService";
@@ -24,7 +30,6 @@ const getCategoryColor = (categoryKey) => {
 export default function LearnCategoryList() {
   const { category, title } = useLocalSearchParams();
   const router = useRouter();
-  const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
   const [sort, setSort] = useState("recent");
@@ -34,7 +39,6 @@ export default function LearnCategoryList() {
     try {
       const res = await contentService.getArticles({
         category,
-        q,
         sort,
         page: 1,
         pageSize: 50,
@@ -45,98 +49,147 @@ export default function LearnCategoryList() {
     } finally {
       setLoading(false);
     }
-  }, [category, q, sort]);
+  }, [category, sort]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      <View
-        style={{
-          flex: 1,
-          paddingHorizontal: SIZING.padding,
-          paddingBottom: SIZING.padding,
-          paddingTop: SIZING.padding * 2,
-        }}
+    <ImageBackground
+      source={require("../../../assets/images/pet-new-background.png")}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.8)" }}
       >
-        <Text style={{ ...FONTS.h2, marginBottom: 8, color: COLORS.neutral }}>
-          {title || "קטגוריה"}
-        </Text>
-
-        <Searchbar
-          placeholder="חיפוש במאמרים"
-          value={q}
-          onChangeText={setQ}
-          onSubmitEditing={load}
-          style={{ backgroundColor: COLORS.white, marginBottom: 8 }}
-          iconColor={COLORS.primary}
-        />
-
-        <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
-          <Chip selected={sort === "recent"} onPress={() => setSort("recent")}>
-            חדש
-          </Chip>
-          <Chip selected={sort === "title"} onPress={() => setSort("title")}>
-            לפי כותרת
-          </Chip>
-        </View>
-
-        {loading ? (
-          <View
-            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: SIZING.padding,
+            paddingBottom: SIZING.padding,
+            paddingTop: SIZING.padding * 2,
+            direction: "rtl",
+          }}
+        >
+          <Text
+            style={{
+              ...FONTS.h2,
+              marginBottom: 8,
+              color: COLORS.neutral,
+              textAlign: "right",
+              writingDirection: "rtl",
+            }}
           >
-            <ActivityIndicator />
+            {title || "קטגוריה"}
+          </Text>
+
+          <View
+            style={{ flexDirection: "row-reverse", gap: 8, marginBottom: 8 }}
+          >
+            <Chip
+              selected={sort === "recent"}
+              onPress={() => setSort("recent")}
+              style={{ textAlign: "right" }}
+            >
+              חדש
+            </Chip>
+            <Chip
+              selected={sort === "title"}
+              onPress={() => setSort("title")}
+              style={{ textAlign: "right" }}
+            >
+              לפי כותרת
+            </Chip>
           </View>
-        ) : (
-          <FlatList
-            data={items}
-            keyExtractor={(i) => i.slug}
-            contentContainerStyle={{ paddingBottom: 24 }}
-            renderItem={({ item }) => (
-              <Pressable
-                onPress={() =>
-                  router.push({
-                    pathname: "/(tabs)/learn/article/[slug]",
-                    params: { slug: item.slug },
-                  })
-                }
-                style={{
-                  backgroundColor: getCategoryColor(category),
-                  borderRadius: 12,
-                  padding: 14,
-                  marginBottom: 10,
-                  borderWidth: 1,
-                  borderColor: COLORS.neutral + "22",
-                }}
-              >
-                <Text style={{ ...FONTS.h3, color: COLORS.dark }}>
-                  {item.title}
-                </Text>
-                {item.summary ? (
+
+          {loading ? (
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ActivityIndicator />
+            </View>
+          ) : (
+            <FlatList
+              data={items}
+              keyExtractor={(i) => i.slug}
+              contentContainerStyle={{ paddingBottom: 24 }}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(tabs)/learn/article/[slug]",
+                      params: { slug: item.slug },
+                    })
+                  }
+                  style={{
+                    backgroundColor: getCategoryColor(category),
+                    borderRadius: 12,
+                    padding: 14,
+                    marginBottom: 10,
+                    borderWidth: 1,
+                    borderColor: COLORS.neutral + "22",
+                  }}
+                >
                   <Text
-                    style={{ color: COLORS.neutral, marginTop: 6 }}
-                    numberOfLines={2}
+                    style={{
+                      ...FONTS.h3,
+                      color: COLORS.dark,
+                      textAlign: "right",
+                      writingDirection: "rtl",
+                    }}
                   >
-                    {item.summary}
+                    {item.title}
                   </Text>
-                ) : null}
-                {item.readingTimeMin ? (
-                  <Text style={{ color: COLORS.neutral, marginTop: 6 }}>
-                    ~{item.readingTimeMin} דק'
+                  {item.summary ? (
+                    <Text
+                      style={{
+                        color: COLORS.neutral,
+                        marginTop: 6,
+                        textAlign: "right",
+                        writingDirection: "rtl",
+                      }}
+                      numberOfLines={2}
+                    >
+                      {item.summary}
+                    </Text>
+                  ) : null}
+                  {item.readingTimeMin ? (
+                    <Text
+                      style={{
+                        color: COLORS.neutral,
+                        marginTop: 6,
+                        textAlign: "right",
+                        writingDirection: "rtl",
+                      }}
+                    >
+                      ~{item.readingTimeMin} דק'
+                    </Text>
+                  ) : null}
+                </Pressable>
+              )}
+              ListEmptyComponent={
+                <View style={{ padding: 16 }}>
+                  <Text
+                    style={{
+                      color: COLORS.neutral,
+                      textAlign: "right",
+                      writingDirection: "rtl",
+                    }}
+                  >
+                    לא נמצאו מאמרים
                   </Text>
-                ) : null}
-              </Pressable>
-            )}
-            ListEmptyComponent={
-              <View style={{ padding: 16 }}>
-                <Text style={{ color: COLORS.neutral }}>לא נמצאו מאמרים</Text>
-              </View>
-            }
-          />
-        )}
-      </View>
-    </SafeAreaView>
+                </View>
+              }
+            />
+          )}
+        </View>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }

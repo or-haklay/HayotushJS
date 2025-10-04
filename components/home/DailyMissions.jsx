@@ -13,7 +13,16 @@ export default function DailyMissions({
   onRefresh,
 }) {
   const { t } = useTranslation();
-  const { showSuccess } = useToast();
+
+  // Safe useToast with error handling
+  let showSuccess;
+  try {
+    const toastContext = useToast();
+    showSuccess = toastContext.showSuccess;
+  } catch (error) {
+    console.warn("ToastProvider not available:", error.message);
+    showSuccess = () => {}; // Fallback function
+  }
   const completed = missions.filter((m) => m.completed).length;
   const total = missions.length || 1;
   const progress = completed / total;

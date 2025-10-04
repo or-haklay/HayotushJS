@@ -175,4 +175,3 @@ export default {
 };
 
 export type { Pet, CreatePetData, UpdatePetData };
-

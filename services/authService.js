@@ -71,13 +71,23 @@ async function createUser(userData) {
 }
 
 async function login(email, password) {
-  const { data } = await httpServices.post("/users/login", {
-    email,
-    password,
-  });
-  // Expecting { token, user? }
-  await setToken(data.token);
-  return data.token; // keep original behavior (returns the token)
+  try {
+    const { data } = await httpServices.post("/users/login", {
+      email,
+      password,
+    });
+
+    // Expecting { token, user? }
+    if (data && data.token) {
+      await setToken(data.token);
+      return data.token; // keep original behavior (returns the token)
+    } else {
+      throw new Error("No token received from server");
+    }
+  } catch (error) {
+    console.error("Login service error:", error);
+    throw error;
+  }
 }
 
 // Useful on app start: read token from storage and set Authorization header

@@ -120,7 +120,18 @@ export default function ServiceDetailsScreen() {
         />
 
         {/* Summary card */}
-        <Card style={{ margin: 12, backgroundColor: COLORS.white }}>
+        <Card
+          style={{
+            margin: 12,
+            backgroundColor: COLORS.white,
+            elevation: 3,
+            shadowColor: COLORS.black,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            borderRadius: 12,
+          }}
+        >
           <Card.Title
             title={title}
             subtitle={toText(details.formattedAddress)}
@@ -142,6 +153,39 @@ export default function ServiceDetailsScreen() {
                     ? t("details.open_now")
                     : t("details.closed")}
                 </Chip>
+              )}
+              {typeof details.rating === "number" && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: COLORS.primary,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 16,
+                    marginRight: 8,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: COLORS.white,
+                      fontSize: 14,
+                      fontWeight: "bold",
+                      marginRight: 4,
+                    }}
+                  >
+                    ⭐
+                  </Text>
+                  <Text
+                    style={{
+                      color: COLORS.white,
+                      fontSize: 14,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {details.rating.toFixed(1)}
+                  </Text>
+                </View>
               )}
               {typeof details.userRatingCount === "number" && (
                 <Chip compact style={{ backgroundColor: COLORS.background }}>
@@ -210,6 +254,12 @@ export default function ServiceDetailsScreen() {
             marginHorizontal: 12,
             marginTop: 4,
             backgroundColor: COLORS.white,
+            elevation: 2,
+            shadowColor: COLORS.black,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.08,
+            shadowRadius: 3,
+            borderRadius: 12,
           }}
         >
           <Card.Title title="Opening Hours" />
@@ -230,16 +280,32 @@ export default function ServiceDetailsScreen() {
         <Divider style={{ marginTop: 12 }} />
 
         {/* Reviews title */}
-        <Card
+        <View
           style={{
             marginHorizontal: 12,
-            marginTop: 12,
-            backgroundColor: "transparent",
-            elevation: 0,
+            marginTop: 16,
+            marginBottom: 8,
           }}
         >
-          <Card.Title title="Reviews" />
-        </Card>
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: "bold",
+              color: COLORS.dark,
+              marginBottom: 4,
+            }}
+          >
+            ביקורות
+          </Text>
+          <View
+            style={{
+              height: 2,
+              backgroundColor: COLORS.primary,
+              width: 40,
+              borderRadius: 1,
+            }}
+          />
+        </View>
       </View>
     );
   };
@@ -256,15 +322,37 @@ export default function ServiceDetailsScreen() {
         <Appbar.BackAction onPress={() => router.back()} />
         <Appbar.Content title={title} />
         {typeof details?.rating === "number" && (
-          <Badge
+          <View
             style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: COLORS.primary,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 20,
               marginRight: 12,
-              backgroundColor: COLORS.accent,
-              color: COLORS.black,
             }}
           >
-            {details.rating.toFixed(1)}
-          </Badge>
+            <Text
+              style={{
+                color: COLORS.white,
+                fontSize: 16,
+                fontWeight: "bold",
+                marginRight: 4,
+              }}
+            >
+              ⭐
+            </Text>
+            <Text
+              style={{
+                color: COLORS.white,
+                fontSize: 16,
+                fontWeight: "bold",
+              }}
+            >
+              {details.rating.toFixed(1)}
+            </Text>
+          </View>
         )}
       </Appbar.Header>
 
@@ -280,32 +368,78 @@ export default function ServiceDetailsScreen() {
           keyExtractor={(_, idx) => `rev_${idx}`}
           ListHeaderComponent={<Header />}
           renderItem={({ item }) => (
-            <View
-              style={{ marginHorizontal: 12, backgroundColor: COLORS.white }}
+            <Card
+              style={{
+                marginHorizontal: 12,
+                marginVertical: 4,
+                backgroundColor: COLORS.white,
+                elevation: 1,
+                shadowColor: COLORS.black,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.05,
+                shadowRadius: 2,
+              }}
             >
-              <View style={{ paddingHorizontal: 12, paddingVertical: 10 }}>
+              <Card.Content style={{ paddingVertical: 8 }}>
                 <View
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-between",
+                    marginBottom: 8,
                   }}
                 >
-                  <Text style={{ fontWeight: "600", color: COLORS.dark }}>
+                  <Text
+                    style={{
+                      fontWeight: "600",
+                      color: COLORS.dark,
+                      fontSize: 16,
+                    }}
+                  >
                     {toText(item?.authorAttribution?.displayName) || "User"}
                   </Text>
-                  <Chip
-                    compact
-                    icon="star"
-                    style={{ backgroundColor: COLORS.background }}
+                  <View
+                    style={{
+                      backgroundColor: COLORS.primary,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
                   >
-                    {typeof item?.rating === "number"
-                      ? item.rating.toFixed(1)
-                      : toText(item?.rating)}
-                  </Chip>
+                    <Text
+                      style={{
+                        color: COLORS.white,
+                        fontSize: 12,
+                        fontWeight: "bold",
+                        marginRight: 2,
+                      }}
+                    >
+                      ⭐
+                    </Text>
+                    <Text
+                      style={{
+                        color: COLORS.white,
+                        fontSize: 11,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {typeof item?.rating === "number"
+                        ? item.rating.toFixed(1)
+                        : toText(item?.rating)}
+                    </Text>
+                  </View>
                 </View>
                 {item?.text ? (
-                  <Text style={{ color: COLORS.neutral, marginTop: 4 }}>
+                  <Text
+                    style={{
+                      color: COLORS.neutral,
+                      marginBottom: 8,
+                      lineHeight: 20,
+                      fontSize: 14,
+                    }}
+                  >
                     {toText(item.text)}
                   </Text>
                 ) : null}
@@ -313,16 +447,19 @@ export default function ServiceDetailsScreen() {
                   <Text
                     style={{
                       color: COLORS.disabled,
-                      marginTop: 2,
                       fontSize: 12,
+                      fontStyle: "italic",
                     }}
                   >
-                    {toText(item.publishTime)}
+                    {new Date(item.publishTime).toLocaleDateString("he-IL", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </Text>
                 ) : null}
-              </View>
-              <Divider />
-            </View>
+              </Card.Content>
+            </Card>
           )}
           contentContainerStyle={{ paddingBottom: 24 }}
         />

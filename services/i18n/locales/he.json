@@ -130,6 +130,7 @@
   "auth.login.loading": "מתחבר...",
   "auth.login.no_account": "אין לך חשבון? הירשם",
   "auth.login.or": "או",
+  "auth.login.success": "התחברת בהצלחה!",
   "auth.login.error.incorrect_credentials": "אימייל או סיסמה שגויים",
   "auth.login.error.email_required": "אימייל נדרש",
   "auth.login.error.invalid_email": "כתובת אימייל לא תקינה",
@@ -264,6 +265,13 @@
   "settings.language.current": "עברית",
   "settings.language.hebrew": "עברית",
   "settings.language.english": "English",
+  "settings.legal.title": "מסמכים משפטיים",
+  "settings.legal.terms_of_service": "תנאי שימוש",
+  "settings.legal.terms_description": "קרא את תנאי השימוש המלאים",
+  "settings.legal.privacy_policy": "מדיניות פרטיות",
+  "settings.legal.privacy_description": "קרא את מדיניות הפרטיות המלאה",
+  "settings.legal.open_error": "שגיאה בפתיחת המסמך",
+  "settings.legal.open_error_message": "לא ניתן לפתוח את המסמך. אנא נסה שוב מאוחר יותר",
 
   "pets": {
     "title": "חיות מחמד",

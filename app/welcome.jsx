@@ -13,7 +13,6 @@ import { COLORS, SIZING, FONTS } from "../theme/theme"; // ודא שהנתיב �
 import { useRouter } from "expo-router";
 import LogoWithName from "../components/ui/LogoWithName";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useTranslation } from "react-i18next";
 
 const image = require("../assets/images/dogs/dog-sit.png"); // ודא שהנתיב נכון
@@ -41,8 +40,7 @@ const WelcomeScreen = () => {
             style={styles.button}
             buttonColor={COLORS.accent}
           >
-            {t("welcome.start_button")}{" "}
-            {<FontAwesome name="long-arrow-right" size={24} color="black" />}
+            {t("welcome.start_button")} →
           </Button>
         </View>
       </ScrollView>

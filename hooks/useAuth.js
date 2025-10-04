@@ -9,6 +9,8 @@ export const useAuth = () => {
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
+        // Refresh auth header from storage first
+        await authService.refreshAuthHeaderFromStorage();
         const currentUser = await authService.getUser();
         setUser(currentUser);
       } catch (error) {

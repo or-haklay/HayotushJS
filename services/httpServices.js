@@ -37,16 +37,21 @@ axios.interceptors.response.use(
     return response;
   },
   async (error) => {
-    console.error("❌ Response error:", {
+    // Log error details for debugging
+    const errorDetails = {
       status: error.response?.status,
       url: error.config?.url,
       data: error.response?.data,
       message: error.message,
-    });
+      code: error.code,
+    };
+
+    console.error("❌ Response error:", errorDetails);
 
     const status = error.response?.status;
 
     if (status === 401) {
+      console.log("🔐 Unauthorized - redirecting to login");
       Alert.alert(
         "Session Expired",
         "Your session has expired. Please log in again."
@@ -54,6 +59,12 @@ axios.interceptors.response.use(
 
       await AsyncStorage.removeItem(TOKEN_KEY);
       router.replace("/(auth)/login");
+    } else if (status === 500) {
+      console.error("🚨 Server error:", error.response?.data);
+    } else if (status === 404) {
+      console.error("🔍 Not found:", error.config?.url);
+    } else if (!error.response) {
+      console.error("🌐 Network error:", error.message);
     }
 
     return Promise.reject(error);

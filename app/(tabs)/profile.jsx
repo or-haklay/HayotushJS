@@ -27,7 +27,6 @@ import {
   Dialog,
   IconButton,
 } from "react-native-paper";
-import { Ionicons } from "@expo/vector-icons";
 import Joi from "joi";
 import { COLORS, FONTS, SIZING } from "../../theme/theme";
 import userService from "../../services/userService";
@@ -654,7 +653,7 @@ export default function ProfileScreen() {
         >
           {/* Header with Profile Picture */}
           <View style={styles.headerCard}>
-            + {/* Hero background */}
+            {/* Hero background */}
             <ImageBackground
               source={require("../../assets/images/cover.png")}
               style={styles.hero}
@@ -891,9 +890,20 @@ export default function ProfileScreen() {
                 </View>
               )}
               {last7 && last7.length > 0 ? (
-                <View style={{ marginTop: 10 }}>
-                  <Text style={[styles.metaText, { marginBottom: 6 }]}>
-                    7 הימים האחרונים
+                <View style={{ marginTop: 12 }}>
+                  <Text
+                    style={[
+                      styles.metaText,
+                      {
+                        marginBottom: 8,
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: COLORS.primary,
+                        textAlign: "center",
+                      },
+                    ]}
+                  >
+                    📅 7 הימים האחרונים
                   </Text>
                   <ScrollView
                     horizontal
@@ -908,18 +918,16 @@ export default function ProfileScreen() {
                           styles.dayCard,
                           d.isToday && styles.todayCard,
                           {
-                            marginLeft: index === 0 ? 0 : 8,
+                            marginLeft: index === 0 ? 0 : 12,
                             backgroundColor: d.isToday
                               ? COLORS.primary
-                              : d.allDone
-                              ? COLORS.primary + "15"
                               : COLORS.white,
                             borderColor: d.isToday
                               ? COLORS.primary
                               : d.allDone
-                              ? COLORS.primary
-                              : COLORS.neutral + "44",
-                            borderWidth: d.isToday ? 2 : 1,
+                              ? COLORS.success
+                              : COLORS.neutral + "30",
+                            borderWidth: d.isToday ? 2.5 : 1.5,
                           },
                         ]}
                       >
@@ -931,7 +939,7 @@ export default function ProfileScreen() {
                               color: d.isToday
                                 ? COLORS.white
                                 : d.allDone
-                                ? COLORS.primary
+                                ? COLORS.success
                                 : COLORS.neutral,
                             },
                           ]}
@@ -947,7 +955,7 @@ export default function ProfileScreen() {
                                 color: d.isToday
                                   ? COLORS.white
                                   : d.allDone
-                                  ? COLORS.primary
+                                  ? COLORS.success
                                   : COLORS.neutral,
                               },
                             ]}
@@ -955,12 +963,18 @@ export default function ProfileScreen() {
                             {d.completed}/{d.total}
                           </Text>
                           {d.allDone && (
-                            <Ionicons
-                              name="checkmark-circle"
-                              size={16}
-                              color={d.isToday ? COLORS.white : COLORS.primary}
-                              style={{ marginLeft: 4 }}
-                            />
+                            <Text
+                              style={{
+                                fontSize: 16,
+                                fontWeight: "bold",
+                                color: d.isToday
+                                  ? COLORS.white
+                                  : COLORS.success,
+                                marginLeft: 4,
+                              }}
+                            >
+                              ✓
+                            </Text>
                           )}
                         </View>
                       </View>
@@ -979,9 +993,21 @@ export default function ProfileScreen() {
             <View style={styles.card}>
               {Array.isArray(pets) && pets.length > 0 ? (
                 pets.map((p) => (
-                  <View key={p._id || p.id} style={{ marginBottom: 10 }}>
+                  <TouchableOpacity
+                    key={p._id || p.id}
+                    style={{
+                      marginBottom: 10,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                    onPress={() => router.push(`/pets/${p._id || p.id}`)}
+                  >
                     <Text style={styles.metaText}>{p.name}</Text>
-                  </View>
+                    <Text style={{ fontSize: 20, color: COLORS.disabled }}>
+                      ▶
+                    </Text>
+                  </TouchableOpacity>
                 ))
               ) : (
                 <Text style={styles.metaText}>
@@ -1568,41 +1594,48 @@ const styles = StyleSheet.create({
 
   // Day cards for carousel
   dayCard: {
-    width: 80,
-    height: 60,
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 8,
+    width: 90,
+    height: 70,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    padding: 10,
     alignItems: "center",
     justifyContent: "center",
-    elevation: 2,
+    elevation: 3,
     shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
   },
   todayCard: {
-    elevation: 4,
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    transform: [{ scale: 1.05 }],
+    elevation: 6,
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    transform: [{ scale: 1.08 }],
+    borderWidth: 2.5,
   },
   dayDate: {
-    fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 4,
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 6,
+    textAlign: "center",
   },
   dayProgress: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
   },
   dayProgressText: {
-    fontSize: 11,
-    fontWeight: "500",
+    fontSize: 12,
+    fontWeight: "600",
+    textAlign: "center",
   },
   todayText: {
-    fontWeight: "700",
+    fontWeight: "800",
+    textShadowColor: "rgba(0,0,0,0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 
   // Level system styles

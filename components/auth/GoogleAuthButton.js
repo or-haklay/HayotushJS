@@ -20,6 +20,13 @@ export default function GoogleAuthButton() {
   // 👇 קבע מפורשות את ה-Expo Proxy שלך (כבר רשמת אותו בגוגל)
   const redirectUri = "https://auth.expo.io/@orhaklay/hayotush";
 
+  // Debug information
+  console.log("🔧 Google OAuth Config:", {
+    clientId: clientId ? `${clientId.slice(0, 20)}...` : "NOT FOUND",
+    redirectUri,
+    hasExpoConfig: !!Constants.expoConfig?.extra,
+  });
+
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
       clientId,
@@ -42,6 +49,7 @@ export default function GoogleAuthButton() {
       if (response?.type === "success") {
         const { code } = response.params;
         try {
+          console.log("🔄 Google OAuth success, exchanging code for token...");
           await authService.oauthLogin("google", {
             code,
             codeVerifier: request?.codeVerifier,
@@ -49,8 +57,15 @@ export default function GoogleAuthButton() {
             clientId:
               Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
           });
+          console.log("✅ Google OAuth completed successfully");
           // router.replace("/(tabs)/home")
-        } catch (e) {}
+        } catch (e) {
+          console.error("❌ Google OAuth error:", e);
+        }
+      } else if (response?.type === "error") {
+        console.error("❌ Google OAuth error:", response.error);
+      } else if (response?.type === "cancel") {
+        console.log("🚫 Google OAuth cancelled by user");
       }
     })();
   }, [response]);

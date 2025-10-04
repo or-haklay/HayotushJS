@@ -1,7 +1,6 @@
 import React from "react";
 import { View, TouchableOpacity, Image } from "react-native";
 import { Text } from "react-native-paper";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import styles from "./styles";
 
@@ -52,7 +51,7 @@ const PetCard = ({ pet, onPress = null }) => {
         <Text style={styles.petName}>{pet?.name || "No pet selected"}</Text>
         <Text style={styles.petType}>{pet?.species || pet?.type || ""}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={24} color={styles.chevron.color} />
+      <Text style={{ fontSize: 24, color: styles.chevron.color }}>▶</Text>
     </TouchableOpacity>
   );
 };

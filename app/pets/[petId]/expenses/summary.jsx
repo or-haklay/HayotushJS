@@ -13,7 +13,8 @@ import {
   Chip,
   Button,
 } from "react-native-paper";
-import { CartesianChart, Line, PolarChart, Pie } from "victory-native";
+import { LineChart, PieChart } from "react-native-chart-kit";
+import { Dimensions } from "react-native";
 import { listExpenses } from "../../../../services/expensesService";
 import gamificationService from "../../../../services/gamificationService";
 import { COLORS, FONTS, SIZING } from "../../../../theme/theme";
@@ -405,260 +406,78 @@ export default function ExpensesSummaryScreen() {
           );
         }
 
+        const screenWidth = Dimensions.get("window").width - 32;
+
         return (
-          <View style={{ height: 380 }}>
-            <CartesianChart
-              data={lineChartData}
-              xKey="x"
-              yKeys={["y"]}
-              domainPadding={{ left: 20, right: 20, top: 20, bottom: 20 }}
-              domain={{ y: [0, null] }}
-            >
-              {({ points, chartBounds }) => (
-                <Line
-                  points={points.y}
-                  color={COLORS.primary}
-                  strokeWidth={3}
-                  animate={{ type: "timing", duration: 300 }}
-                />
-              )}
-            </CartesianChart>
-
-            {/* סימוני צירים מפורטים */}
-            <View
-              style={{
-                position: "absolute",
-                bottom: 5,
-                left: 20,
-                right: 20,
-                flexDirection: "row",
-                justifyContent: "space-between",
-              }}
-            >
-              {/* כותרות הצירים הוסרו - רק הנתונים נשארו */}
-            </View>
-
-            {/* סימון ציר Y עם כמויות */}
-            <View
-              style={{
-                position: "absolute",
-                left: 5,
-                top: 20,
-                bottom: 40,
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              {/* כותרות הציר Y הוסרו - רק הנתונים נשארו */}
-            </View>
-
-            {/* סימון תאריכים/חודשים בציר X */}
-            <View
-              style={{
-                position: "absolute",
-                bottom: 25,
-                left: 20,
-                right: 20,
-                flexDirection: "row",
-                justifyContent: "space-between",
-              }}
-            >
-              {(() => {
-                try {
-                  // חישוב איזה תאריכים להציג
-                  const totalPoints = lineChartData.length;
-                  let step = 1;
-
-                  if (totalPoints > 12) {
-                    step = Math.ceil(totalPoints / 12); // מקסימום 12 תאריכים
-                  } else if (totalPoints > 6) {
-                    step = Math.ceil(totalPoints / 6); // מקסימום 6 תאריכים
+          <View
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "transparent",
+              paddingVertical: 20,
+            }}
+          >
+            <LineChart
+              data={{
+                labels: lineChartData.map((item) => {
+                  // קיצור שמות החודשים ל-3 אותיות
+                  if (summaryType === "yearly") {
+                    return item.x ? item.x.substring(0, 3) : item.x;
+                  } else {
+                    // עבור חודשי - הצג רק כל יום שני
+                    const dayNum = parseInt(item.x);
+                    return dayNum % 2 === 0 ? item.x : "";
                   }
-
-                  return lineChartData.map((item, index) => {
-                    if (!item || index % step !== 0) return null;
-
-                    return (
-                      <Text
-                        key={index}
-                        style={[
-                          FONTS.caption,
-                          {
-                            color: COLORS.neutral,
-                            fontSize: 10,
-                            textAlign: "center",
-                            width: 35,
-                            fontWeight: "500",
-                          },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {
-                          summaryType === "yearly"
-                            ? item.x && item.x.substring
-                              ? item.x.substring(0, 3)
-                              : item.x // רק 3 אותיות ראשונות של החודש
-                            : `${item.x}/${month + 1}` // יום/חודש
-                        }
-                      </Text>
-                    );
-                  });
-                } catch (error) {
-                  console.error("X axis labels error:", error);
-                  return null;
-                }
-              })()}
-            </View>
-
-            {/* סימון כמויות בציר Y */}
-            <View
-              style={{
-                position: "absolute",
-                left: 25,
-                top: 20,
-                bottom: 40,
-                justifyContent: "space-between",
-                alignItems: "flex-start",
+                }),
+                datasets: [
+                  {
+                    data: lineChartData.map((item) => item.y),
+                    color: (opacity = 1) =>
+                      selectedCategory
+                        ? (CAT_COLORS[selectedCategory] || COLORS.primary) +
+                          Math.floor(opacity * 255)
+                            .toString(16)
+                            .padStart(2, "0")
+                        : COLORS.primary +
+                          Math.floor(opacity * 255)
+                            .toString(16)
+                            .padStart(2, "0"),
+                    strokeWidth: 2,
+                  },
+                ],
               }}
-            >
-              {(() => {
-                try {
-                  if (!lineChartData || lineChartData.length === 0) {
-                    return (
-                      <Text
-                        style={[
-                          FONTS.caption,
-                          {
-                            color: COLORS.neutral,
-                            fontSize: 10,
-                            textAlign: "left",
-                            width: 50,
-                            fontWeight: "500",
-                          },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        0 ₪
-                      </Text>
-                    );
-                  }
-
-                  const validData = lineChartData.filter(
-                    (item) =>
-                      item && typeof item.y === "number" && !isNaN(item.y)
-                  );
-                  if (validData.length === 0) {
-                    return (
-                      <Text
-                        style={[
-                          FONTS.caption,
-                          {
-                            color: COLORS.neutral,
-                            fontSize: 10,
-                            textAlign: "left",
-                            width: 50,
-                            fontWeight: "500",
-                          },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        0 ₪
-                      </Text>
-                    );
-                  }
-
-                  const maxValue = Math.max(...validData.map((item) => item.y));
-                  const minValue = 0; // תמיד מתחילים מ-0
-
-                  // אם אין נתונים
-                  if (maxValue === 0) {
-                    return (
-                      <Text
-                        style={[
-                          FONTS.caption,
-                          {
-                            color: COLORS.neutral,
-                            fontSize: 10,
-                            textAlign: "left",
-                            width: 50,
-                            fontWeight: "500",
-                          },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        0 ₪
-                      </Text>
-                    );
-                  }
-
-                  // חישוב חלוקה יפה של הציר
-                  const roundToNice = (value) => {
-                    try {
-                      if (value <= 0) return 1;
-                      const magnitude = Math.pow(
-                        10,
-                        Math.floor(Math.log10(value))
-                      );
-                      const normalized = value / magnitude;
-
-                      if (normalized <= 1) return magnitude;
-                      if (normalized <= 2) return 2 * magnitude;
-                      if (normalized <= 5) return 5 * magnitude;
-                      return 10 * magnitude;
-                    } catch (error) {
-                      console.error("Round to nice error:", error);
-                      return value;
-                    }
-                  };
-
-                  const niceMax = roundToNice(maxValue);
-                  const step = niceMax / 4; // 5 נקודות: 0, step, 2*step, 3*step, niceMax
-
-                  return Array.from({ length: 5 }, (_, i) => {
-                    const value = i * step;
-                    return (
-                      <Text
-                        key={i}
-                        style={[
-                          FONTS.caption,
-                          {
-                            color: COLORS.neutral,
-                            fontSize: 10,
-                            textAlign: "left",
-                            width: 50,
-                            fontWeight: "500",
-                          },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {value >= 1000
-                          ? `${(value / 1000).toFixed(1)}K ₪`
-                          : `${value.toFixed(0)} ₪`}
-                      </Text>
-                    );
-                  }).reverse(); // הפוך כדי שהערך הגבוה יהיה למעלה
-                } catch (error) {
-                  console.error("Y axis labels error:", error);
-                  return (
-                    <Text
-                      style={[
-                        FONTS.caption,
-                        {
-                          color: COLORS.neutral,
-                          fontSize: 10,
-                          textAlign: "left",
-                          width: 50,
-                          fontWeight: "500",
-                        },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      0 ₪
-                    </Text>
-                  );
-                }
-              })()}
-            </View>
+              width={screenWidth}
+              height={220}
+              chartConfig={{
+                decimalPlaces: 0,
+                backgroundGradientFromOpacity: 0,
+                backgroundGradientToOpacity: 0,
+                color: (opacity = 1) =>
+                  COLORS.primary +
+                  Math.floor(opacity * 255)
+                    .toString(16)
+                    .padStart(2, "0"),
+                labelColor: (opacity = 1) =>
+                  COLORS.neutral +
+                  Math.floor(opacity * 255)
+                    .toString(16)
+                    .padStart(2, "0"),
+                style: {
+                  borderRadius: 16,
+                },
+                propsForDots: {
+                  r: summaryType === "yearly" ? "4" : "0",
+                  strokeWidth: "2",
+                  stroke: COLORS.primary,
+                },
+              }}
+              bezier
+              style={{
+                marginVertical: 8,
+                borderRadius: 16,
+                backgroundColor: "transparent",
+              }}
+            />
 
             {/* Legend לגרף הקו */}
             {selectedCategory && (
@@ -704,149 +523,41 @@ export default function ExpensesSummaryScreen() {
           );
         }
 
+        const screenWidth = Dimensions.get("window").width - 32;
+
         return (
-          <View style={{ height: 380 }}>
-            <PolarChart
-              data={pieChartData}
-              labelKey="label"
-              valueKey="value"
-              colorKey="color"
-            >
-              <Pie.Chart />
-            </PolarChart>
-
-            {/* Legend לגרף העוגה עם סכומים - בשורה מתחת לגרף */}
-            <View
-              style={{
-                marginTop: 24,
-                paddingHorizontal: 16,
+          <View style={{ alignItems: "center", paddingVertical: 10 }}>
+            <PieChart
+              data={pieChartData.map((item, index) => ({
+                name: getCategoryLabel(item.label),
+                population: item.value,
+                color: item.color,
+                legendFontColor: COLORS.neutral,
+                legendFontSize: 12,
+              }))}
+              width={screenWidth}
+              height={220}
+              chartConfig={{
+                color: (opacity = 1) =>
+                  COLORS.primary +
+                  Math.floor(opacity * 255)
+                    .toString(16)
+                    .padStart(2, "0"),
+                labelColor: (opacity = 1) =>
+                  COLORS.neutral +
+                  Math.floor(opacity * 255)
+                    .toString(16)
+                    .padStart(2, "0"),
               }}
-            >
-              {/* שורת כותרות */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  paddingBottom: 8,
-                  borderBottomWidth: 1,
-                  borderBottomColor: COLORS.neutral + "20",
-                  marginBottom: 12,
-                }}
-              >
-                <Text style={[FONTS.h4, { color: COLORS.primary, flex: 2 }]}>
-                  קטגוריה
-                </Text>
-                <Text
-                  style={[
-                    FONTS.h4,
-                    { color: COLORS.primary, flex: 1, textAlign: "center" },
-                  ]}
-                >
-                  סכום
-                </Text>
-                <Text
-                  style={[
-                    FONTS.h4,
-                    { color: COLORS.primary, flex: 1, textAlign: "center" },
-                  ]}
-                >
-                  אחוז
-                </Text>
-              </View>
-
-              {/* שורות הנתונים */}
-              {pieChartData.map((item, index) => {
-                try {
-                  if (!item || !item.label || typeof item.value !== "number")
-                    return null;
-
-                  return (
-                    <View
-                      key={index}
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        paddingVertical: 8,
-                        borderBottomWidth:
-                          index < pieChartData.length - 1 ? 1 : 0,
-                        borderBottomColor: COLORS.neutral + "10",
-                      }}
-                    >
-                      {/* צבע + שם הקטגוריה */}
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          flex: 2,
-                        }}
-                      >
-                        <View
-                          style={{
-                            width: 12,
-                            height: 12,
-                            backgroundColor: item.color || "#FF7043",
-                            borderRadius: 6,
-                            marginRight: 8,
-                          }}
-                        />
-                        <Text
-                          style={[
-                            FONTS.body,
-                            {
-                              color: COLORS.neutral,
-                              fontWeight: "500",
-                            },
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {getCategoryLabel(item.label)}
-                        </Text>
-                      </View>
-
-                      {/* הסכום */}
-                      <Text
-                        style={[
-                          FONTS.body,
-                          {
-                            color: COLORS.primary,
-                            fontWeight: "bold",
-                            flex: 1,
-                            textAlign: "center",
-                          },
-                        ]}
-                      >
-                        {item.value >= 1000
-                          ? `${(item.value / 1000).toFixed(1)}K ₪`
-                          : `${item.value.toFixed(0)} ₪`}
-                      </Text>
-
-                      {/* אחוז מהסה"כ */}
-                      <Text
-                        style={[
-                          FONTS.body,
-                          {
-                            color: COLORS.neutral,
-                            fontWeight: "500",
-                            flex: 1,
-                            textAlign: "center",
-                          },
-                        ]}
-                      >
-                        {currentTotal > 0
-                          ? ((item.value / currentTotal) * 100).toFixed(1)
-                          : "0.0"}
-                        %
-                      </Text>
-                    </View>
-                  );
-                } catch (error) {
-                  console.error("Pie chart item error:", error);
-                  return null;
-                }
-              })}
-            </View>
+              accessor="population"
+              backgroundColor="transparent"
+              paddingLeft="15"
+              hasLegend={true}
+              style={{
+                marginVertical: 8,
+                borderRadius: 16,
+              }}
+            />
           </View>
         );
       }
@@ -949,7 +660,7 @@ export default function ExpensesSummaryScreen() {
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={load} />
         }
-        contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 150, flexGrow: 1 }}
       >
         <View
           style={{
@@ -1223,6 +934,150 @@ export default function ExpensesSummaryScreen() {
             )}
           </Card.Content>
         </Card>
+
+        {/* כרטיס נפרד לפירוט הוצאות לפי קטגוריה - רק לגרף עוגה */}
+        {!loading &&
+          filteredRows &&
+          filteredRows.length > 0 &&
+          chartType === "pie" && (
+            <Card style={{ marginTop: 16, borderRadius: 12 }}>
+              <Card.Content>
+                <Text
+                  style={[
+                    FONTS.h3,
+                    { color: COLORS.primary, marginBottom: 16 },
+                  ]}
+                >
+                  פירוט הוצאות לפי קטגוריה
+                </Text>
+
+                {/* שורת כותרות */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingBottom: 8,
+                    borderBottomWidth: 1,
+                    borderBottomColor: COLORS.neutral + "20",
+                    marginBottom: 12,
+                  }}
+                >
+                  <Text style={[FONTS.h4, { color: COLORS.primary, flex: 2 }]}>
+                    קטגוריה
+                  </Text>
+                  <Text
+                    style={[
+                      FONTS.h4,
+                      { color: COLORS.primary, flex: 1, textAlign: "center" },
+                    ]}
+                  >
+                    סכום
+                  </Text>
+                  <Text
+                    style={[
+                      FONTS.h4,
+                      { color: COLORS.primary, flex: 1, textAlign: "center" },
+                    ]}
+                  >
+                    אחוז
+                  </Text>
+                </View>
+
+                {/* שורות הנתונים */}
+                {pieChartData.map((item, index) => {
+                  try {
+                    if (!item || !item.label || typeof item.value !== "number")
+                      return null;
+
+                    return (
+                      <View
+                        key={index}
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          paddingVertical: 8,
+                          borderBottomWidth:
+                            index < pieChartData.length - 1 ? 1 : 0,
+                          borderBottomColor: COLORS.neutral + "10",
+                        }}
+                      >
+                        {/* צבע + שם הקטגוריה */}
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            flex: 2,
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: 12,
+                              height: 12,
+                              backgroundColor: item.color || "#FF7043",
+                              borderRadius: 6,
+                              marginRight: 8,
+                            }}
+                          />
+                          <Text
+                            style={[
+                              FONTS.body,
+                              {
+                                color: COLORS.neutral,
+                                fontWeight: "500",
+                              },
+                            ]}
+                            numberOfLines={1}
+                          >
+                            {getCategoryLabel(item.label)}
+                          </Text>
+                        </View>
+
+                        {/* הסכום */}
+                        <Text
+                          style={[
+                            FONTS.body,
+                            {
+                              color: COLORS.primary,
+                              fontWeight: "bold",
+                              flex: 1,
+                              textAlign: "center",
+                            },
+                          ]}
+                        >
+                          {item.value >= 1000
+                            ? `${(item.value / 1000).toFixed(1)}K ₪`
+                            : `${item.value.toFixed(0)} ₪`}
+                        </Text>
+
+                        {/* אחוז מהסה"כ */}
+                        <Text
+                          style={[
+                            FONTS.body,
+                            {
+                              color: COLORS.neutral,
+                              fontWeight: "500",
+                              flex: 1,
+                              textAlign: "center",
+                            },
+                          ]}
+                        >
+                          {currentTotal > 0
+                            ? ((item.value / currentTotal) * 100).toFixed(1)
+                            : "0.0"}
+                          %
+                        </Text>
+                      </View>
+                    );
+                  } catch (error) {
+                    console.error("Pie chart item error:", error);
+                    return null;
+                  }
+                })}
+              </Card.Content>
+            </Card>
+          )}
 
         {/* סה"כ לתקופה הנוכחית */}
         {!loading && filteredRows && filteredRows.length > 0 && (

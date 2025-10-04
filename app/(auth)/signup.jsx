@@ -145,6 +145,7 @@ const SignUpScreen = () => {
           showsVerticalScrollIndicator={true}
           bounces={true}
           alwaysBounceVertical={true}
+          contentInsetAdjustmentBehavior="automatic"
         >
           <View style={styles.header}>
             <LogoWithName />
@@ -228,7 +229,7 @@ const SignUpScreen = () => {
                   {t("auth.signup.terms_agree")}{" "}
                   <Text
                     accessibilityRole="link"
-                    onPress={() => openURL("https://example.com/terms.html")}
+                    onPress={() => openURL("https://hayotush.com/terms")}
                     style={styles.link}
                   >
                     {t("auth.signup.terms_of_service")}
@@ -246,7 +247,7 @@ const SignUpScreen = () => {
                   {t("auth.signup.privacy_agree")}{" "}
                   <Text
                     accessibilityRole="link"
-                    onPress={() => openURL("https://example.com/privacy.html")}
+                    onPress={() => openURL("https://hayotush.com/privacy")}
                     style={styles.link}
                   >
                     {t("auth.signup.privacy_policy")}
@@ -307,12 +308,12 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: COLORS.background,
     width: "100%",
-    height: "22%",
+    height: 120, // גובה קבוע במקום אחוזים
     justifyContent: "flex-end",
   },
   image: {
-    width: "90%",
-    height: "90%",
+    width: "70%",
+    height: "70%",
     zIndex: -1,
     resizeMode: "contain",
     marginTop: SIZING.margin,
@@ -320,31 +321,27 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     ...FONTS.h1,
     textAlign: "center",
-    fontSize: 28,
+    fontSize: 24, // קטנתי מ-28 ל-24
     fontWeight: "bold",
     color: COLORS.black,
-    marginBottom: SIZING.base / 2,
+    marginBottom: SIZING.base / 4, // קטנתי את המרווח
   },
   form: {
     flex: 0,
     paddingHorizontal: SIZING.padding,
-    paddingTop: SIZING.base,
-    paddingBottom: SIZING.base,
+    paddingTop: SIZING.base / 2, // קטנתי את המרווח העליון
+    paddingBottom: SIZING.base / 2, // קטנתי את המרווח התחתון
   },
   footer: {
-    paddingTop: SIZING.base,
+    paddingTop: SIZING.base / 2, // קטנתי את המרווח העליון
     paddingBottom: SIZING.padding,
-    marginTop: SIZING.base,
-    minHeight: 80,
+    marginTop: SIZING.base / 2, // קטנתי את המרווח העליון
+    minHeight: 60, // קטנתי מ-80 ל-60
     zIndex: 20,
     backgroundColor: COLORS.accent,
     borderTopLeftRadius: SIZING.radius_lg,
     borderTopRightRadius: SIZING.radius_lg,
-    elevation: 8,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    // הסרתי את הצל
   },
   loginText: {
     ...FONTS.body,
@@ -354,7 +351,7 @@ const styles = StyleSheet.create({
     marginBottom: SIZING.base,
   },
   input: {
-    marginBottom: SIZING.base / 2,
+    marginBottom: SIZING.base / 4, // קטנתי את המרווח התחתון
     fontSize: 16,
     backgroundColor: COLORS.white,
   },
@@ -367,7 +364,7 @@ const styles = StyleSheet.create({
     marginHorizontal: SIZING.margin + SIZING.base,
     marginTop: SIZING.base / 2,
     zIndex: 10,
-    elevation: 5,
+    // הסרתי את הצל
   },
   buttonLabel: {
     fontSize: 16,
@@ -398,31 +395,28 @@ const styles = StyleSheet.create({
   termsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: SIZING.base / 2,
-    marginBottom: SIZING.base / 4,
+    marginTop: SIZING.base / 4, // קטנתי את המרווח העליון
+    marginBottom: SIZING.base / 8, // קטנתי את המרווח התחתון
   },
   termsText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 11, // קטנתי מ-12 ל-11
     color: COLORS.black,
     marginLeft: SIZING.base,
+    lineHeight: 14, // הוספתי גובה שורה קטן יותר
   },
   loginButton: {
-    marginTop: SIZING.base / 2,
+    marginTop: SIZING.base / 4, // קטנתי את המרווח העליון
     marginHorizontal: SIZING.margin + SIZING.base,
-    paddingVertical: SIZING.base / 2,
+    paddingVertical: SIZING.base / 4, // קטנתי את המרווח האנכי
     borderRadius: SIZING.radius_md,
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    // הסרתי את הצל
     zIndex: 10,
   },
   contentWrapper: {
     flex: 1,
     justifyContent: "space-between",
-    minHeight: 280,
+    minHeight: 200, // קטנתי מ-280 ל-200
   },
 });
 

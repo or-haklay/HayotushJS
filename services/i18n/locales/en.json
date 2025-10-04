@@ -264,6 +264,13 @@
   "settings.language.current": "Hebrew",
   "settings.language.hebrew": "Hebrew",
   "settings.language.english": "English",
+  "settings.legal.title": "Legal Documents",
+  "settings.legal.terms_of_service": "Terms of Service",
+  "settings.legal.terms_description": "Read the full terms of service",
+  "settings.legal.privacy_policy": "Privacy Policy",
+  "settings.legal.privacy_description": "Read the full privacy policy",
+  "settings.legal.open_error": "Error opening document",
+  "settings.legal.open_error_message": "Unable to open the document. Please try again later",
 
   "pets.add_pet": "Add Pet",
   "pets.edit_pet": "Edit Pet",

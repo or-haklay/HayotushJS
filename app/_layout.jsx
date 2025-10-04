@@ -5,6 +5,7 @@ import {
 } from "react-native-paper";
 import { Stack, SplashScreen } from "expo-router";
 import { View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuth } from "../hooks/useAuth";
 import { COLORS, SIZING } from "../theme/theme";
 import { useFonts } from "expo-font";
@@ -46,12 +47,14 @@ export default function RootLayout() {
   }
 
   return (
-    <PaperProvider theme={theme}>
-      <ToastProvider>
-        <View style={{ flex: 1 }}>
-          <Stack screenOptions={{ headerShown: false }} />
-        </View>
-      </ToastProvider>
-    </PaperProvider>
+    <SafeAreaProvider>
+      <PaperProvider theme={theme}>
+        <ToastProvider>
+          <View style={{ flex: 1 }}>
+            <Stack screenOptions={{ headerShown: false }} />
+          </View>
+        </ToastProvider>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }

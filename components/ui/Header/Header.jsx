@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Image } from "react-native";
 import { Text, IconButton } from "react-native-paper";
-import { Ionicons } from "@expo/vector-icons";
 import styles from "./styles";
 import NotificationBell from "../NotificationBell";
 

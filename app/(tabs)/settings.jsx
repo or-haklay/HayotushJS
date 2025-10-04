@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert, Linking } from "react-native";
 import { Text, Button, Switch, List, Menu, Divider } from "react-native-paper";
 import { COLORS, SIZING, FONTS } from "../../theme/theme";
 import authService from "../../services/authService";
@@ -7,6 +7,7 @@ import { useRouter } from "expo-router";
 import { setLanguage } from "../../services/i18n/index";
 import { useTranslation } from "react-i18next";
 import calendarService from "../../services/calendarService";
+import legalLinks from "../../legal-links.json";
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
@@ -23,7 +24,11 @@ export default function SettingsScreen() {
     try {
       const response = await calendarService.checkAccess();
       setGoogleCalendarEnabled(response.success);
-    } catch (error) {}
+    } catch (error) {
+      // אם זה שגיאה אחרת, נדפיס אותה
+      console.error("Calendar status check failed:", error);
+      setGoogleCalendarEnabled(false);
+    }
   };
 
   const toggleGoogleCalendar = async () => {
@@ -86,6 +91,26 @@ export default function SettingsScreen() {
     router.replace("/(auth)/login");
   };
 
+  const openLegalDocument = async (url, title) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert(
+          t("settings.legal.open_error"),
+          t("settings.legal.open_error_message")
+        );
+      }
+    } catch (error) {
+      console.error("Error opening legal document:", error);
+      Alert.alert(
+        t("settings.legal.open_error"),
+        t("settings.legal.open_error_message")
+      );
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t("settings.title")}</Text>
@@ -122,6 +147,36 @@ export default function SettingsScreen() {
           {t("settings.calendar.sync_existing")}
         </Button>
       )}
+
+      <Divider style={styles.divider} />
+
+      <Text style={styles.sectionTitle}>{t("settings.legal.title")}</Text>
+
+      <List.Item
+        title={t("settings.legal.terms_of_service")}
+        description={t("settings.legal.terms_description")}
+        left={(props) => <List.Icon {...props} icon="file-document" />}
+        right={(props) => <List.Icon {...props} icon="open-in-new" />}
+        onPress={() =>
+          openLegalDocument(
+            legalLinks.termsOfService,
+            t("settings.legal.terms_of_service")
+          )
+        }
+      />
+
+      <List.Item
+        title={t("settings.legal.privacy_policy")}
+        description={t("settings.legal.privacy_description")}
+        left={(props) => <List.Icon {...props} icon="shield-account" />}
+        right={(props) => <List.Icon {...props} icon="open-in-new" />}
+        onPress={() =>
+          openLegalDocument(
+            legalLinks.privacyPolicy,
+            t("settings.legal.privacy_policy")
+          )
+        }
+      />
 
       <Divider style={styles.divider} />
 

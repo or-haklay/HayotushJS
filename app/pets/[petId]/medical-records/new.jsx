@@ -47,7 +47,17 @@ const RECORD_TYPES = [
 
 export default function NewMedicalRecord() {
   const { t } = useTranslation();
-  const { showSuccess, showError } = useToast();
+  // Safe useToast with error handling
+  let showSuccess, showError;
+  try {
+    const toastContext = useToast();
+    showSuccess = toastContext.showSuccess;
+    showError = toastContext.showError;
+  } catch (error) {
+    console.warn("ToastProvider not available:", error.message);
+    showSuccess = () => {}; // Fallback function
+    showError = () => {}; // Fallback function
+  }
   const { petId, recordId } = useLocalSearchParams();
   const router = useRouter();
   const isEditing = !!recordId;

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { View, StyleSheet, Animated, Dimensions } from "react-native";
 import { Text, Portal } from "react-native-paper";
-import { Ionicons } from "@expo/vector-icons";
+// import { Ionicons } from "@expo/vector-icons";
 import { COLORS, FONTS, SIZING } from "../theme/theme";
 
 const ToastContext = createContext();
@@ -207,14 +207,14 @@ const ToastItem = ({ toast, onHide }) => {
   const getIcon = () => {
     switch (toast.type) {
       case "success":
-        return "checkmark-circle";
+        return "✅";
       case "error":
-        return "close-circle";
+        return "❌";
       case "warning":
-        return "warning";
+        return "⚠️";
       case "info":
       default:
-        return "information-circle";
+        return "ℹ️";
     }
   };
 
@@ -229,7 +229,9 @@ const ToastItem = ({ toast, onHide }) => {
         },
       ]}
     >
-      <Ionicons name={getIcon()} size={20} color="white" style={styles.icon} />
+      <Text style={{ fontSize: 20, color: "white", marginRight: 12 }}>
+        {getIcon()}
+      </Text>
       <Text style={styles.message}>{toast.message}</Text>
     </Animated.View>
   );

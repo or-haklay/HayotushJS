@@ -24,7 +24,17 @@ export default function NewReminder() {
   const { petId, reminderId } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
-  const { showSuccess, showError } = useToast();
+  // Safe useToast with error handling
+  let showSuccess, showError;
+  try {
+    const toastContext = useToast();
+    showSuccess = toastContext.showSuccess;
+    showError = toastContext.showError;
+  } catch (error) {
+    console.warn("ToastProvider not available:", error.message);
+    showSuccess = () => {}; // Fallback function
+    showError = () => {}; // Fallback function
+  }
 
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");

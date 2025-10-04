@@ -13,6 +13,10 @@ class CalendarService {
       const response = await httpServices.get(`${BASE_URL}/calendar/access`);
       return response.data;
     } catch (error) {
+      // אם זה שגיאה 400 (אין טוקן), נחזיר false במקום לזרוק שגיאה
+      if (error.response?.status === 400) {
+        return { success: false, message: "No calendar access token" };
+      }
       console.error("Calendar access check failed:", error);
       throw error;
     }
