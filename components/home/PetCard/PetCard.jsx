@@ -29,7 +29,7 @@ const PetCard = ({ pet, onPress = null }) => {
     if (pet?.species === "cat") {
       return require("../../../assets/images/cats/cat-sit.png");
     } else {
-      return require("../../../assets/images/dogs/dog-sit.jpg");
+      return require("../../../assets/images/dogs/dog-sit.png");
     }
   };
 

@@ -24,8 +24,7 @@
     "owner": "orhaklay",
     "android": {
       "package": "com.orhaklay.hayotush",
-      "usesCleartextTraffic": true,
-      "networkSecurityConfig": "@xml/network_security_config"
+      "usesCleartextTraffic": true
     }
   }
 }
