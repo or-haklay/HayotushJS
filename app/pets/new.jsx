@@ -1,8 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { View, Image } from "react-native";
+import {
+  View,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Text, TextInput, Button, Snackbar } from "react-native-paper";
-import uploadService from "../../services/uploadService";
+import {
+  Text,
+  TextInput,
+  Button,
+  Snackbar,
+  Menu,
+  Provider,
+  Card,
+} from "react-native-paper";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { COLORS, FONTS } from "../../theme/theme";
 import petService from "../../services/petService";
 import { useTranslation } from "react-i18next";
@@ -12,25 +26,22 @@ export default function PetForm() {
   const { petId } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
-  // Safe useToast with error handling
-  let showSuccess, showError;
-  try {
-    const toastContext = useToast();
-    showSuccess = toastContext.showSuccess;
-    showError = toastContext.showError;
-  } catch (error) {
-    console.warn("ToastProvider not available:", error.message);
-    showSuccess = () => {}; // Fallback function
-    showError = () => {}; // Fallback function
-  }
+  const { showSuccess, showError } = useToast();
+
   const [name, setName] = useState("");
   const [species, setSpecies] = useState("dog");
   const [breed, setBreed] = useState("");
   const [chipNumber, setChipNumber] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null); // שינוי מ-URL לקובץ
+  const [weightKg, setWeightKg] = useState("");
+  const [birthDate, setBirthDate] = useState(null);
+  const [sex, setSex] = useState("unknown");
+  const [color, setColor] = useState("");
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [currentPetImage, setCurrentPetImage] = useState(null); // תמונה נוכחית של החיה
+  const [sexMenuVisible, setSexMenuVisible] = useState(false);
+  const [speciesMenuVisible, setSpeciesMenuVisible] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -41,17 +52,22 @@ export default function PetForm() {
         setSpecies(p.species || "dog");
         setBreed(p.breed || "");
         setChipNumber(p.chipNumber || "");
-        setCurrentPetImage(p.profilePictureUrl || null); // שמירת התמונה הנוכחית
-      } catch {
+        setWeightKg(p.weightKg ? p.weightKg.toString() : "");
+        setBirthDate(p.birthDate ? new Date(p.birthDate) : null);
+        setSex(p.sex || "unknown");
+        setColor(p.color || "");
+        setNotes(p.notes || "");
+      } catch (error) {
+        console.error("Error loading pet:", error);
         setErr(t("pets.edit_load_error"));
       }
     })();
-  }, [petId]);
+  }, [petId, t]);
 
-  const handlePickImage = async () => {
-    const image = await uploadService.pickImage();
-    if (image) {
-      setSelectedImage(image);
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setBirthDate(selectedDate);
     }
   };
 
@@ -61,35 +77,16 @@ export default function PetForm() {
 
     setLoading(true);
     try {
-      let profilePictureUrl = undefined;
-
-      // אם המשתמש בחר תמונה חדשה, נעלה אותה ל-S3
-      if (selectedImage) {
-        const uploadResult = await uploadService.uploadPetPicture(
-          selectedImage
-        );
-
-        if (uploadResult && uploadResult.success) {
-          profilePictureUrl = uploadResult.fileUrl;
-
-          // מחיקת התמונה הישנה מ-S3 אם יש כזו
-          if (currentPetImage) {
-            await uploadService.deleteOldImage(currentPetImage);
-          }
-        } else {
-          console.error("Upload failed:", uploadResult);
-          setErr(t("pets.image_upload_error"));
-          setLoading(false);
-          return;
-        }
-      }
-
       const payload = {
         name: name.trim(),
         species: species.trim(),
         breed: breed?.trim() || undefined,
         chipNumber: chipNumber?.trim() || undefined,
-        profilePictureUrl: profilePictureUrl || currentPetImage, // שמירה על התמונה הקיימת אם אין חדשה
+        weightKg: weightKg ? parseFloat(weightKg) : undefined,
+        birthDate: birthDate ? birthDate.toISOString() : undefined,
+        sex: sex || undefined,
+        color: color?.trim() || undefined,
+        notes: notes?.trim() || undefined,
       };
 
       if (petId) {
@@ -100,8 +97,6 @@ export default function PetForm() {
         showSuccess(t("toast.success.pet_created"));
       }
 
-      // איפוס התמונה הנבחרת אחרי שמירה מוצלחת
-      setSelectedImage(null);
       router.back();
     } catch (error) {
       showError(t("toast.error.save_failed"));
@@ -125,13 +120,62 @@ export default function PetForm() {
         mode="outlined"
         style={{ marginTop: 12 }}
       />
-      <TextInput
-        label={t("pets.species")}
-        value={species}
-        onChangeText={setSpecies}
-        mode="outlined"
-        style={{ marginTop: 12 }}
-      />
+
+      <View style={{ marginTop: 12 }}>
+        <Text style={{ marginBottom: 8, fontSize: 16, color: COLORS.dark }}>
+          {t("pets.species")}
+        </Text>
+        <Menu
+          visible={speciesMenuVisible}
+          onDismiss={() => setSpeciesMenuVisible(false)}
+          anchor={
+            <Button
+              mode="outlined"
+              onPress={() => setSpeciesMenuVisible(true)}
+              style={{ justifyContent: "flex-start" }}
+            >
+              {t(`pets.species.${species}`)}
+            </Button>
+          }
+        >
+          <Menu.Item
+            onPress={() => {
+              setSpecies("dog");
+              setSpeciesMenuVisible(false);
+            }}
+            title={t("pets.species.dog")}
+          />
+          <Menu.Item
+            onPress={() => {
+              setSpecies("cat");
+              setSpeciesMenuVisible(false);
+            }}
+            title={t("pets.species.cat")}
+          />
+          <Menu.Item
+            onPress={() => {
+              setSpecies("bird");
+              setSpeciesMenuVisible(false);
+            }}
+            title={t("pets.species.bird")}
+          />
+          <Menu.Item
+            onPress={() => {
+              setSpecies("fish");
+              setSpeciesMenuVisible(false);
+            }}
+            title={t("pets.species.fish")}
+          />
+          <Menu.Item
+            onPress={() => {
+              setSpecies("other");
+              setSpeciesMenuVisible(false);
+            }}
+            title={t("pets.species.other")}
+          />
+        </Menu>
+      </View>
+
       <TextInput
         label={t("pets.breed_optional")}
         value={breed}
@@ -139,69 +183,126 @@ export default function PetForm() {
         mode="outlined"
         style={{ marginTop: 12 }}
       />
+
       <TextInput
-        label={t("pets.chip_number_optional")}
-        value={chipNumber}
-        onChangeText={setChipNumber}
+        label={t("pets.weight_optional")}
+        value={weightKg}
+        onChangeText={setWeightKg}
+        keyboardType="numeric"
         mode="outlined"
         style={{ marginTop: 12 }}
       />
 
-      {/* שדה תמונה - עכשיו עם קובץ */}
-      <View style={{ marginTop: 12 }}>
-        <Text style={{ marginBottom: 8, fontSize: 16, fontWeight: "600" }}>
-          {t("pets.profile_picture")}
+      <TouchableOpacity
+        onPress={() => setShowDatePicker(true)}
+        style={{
+          borderWidth: 1,
+          borderColor: "#E0E0E0",
+          borderRadius: 8,
+          padding: 16,
+          backgroundColor: "white",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: 12,
+        }}
+      >
+        <Text style={{ color: birthDate ? "#000" : "#999" }}>
+          {birthDate && birthDate instanceof Date
+            ? birthDate.toLocaleDateString("he-IL")
+            : t("pets.birth_date_optional")}
         </Text>
+        <Text style={{ color: "#666" }}>📅</Text>
+      </TouchableOpacity>
 
-        {/* הצגת התמונה הנוכחית אם יש כזו */}
-        {currentPetImage && !selectedImage && (
-          <View style={{ marginBottom: 12 }}>
-            <Text style={{ marginBottom: 8, fontSize: 14, color: "#666" }}>
-              {t("pets.current_image")}:
-            </Text>
-            <Image
-              source={{ uri: currentPetImage }}
-              style={{ width: 100, height: 100, borderRadius: 8 }}
-              resizeMode="cover"
-            />
-          </View>
-        )}
-
-        {selectedImage ? (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 12,
-              gap: 12,
-            }}
-          >
-            <Text numberOfLines={1} style={{ flex: 1 }}>
-              {selectedImage.name || t("pets.selected_image")}
-            </Text>
+      <View style={{ marginTop: 12 }}>
+        <Text style={{ marginBottom: 8, fontSize: 16, color: COLORS.dark }}>
+          {t("pets.sex_optional")}
+        </Text>
+        <Menu
+          visible={sexMenuVisible}
+          onDismiss={() => setSexMenuVisible(false)}
+          anchor={
             <Button
               mode="outlined"
-              onPress={() => setSelectedImage(null)}
-              compact
+              onPress={() => setSexMenuVisible(true)}
+              style={{ justifyContent: "flex-start" }}
             >
-              {t("pets.remove")}
+              {sex ? t(`sex.${sex}`) : t("pets.sex_optional")}
             </Button>
-          </View>
-        ) : null}
-
-        <Button mode="outlined" onPress={handlePickImage}>
-          {selectedImage ? t("pets.change_image") : t("pets.choose_image")}
-        </Button>
+          }
+        >
+          <Menu.Item
+            onPress={() => {
+              setSex("male");
+              setSexMenuVisible(false);
+            }}
+            title={t("sex.male")}
+          />
+          <Menu.Item
+            onPress={() => {
+              setSex("female");
+              setSexMenuVisible(false);
+            }}
+            title={t("sex.female")}
+          />
+          <Menu.Item
+            onPress={() => {
+              setSex("unknown");
+              setSexMenuVisible(false);
+            }}
+            title={t("sex.unknown")}
+          />
+        </Menu>
       </View>
+
+      <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
+        <View style={{ flex: 1 }}>
+          <TextInput
+            label={t("pets.chip_number_optional")}
+            value={chipNumber}
+            onChangeText={setChipNumber}
+            mode="outlined"
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <TextInput
+            label={t("pets.color_optional")}
+            value={color}
+            onChangeText={setColor}
+            mode="outlined"
+          />
+        </View>
+      </View>
+
+      <TextInput
+        label={t("pets.notes_optional")}
+        value={notes}
+        onChangeText={setNotes}
+        mode="outlined"
+        multiline
+        numberOfLines={3}
+        style={{ marginTop: 12, textAlignVertical: "top" }}
+      />
 
       <Button
         mode="contained"
         onPress={submit}
         loading={loading}
-        style={{ marginTop: 24 }}
+        style={{ marginTop: 16, backgroundColor: COLORS.primary }}
       >
         {petId ? t("pets.update") : t("pets.create")}
       </Button>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={birthDate instanceof Date ? birthDate : new Date()}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+          maximumDate={new Date()}
+        />
+      )}
 
       <Snackbar
         visible={!!err}

@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import {
   Text,
@@ -21,7 +23,6 @@ import { useRouter } from "expo-router";
 import { usePetCreation } from "../../../context/PetCreationContext";
 import { StepNavigationHeader } from "./_layout";
 import * as ImagePicker from "expo-image-picker";
-import { Platform } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -431,65 +432,73 @@ export default function Step4() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 140 }}
-        showsVerticalScrollIndicator={false}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
-        <View
-          style={{
-            justifyContent: "flex-start",
-            alignItems: "center",
-            paddingHorizontal: 24,
-            paddingTop: insets.top + 10,
-          }}
+        <ScrollView
+          style={{ flex: 1, marginBottom: 60 }}
+          contentContainerStyle={{ paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
         >
-          <PetIllustration
-            source={require("../../../assets/images/dogs/dog-sick.png")}
-          />
-
           <View
             style={{
+              justifyContent: "flex-start",
               alignItems: "center",
-              paddingHorizontal: 16,
-              marginTop: 20,
+              paddingHorizontal: 24,
+              paddingTop: insets.top + 10,
             }}
           >
-            <Text variant="titleLarge" style={{ fontWeight: "bold" }}>
-              פרטים נוספים 📋
-            </Text>
-            <Text
-              variant="bodyMedium"
-              style={{ marginTop: 8, textAlign: "center" }}
+            <PetIllustration
+              source={require("../../../assets/images/dogs/dog-sick.png")}
+            />
+
+            <View
+              style={{
+                alignItems: "center",
+                paddingHorizontal: 16,
+                marginTop: 20,
+              }}
             >
-              הזן משקל ומספר שבב, והעלה פנקס חיסונים (לא חובה)
-            </Text>
-          </View>
+              <Text variant="titleLarge" style={{ fontWeight: "bold" }}>
+                פרטים נוספים 📋
+              </Text>
+              <Text
+                variant="bodyMedium"
+                style={{ marginTop: 8, textAlign: "center" }}
+              >
+                הזן משקל ומספר שבב, והעלה פנקס חיסונים (לא חובה)
+              </Text>
+            </View>
 
-          <View style={{ width: "100%", marginTop: 32 }}>
-            <TextInput
-              label="משקל (ק״ג)"
-              mode="outlined"
-              keyboardType="numeric"
-              value={petData.weight}
-              onChangeText={(text) => setPetData({ ...petData, weight: text })}
-              style={{ marginBottom: 12 }}
-              placeholder="לא חובה"
-            />
+            <View style={{ width: "100%", marginTop: 32 }}>
+              <TextInput
+                label="משקל (ק״ג)"
+                mode="outlined"
+                keyboardType="numeric"
+                value={petData.weight}
+                onChangeText={(text) =>
+                  setPetData({ ...petData, weight: text })
+                }
+                style={{ marginBottom: 12 }}
+                placeholder="לא חובה"
+              />
 
-            <TextInput
-              label="מספר שבב"
-              mode="outlined"
-              value={petData.chipNumber}
-              onChangeText={(text) =>
-                setPetData({ ...petData, chipNumber: text })
-              }
-              style={{ marginBottom: 16 }}
-              placeholder="לא חובה"
-            />
+              <TextInput
+                label="מספר שבב"
+                mode="outlined"
+                value={petData.chipNumber}
+                onChangeText={(text) =>
+                  setPetData({ ...petData, chipNumber: text })
+                }
+                style={{ marginBottom: 16 }}
+                placeholder="לא חובה"
+              />
 
-            <View style={{ marginTop: 16, marginBottom: 16 }}>
-              {/* <Text
+              <View style={{ marginTop: 16, marginBottom: 16 }}>
+                {/* <Text
                 variant="titleSmall"
                 style={{
                   fontWeight: "600",
@@ -514,54 +523,55 @@ export default function Step4() {
                 העלה תמונה או מסמך PDF של פנקס החיסונים של החיה שלך
               </Text> */}
 
-              {/* כפתורים נפרדים לכל אפשרות */}
-              {/* הכפתורים הוסרו מכאן והם יופיעו בדיאלוג */}
+                {/* כפתורים נפרדים לכל אפשרות */}
+                {/* הכפתורים הוסרו מכאן והם יופיעו בדיאלוג */}
 
-              {/* הצגת המסמך שנבחר */}
-              <View style={{ alignItems: "center" }}>{vaccineBookImage}</View>
-            </View>
+                {/* הצגת המסמך שנבחר */}
+                <View style={{ alignItems: "center" }}>{vaccineBookImage}</View>
+              </View>
 
-            {/* Progress Bar */}
-            {loading && (
-              <View
-                style={{
-                  marginTop: 20,
-                  padding: 16,
-                  backgroundColor: COLORS.surface,
-                  borderRadius: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    textAlign: "center",
-                    marginBottom: 8,
-                    fontWeight: "600",
-                  }}
-                >
-                  {updateStatus}
-                </Text>
-                <ProgressBar
-                  progress={updateProgress / 100}
-                  color={COLORS.primary}
-                  style={{ height: 8, borderRadius: 4 }}
-                />
+              {/* Progress Bar */}
+              {loading && (
                 <View
                   style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    marginTop: 8,
+                    marginTop: 20,
+                    padding: 16,
+                    backgroundColor: COLORS.surface,
+                    borderRadius: 8,
                   }}
                 >
-                  <Text style={{ fontSize: 12, color: "#666" }}>התקדמות</Text>
-                  <Text style={{ fontSize: 12, fontWeight: "600" }}>
-                    {Math.round(updateProgress)}%
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      marginBottom: 8,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {updateStatus}
                   </Text>
+                  <ProgressBar
+                    progress={updateProgress / 100}
+                    color={COLORS.primary}
+                    style={{ height: 8, borderRadius: 4 }}
+                  />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginTop: 8,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: "#666" }}>התקדמות</Text>
+                    <Text style={{ fontSize: 12, fontWeight: "600" }}>
+                      {Math.round(updateProgress)}%
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
+            </View>
           </View>
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <Portal>
         {/* Upload Options Dialog */}

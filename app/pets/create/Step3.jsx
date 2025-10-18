@@ -1,12 +1,20 @@
 import React, { useState } from "react";
-import { View, Image, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { Text, Button, ProgressBar } from "react-native-paper";
 import PetIllustration from "../../../components/createPet/PetIllustration";
 import { useRouter } from "expo-router";
 import { usePetCreation } from "../../../context/PetCreationContext";
 import { StepNavigationHeader } from "./_layout";
 import * as ImagePicker from "expo-image-picker";
-import { Platform } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -132,113 +140,126 @@ export default function Step3() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "flex-start",
-          alignItems: "center",
-          paddingHorizontal: 24,
-          paddingTop: insets.top + 10,
-        }}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
-        <PetIllustration
-          source={require("../../../assets/images/cats/cat-strach.png")}
-        />
-
-        <View
-          style={{
-            alignItems: "center",
-            paddingHorizontal: 16,
-            marginTop: 20,
-          }}
+        <ScrollView
+          style={{ flex: 1, marginBottom: 60 }}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
         >
-          <Text variant="titleLarge" style={{ fontWeight: "bold" }}>
-            תמונה אחת שווה אלף מילים 📸
-          </Text>
-          <Text
-            variant="bodyMedium"
-            style={{ marginTop: 8, textAlign: "center" }}
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "flex-start",
+              alignItems: "center",
+              paddingHorizontal: 24,
+              paddingTop: insets.top + 10,
+            }}
           >
-            בחר תמונת פרופיל לחיית המחמד שלך (אופציונלי)
-          </Text>
-        </View>
+            <PetIllustration
+              source={require("../../../assets/images/cats/cat-strach.png")}
+            />
 
-        <View style={{ width: "100%", marginTop: 32 }}>
-          {petData.image ? (
-            <View style={{ alignItems: "center", marginBottom: 20 }}>
-              <Image
-                source={{ uri: petData.image }}
-                style={{
-                  width: 200,
-                  height: 200,
-                  borderRadius: 100,
-                  marginBottom: 16,
-                }}
-                resizeMode="cover"
-              />
-              <Text style={{ color: "#666", textAlign: "center" }}>
-                תמונת הפרופיל נבחרה בהצלחה!
-              </Text>
-            </View>
-          ) : (
-            <View style={{ alignItems: "center", marginBottom: 20 }}>
-              <Text style={{ color: "#666", textAlign: "center" }}>
-                לחץ על הכפתור למטה כדי לבחור תמונת פרופיל
-              </Text>
-            </View>
-          )}
-
-          <Button
-            mode="contained"
-            onPress={handlePickImage}
-            icon="camera"
-            style={{ marginBottom: 16 }}
-            loading={loading}
-            disabled={loading}
-          >
-            {petData.image ? "שנה תמונה" : "בחר תמונת פרופיל"}
-          </Button>
-
-          {loading && (
             <View
               style={{
+                alignItems: "center",
+                paddingHorizontal: 16,
                 marginTop: 20,
-                padding: 16,
-                backgroundColor: COLORS.surface,
-                borderRadius: 8,
-                width: "100%",
               }}
             >
-              <Text
-                style={{
-                  textAlign: "center",
-                  marginBottom: 8,
-                  fontWeight: "600",
-                }}
-              >
-                {uploadStatus}
+              <Text variant="titleLarge" style={{ fontWeight: "bold" }}>
+                תמונה אחת שווה אלף מילים 📸
               </Text>
-              <ProgressBar
-                progress={uploadProgress / 100}
-                color={COLORS.primary}
-                style={{ height: 8, borderRadius: 4 }}
-              />
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginTop: 8,
-                }}
+              <Text
+                variant="bodyMedium"
+                style={{ marginTop: 8, textAlign: "center" }}
               >
-                <Text style={{ fontSize: 12, color: "#666" }}>התקדמות</Text>
-                <Text style={{ fontSize: 12, fontWeight: "600" }}>
-                  {Math.round(uploadProgress)}%
-                </Text>
-              </View>
+                בחר תמונת פרופיל לחיית המחמד שלך (אופציונלי)
+              </Text>
             </View>
-          )}
-        </View>
-      </View>
+
+            <View style={{ width: "100%", marginTop: 32 }}>
+              {petData.image ? (
+                <View style={{ alignItems: "center", marginBottom: 20 }}>
+                  <Image
+                    source={{ uri: petData.image }}
+                    style={{
+                      width: 200,
+                      height: 200,
+                      borderRadius: 100,
+                      marginBottom: 16,
+                    }}
+                    resizeMode="cover"
+                  />
+                  <Text style={{ color: "#666", textAlign: "center" }}>
+                    תמונת הפרופיל נבחרה בהצלחה!
+                  </Text>
+                </View>
+              ) : (
+                <View style={{ alignItems: "center", marginBottom: 20 }}>
+                  <Text style={{ color: "#666", textAlign: "center" }}>
+                    לחץ על הכפתור למטה כדי לבחור תמונת פרופיל
+                  </Text>
+                </View>
+              )}
+
+              <Button
+                mode="contained"
+                onPress={handlePickImage}
+                icon="camera"
+                style={{ marginBottom: 40 }}
+                loading={loading}
+                disabled={loading}
+              >
+                {petData.image ? "שנה תמונה" : "בחר תמונת פרופיל"}
+              </Button>
+
+              {loading && (
+                <View
+                  style={{
+                    marginTop: 20,
+                    padding: 16,
+                    backgroundColor: COLORS.surface,
+                    borderRadius: 8,
+                    width: "100%",
+                  }}
+                >
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      marginBottom: 8,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {uploadStatus}
+                  </Text>
+                  <ProgressBar
+                    progress={uploadProgress / 100}
+                    color={COLORS.primary}
+                    style={{ height: 8, borderRadius: 4 }}
+                  />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginTop: 8,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: "#666" }}>התקדמות</Text>
+                    <Text style={{ fontSize: 12, fontWeight: "600" }}>
+                      {Math.round(uploadProgress)}%
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <StepNavigationHeader
         step={3}

@@ -5,6 +5,8 @@ import {
   StyleSheet,
   Alert,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Text, Card, Chip, ProgressBar, TextInput } from "react-native-paper";
 import PetIllustration from "../../../components/createPet/PetIllustration";
@@ -63,7 +65,7 @@ export default function Step2() {
           petData.birthDate && petData.birthDate instanceof Date
             ? petData.birthDate.toISOString()
             : petData.birthDate,
-        sex: "unknown", // ברירת מחדל
+        sex: petData.sex || "unknown",
       };
 
       // הוספת הערות על אופי, אוכל מועדף והערות נוספות ל-notes
@@ -137,146 +139,155 @@ export default function Step2() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 140 }}
-        showsVerticalScrollIndicator={false}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
-        {/* תוכן המסך */}
-        <View
-          style={{
-            justifyContent: "flex-start",
-            alignItems: "center",
-            paddingHorizontal: 24,
-            paddingTop: insets.top + 10,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
+        <ScrollView
+          style={{ flex: 1, marginBottom: 60 }}
+          contentContainerStyle={{ paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
         >
-          {/* איור */}
-          <PetIllustration
-            source={require("../../../assets/images/dogs/dog-happy.png")}
-            style={{ width: 200, height: 200 }}
-          />
-
-          {/* טקסט */}
+          {/* תוכן המסך */}
           <View
             style={{
+              justifyContent: "flex-start",
               alignItems: "center",
-              paddingHorizontal: 16,
-              marginTop: 20,
+              paddingHorizontal: 24,
+              paddingTop: insets.top + 10,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
           >
-            <Text variant="titleLarge" style={{ fontWeight: "bold" }}>
-              אופי החיה 🐾
-            </Text>
-            <Text
-              variant="bodyMedium"
-              style={{ marginTop: 8, textAlign: "center" }}
-            >
-              בחר תכונות שמתארות את החיה שלך (לא חובה)
-            </Text>
-          </View>
+            {/* איור */}
+            <PetIllustration
+              source={require("../../../assets/images/dogs/dog-happy.png")}
+              style={{ width: 200, height: 200 }}
+            />
 
-          {/* טופס */}
-          <View style={{ width: "100%", marginTop: 32 }}>
-            {/* תכונות אופי */}
-            <Text
-              variant="titleMedium"
-              style={{ fontWeight: "600", marginBottom: 16, color: "#333" }}
-            >
-              תכונות אופי (לא חובה)
-            </Text>
+            {/* טקסט */}
             <View
               style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                gap: 8,
-                justifyContent: "center",
-                marginBottom: 24,
+                alignItems: "center",
+                paddingHorizontal: 16,
+                marginTop: 20,
               }}
             >
-              {personalityOptions.map((personality) => (
-                <Chip
-                  key={personality}
-                  selected={(petData.personalities || []).includes(personality)}
-                  onPress={() => togglePersonality(personality)}
-                  style={{ marginBottom: 8 }}
-                  textStyle={{ fontSize: 14 }}
-                >
-                  {personality}
-                </Chip>
-              ))}
+              <Text variant="titleLarge" style={{ fontWeight: "bold" }}>
+                אופי החיה 🐾
+              </Text>
+              <Text
+                variant="bodyMedium"
+                style={{ marginTop: 8, textAlign: "center" }}
+              >
+                בחר תכונות שמתארות את החיה שלך (לא חובה)
+              </Text>
             </View>
 
-            {/* מזון מועדף */}
-            <TextInput
-              label="מזון מועדף (לא חובה)"
-              mode="outlined"
-              value={petData.favoriteFood}
-              onChangeText={(text) =>
-                setPetData({ ...petData, favoriteFood: text })
-              }
-              style={{ marginBottom: 16 }}
-              placeholder="למשל: אוכל יבש, אוכל רטוב"
-              multiline
-              numberOfLines={2}
-            />
-
-            {/* הערות נוספות */}
-            <TextInput
-              label="הערות נוספות (לא חובה)"
-              mode="outlined"
-              value={petData.notes}
-              onChangeText={(text) => setPetData({ ...petData, notes: text })}
-              style={{ marginBottom: 16 }}
-              placeholder="כל מידע נוסף שתרצה להוסיף על החיה שלך"
-              multiline
-              numberOfLines={3}
-            />
-
-            {/* Progress Bar */}
-            {loading && (
+            {/* טופס */}
+            <View style={{ width: "100%", marginTop: 32 }}>
+              {/* תכונות אופי */}
+              <Text
+                variant="titleMedium"
+                style={{ fontWeight: "600", marginBottom: 16, color: "#333" }}
+              >
+                תכונות אופי (לא חובה)
+              </Text>
               <View
                 style={{
-                  marginBottom: 16,
-                  padding: 16,
-                  backgroundColor: COLORS.background,
-                  borderRadius: 8,
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: 8,
+                  justifyContent: "center",
+                  marginBottom: 24,
                 }}
               >
-                <Text
-                  style={{
-                    textAlign: "center",
-                    marginBottom: 8,
-                    fontWeight: "600",
-                  }}
-                >
-                  {createStatus}
-                </Text>
-                <ProgressBar
-                  progress={createProgress / 100}
-                  color={COLORS.primary}
-                  style={{ height: 8, borderRadius: 4 }}
-                />
+                {personalityOptions.map((personality) => (
+                  <Chip
+                    key={personality}
+                    selected={(petData.personalities || []).includes(
+                      personality
+                    )}
+                    onPress={() => togglePersonality(personality)}
+                    style={{ marginBottom: 8 }}
+                    textStyle={{ fontSize: 14 }}
+                  >
+                    {personality}
+                  </Chip>
+                ))}
+              </View>
+
+              {/* מזון מועדף */}
+              <TextInput
+                label="מזון מועדף (לא חובה)"
+                mode="outlined"
+                value={petData.favoriteFood}
+                onChangeText={(text) =>
+                  setPetData({ ...petData, favoriteFood: text })
+                }
+                style={{ marginBottom: 16 }}
+                placeholder="למשל: אוכל יבש, אוכל רטוב"
+                multiline
+                numberOfLines={2}
+              />
+
+              {/* הערות נוספות */}
+              <TextInput
+                label="הערות נוספות (לא חובה)"
+                mode="outlined"
+                value={petData.notes}
+                onChangeText={(text) => setPetData({ ...petData, notes: text })}
+                style={{ marginBottom: 16 }}
+                placeholder="כל מידע נוסף שתרצה להוסיף על החיה שלך"
+                multiline
+                numberOfLines={3}
+              />
+
+              {/* Progress Bar */}
+              {loading && (
                 <View
                   style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    marginTop: 8,
+                    marginBottom: 16,
+                    padding: 16,
+                    backgroundColor: COLORS.background,
+                    borderRadius: 8,
                   }}
                 >
-                  <Text style={{ fontSize: 12, color: "#666" }}>התקדמות</Text>
-                  <Text style={{ fontSize: 12, fontWeight: "600" }}>
-                    {Math.round(createProgress)}%
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      marginBottom: 8,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {createStatus}
                   </Text>
+                  <ProgressBar
+                    progress={createProgress / 100}
+                    color={COLORS.primary}
+                    style={{ height: 8, borderRadius: 4 }}
+                  />
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginTop: 8,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: "#666" }}>התקדמות</Text>
+                    <Text style={{ fontSize: 12, fontWeight: "600" }}>
+                      {Math.round(createProgress)}%
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
+            </View>
           </View>
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* כפתורי ניווט */}
       <StepNavigationHeader

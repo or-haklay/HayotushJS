@@ -12,6 +12,9 @@ import {
   Divider,
   Snackbar,
   Badge,
+  Portal,
+  Dialog,
+  TextInput,
 } from "react-native-paper";
 
 import petService from "../../services/petService";
@@ -61,6 +64,8 @@ export default function PetProfile() {
   const [nextReminder, setNextReminder] = useState(null);
   const [lastMedical, setLastMedical] = useState(null);
   const [medCount, setMedCount] = useState(0);
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -179,21 +184,23 @@ export default function PetProfile() {
   }, [pet, photoUrl]);
 
   const onDelete = () => {
-    Alert.alert(t("pets.delete_title"), t("pets.delete_message"), [
-      { text: t("action.cancel") },
-      {
-        text: t("pets.delete"),
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await petService.deletePet(petId);
-            router.replace("/(tabs)/home");
-          } catch {
-            setErr(t("pets.delete_error"));
-          }
-        },
-      },
-    ]);
+    setDeleteDialogVisible(true);
+    setDeleteConfirmText("");
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deleteConfirmText.trim() !== pet?.name) {
+      setErr(t("pets.delete_confirm_name_mismatch"));
+      return;
+    }
+
+    try {
+      await petService.deletePet(petId);
+      setDeleteDialogVisible(false);
+      router.replace("/(tabs)/home");
+    } catch {
+      setErr(t("pets.delete_error"));
+    }
   };
 
   // פונקציה לטעינה מחדש של הפרופיל אחרי שינוי תמונה
@@ -461,6 +468,40 @@ export default function PetProfile() {
       >
         {err}
       </Snackbar>
+
+      <Portal>
+        <Dialog
+          visible={deleteDialogVisible}
+          onDismiss={() => setDeleteDialogVisible(false)}
+        >
+          <Dialog.Title>{t("pets.delete_confirm_title")}</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium" style={{ marginBottom: 16 }}>
+              {t("pets.delete_confirm_message", { petName: pet?.name })}
+            </Text>
+            <TextInput
+              label={t("pets.delete_confirm_input_label")}
+              value={deleteConfirmText}
+              onChangeText={setDeleteConfirmText}
+              placeholder={t("pets.delete_confirm_input_placeholder")}
+              mode="outlined"
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDeleteDialogVisible(false)}>
+              {t("pets.delete_confirm_cancel")}
+            </Button>
+            <Button
+              mode="contained"
+              buttonColor={COLORS.error}
+              onPress={handleDeleteConfirm}
+              disabled={deleteConfirmText.trim() !== pet?.name}
+            >
+              {t("pets.delete_confirm_delete")}
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }

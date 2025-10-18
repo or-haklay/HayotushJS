@@ -69,11 +69,21 @@ export const StepNavigationHeader = ({
         </View>
 
         {/* Navigation Buttons at Bottom */}
-        <View style={styles.bottomNavigation}>
+        <View
+          style={[
+            styles.bottomNavigation,
+            { paddingBottom: insets.bottom + 10 },
+          ]}
+        >
           {/* Left Half Circle */}
 
           {/* Navigation Buttons */}
-          <View style={styles.navigationContainer}>
+          <View
+            style={[
+              styles.navigationContainer,
+              { marginBottom: insets.bottom + 10 },
+            ]}
+          >
             {canGoBack && (
               <Button
                 mode="outlined"
@@ -215,6 +225,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    paddingBottom: 0, // Will be set dynamically with safe area
   },
   navigationContainer: {
     flex: 1,
@@ -222,7 +233,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 60, // Add space for the half-circles
-    marginBottom: 20,
+    marginBottom: 0, // Will be set dynamically with safe area
     marginTop: 20,
   },
   navButton: {
@@ -233,7 +244,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     position: "absolute",
-    bottom: 30,
+    bottom: 10, // Reduced from 30 to avoid overlap
     height: 40,
     zIndex: 1000,
   },

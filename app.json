@@ -6,28 +6,51 @@
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/android-chrome-512x512.png",
-    "scheme": "hayotushjs",
+    "scheme": "hayotush",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "plugins": ["expo-router", "expo-web-browser", "expo-localization"],
+    "plugins": [
+      "expo-router",
+      "expo-web-browser",
+      "expo-localization",
+      "expo-font"
+    ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
+      "EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
+      "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "YOUR_NEW_ANDROID_CLIENT_ID_HERE",
+      "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
       "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
-      "EXPO_PUBLIC_API_URL": "http://192.168.1.13:3000",
+      "EXPO_PUBLIC_API_URL": "https://api.hayotush.com",
       "router": {},
       "eas": {
         "projectId": "cdbae1c1-512e-4e25-814b-5571a946762b"
       }
     },
     "owner": "orhaklay",
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "android": {
-      "package": "com.orhaklay.hayotush",
-      "usesCleartextTraffic": true,
-      "compileSdkVersion": 35,
-      "targetSdkVersion": 35,
-      "minSdkVersion": 24
+      "package": "com.hayotush.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.hayotush.app"
     }
   }
 }

@@ -8,6 +8,7 @@ export const PetCreationProvider = ({ children }) => {
     type: "",
     breed: "",
     birthDate: null,
+    sex: "",
     weight: "",
     chipNumber: "",
     image: null,
