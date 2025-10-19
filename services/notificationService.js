@@ -173,6 +173,15 @@ class NotificationService {
       console.error("Error cancelling all notifications:", error);
     }
   }
+
+  // עדכון פעילות אחרונה
+  async updateLastActivity() {
+    try {
+      await httpServices.post("/users/activity");
+    } catch (error) {
+      console.log("Failed to update activity");
+    }
+  }
 }
 
 export default new NotificationService();

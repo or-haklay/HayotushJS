@@ -11,6 +11,7 @@ import { COLORS, SIZING } from "../theme/theme";
 import { useFonts } from "expo-font";
 import "../services/i18n"; // Import i18n configuration
 import ToastProvider from "../context/ToastContext";
+import notificationService from "../services/notificationService";
 
 // מונע ממסך הפתיחה להסתתר אוטומטית
 SplashScreen.preventAutoHideAsync();
@@ -41,6 +42,21 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [isLoading, fontsLoaded, fontError]);
+
+  // עדכון פעילות משתמש
+  useEffect(() => {
+    if (user) {
+      // עדכן פעילות בכניסה
+      notificationService.updateLastActivity();
+
+      // עדכן כל 10 דקות בזמן שימוש
+      const interval = setInterval(() => {
+        notificationService.updateLastActivity();
+      }, 10 * 60 * 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   if (isLoading || (!fontsLoaded && !fontError)) {
     return null;

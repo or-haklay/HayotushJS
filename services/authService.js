@@ -102,6 +102,15 @@ async function refreshAuthHeaderFromStorage() {
 }
 
 async function oauthLogin(provider, payload) {
+  console.log("🔍 oauthLogin called with:", { provider, payload });
+
+  // Force clientId for Google OAuth - Use Web Client ID
+  if (provider === "google") {
+    payload.clientId =
+      "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com";
+    console.log("🔧 Forced clientId in authService:", payload.clientId);
+  }
+
   const { data } = await httpServices.post(`/auth/${provider}`, payload);
   await setToken(data.token);
   return data.token;

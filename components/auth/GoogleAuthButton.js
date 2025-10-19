@@ -23,9 +23,8 @@ export default function GoogleAuthButton() {
   const [state, setState] = React.useState(null);
 
   // Use secure redirect URI based on environment
-  const redirectUri = isExpoGo
-    ? "https://auth.expo.dev/@orhaklay/hayotush"
-    : "https://api.hayotush.com/api/auth/google/callback";
+  // Temporarily use server redirect URI due to auth.expo.dev being down
+  const redirectUri = "https://api.hayotush.com/api/auth/google/callback";
 
   // Debug: Log the redirectUri being used (temporarily enabled for debugging)
   console.log("🔧 OAuth Config:", {
@@ -71,7 +70,7 @@ export default function GoogleAuthButton() {
     iosClientId: webClientId, // Use web client for iOS builds
     webClientId, // used in Web
     responseType: "code",
-    usePKCE: true,
+    usePKCE: false, // 👈 Disable PKCE to avoid code_verifier issues
     state: state, // CSRF protection
     scopes: [
       "openid",
@@ -92,17 +91,13 @@ export default function GoogleAuthButton() {
   React.useEffect(() => {
     (async () => {
       if (response?.type === "success") {
-        const { code, state: returnedState, code_verifier } = response.params;
+        const { code, state: returnedState } = response.params;
 
         console.log("🔍 OAuth Response params:", {
           code: code ? code.substring(0, 20) + "..." : "missing",
           state: returnedState
             ? returnedState.substring(0, 20) + "..."
             : "missing",
-          code_verifier: code_verifier
-            ? code_verifier.substring(0, 20) + "..."
-            : "missing",
-          code_verifier_length: code_verifier ? code_verifier.length : 0,
           full_response_params: response.params,
         });
 
@@ -117,7 +112,7 @@ export default function GoogleAuthButton() {
           ? expoClientId
           : Platform.OS === "ios"
           ? iosClientId
-          : androidClientId;
+          : webClientId; // Use webClientId as fallback for Android
 
         try {
           await authService.oauthLogin("google", {
@@ -126,7 +121,7 @@ export default function GoogleAuthButton() {
             clientId: activeClientId,
             platform: Platform.OS,
             state: returnedState, // Include state for backend verification
-            codeVerifier: code_verifier, // Include PKCE code verifier
+            // No codeVerifier - PKCE is disabled
           });
           router.replace("/(tabs)/home");
         } catch (e) {
@@ -134,6 +129,17 @@ export default function GoogleAuthButton() {
         }
       } else if (response?.type === "error") {
         console.error("❌ Google OAuth error:", response.error);
+
+        // Handle specific certificate errors
+        if (
+          response.error?.includes("certificate") ||
+          response.error?.includes("SSL") ||
+          response.error?.includes("NETWORK_ERROR")
+        ) {
+          console.log("🔒 Certificate/Network error detected");
+          // You could show a user-friendly message here
+          // Alert.alert("בעיית חיבור", "יש בעיה עם התעודה. נסה שוב או השתמש באימות רגיל");
+        }
       } else if (response?.type === "cancel") {
         console.log("🚫 Google OAuth cancelled");
       }
@@ -144,7 +150,7 @@ export default function GoogleAuthButton() {
   const missingId =
     (isExpoGo && !expoClientId) ||
     (!isExpoGo &&
-      ((Platform.OS === "android" && !androidClientId) ||
+      ((Platform.OS === "android" && !webClientId) ||
         (Platform.OS === "ios" && !iosClientId)));
 
   if (missingId) {
@@ -168,7 +174,7 @@ export default function GoogleAuthButton() {
     try {
       // Use secure authentication flow
       await promptAsync({
-        useProxy: isExpoGo, // Only use proxy in Expo Go
+        useProxy: false, // Don't use proxy since auth.expo.dev is down
         showInRecents: false, // Don't show in recent apps for security
         preferEphemeralSession: true, // Don't persist session
         // Additional security options
@@ -179,6 +185,16 @@ export default function GoogleAuthButton() {
     } catch (error) {
       console.error("OAuth error:", error);
       console.error("Error details:", JSON.stringify(error, null, 2));
+
+      // Handle certificate/SSL errors specifically
+      if (
+        error.message?.includes("certificate") ||
+        error.message?.includes("SSL") ||
+        error.message?.includes("NETWORK_ERROR")
+      ) {
+        console.log("🔒 Certificate error in promptAsync");
+        // You could show a user message here or try alternative approach
+      }
     }
   };
 

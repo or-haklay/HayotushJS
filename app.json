@@ -2,7 +2,7 @@
   "expo": {
     "name": "Hayotush",
     "slug": "hayotush",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/android-chrome-512x512.png",
@@ -13,17 +13,26 @@
       "expo-router",
       "expo-web-browser",
       "expo-localization",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#4CAF50",
+          "androidMode": "default",
+          "androidCollapsedTitle": "התראות חדשות"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
-      "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "YOUR_NEW_ANDROID_CLIENT_ID_HERE",
+      "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "387230820014-7nq8eac3v8u107au3bb3firb33b3c8d6.apps.googleusercontent.com",
       "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
       "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
-      "EXPO_PUBLIC_API_URL": "https://api.hayotush.com",
+      "EXPO_PUBLIC_API_URL": "https://api.hayotush.com/api",
       "router": {},
       "eas": {
         "projectId": "cdbae1c1-512e-4e25-814b-5571a946762b"
@@ -37,6 +46,7 @@
     },
     "android": {
       "package": "com.hayotush.app",
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -46,7 +56,8 @@
         "ACCESS_FINE_LOCATION",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "NOTIFICATIONS"
       ]
     },
     "ios": {

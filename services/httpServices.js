@@ -1,19 +1,26 @@
 import axios from "axios";
-import config from "../config.json";
+import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 
 const TOKEN_KEY = "token";
-const API_URL = config.URL;
+// Force the correct API URL for now
+const API_URL = "https://api.hayotush.com/api";
 
-axios.defaults.baseURL = API_URL;
-axios.defaults.headers.common["Content-Type"] = "application/json";
-axios.defaults.timeout = 30000; // 30 seconds timeout
-axios.defaults.retry = 3; // retry 3 times
+console.log("🔗 API URL:", API_URL);
+
+// Create axios instance instead of modifying defaults
+const httpServices = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 30000, // 30 seconds timeout
+});
 
 // --- Request Interceptor ---
-axios.interceptors.request.use(
+httpServices.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem(TOKEN_KEY);
     if (token && config.headers) {
@@ -21,6 +28,16 @@ axios.interceptors.request.use(
       // Token added to headers
     } else {
       // No token found in AsyncStorage
+    }
+
+    // Debug: Log the request being sent
+    if (config.url?.includes("/auth/google")) {
+      console.log("🔍 httpServices sending request:", {
+        url: config.url,
+        method: config.method,
+        data: config.data,
+        headers: config.headers,
+      });
     }
 
     return config;
@@ -32,7 +49,7 @@ axios.interceptors.request.use(
 );
 
 // --- Response Interceptor ---
-axios.interceptors.response.use(
+httpServices.interceptors.response.use(
   (response) => {
     return response;
   },
@@ -87,15 +104,16 @@ const retryRequest = async (fn, retries = 3, delay = 1000) => {
   }
 };
 
-const httpServices = {
-  get: (url, config) => retryRequest(() => axios.get(url, config)),
+const httpServicesInstance = {
+  get: (url, config) => retryRequest(() => httpServices.get(url, config)),
   post: (url, data, config) =>
-    retryRequest(() => axios.post(url, data, config)),
-  put: (url, data, config) => retryRequest(() => axios.put(url, data, config)),
-  delete: (url, config) => retryRequest(() => axios.delete(url, config)),
+    retryRequest(() => httpServices.post(url, data, config)),
+  put: (url, data, config) =>
+    retryRequest(() => httpServices.put(url, data, config)),
+  delete: (url, config) => retryRequest(() => httpServices.delete(url, config)),
   patch: (url, data, config) =>
-    retryRequest(() => axios.patch(url, data, config)),
-  defaults: axios.defaults,
+    retryRequest(() => httpServices.patch(url, data, config)),
+  defaults: httpServices.defaults,
 };
 
-export default httpServices;
+export default httpServicesInstance;

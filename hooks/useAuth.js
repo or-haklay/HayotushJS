@@ -1,59 +1,122 @@
-// hooks/useAuth.js
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import authService from "../services/authService";
 
-export const useAuth = () => {
+export function useAuth() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Load user from token on mount
   useEffect(() => {
-    const checkAuthentication = async () => {
+    const loadUser = async () => {
       try {
-        // Refresh auth header from storage first
-        await authService.refreshAuthHeaderFromStorage();
-        const currentUser = await authService.getUser();
-        setUser(currentUser);
+        setIsLoading(true);
+        const token = await authService.getJWT();
+        if (token) {
+          // Refresh auth header
+          await authService.refreshAuthHeaderFromStorage();
+          // Get user from token
+          const userData = await authService.getUser();
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
       } catch (error) {
-        console.error("Failed to check authentication status", error);
+        console.error("Error loading user:", error);
         setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuthentication();
+    loadUser();
   }, []);
 
-  const loginWithGoogle = async ({ code, state, codeVerifier }) => {
+  // Login with Google OAuth
+  const loginWithGoogle = useCallback(async ({ code, state, codeVerifier }) => {
     try {
       setIsLoading(true);
 
-      // Get the redirect URI and client ID from the app config
+      // Detect platform and get appropriate client ID
+      const isExpoGo =
+        typeof window !== "undefined" && window.location?.protocol === "exp:";
+      // Temporarily use server redirect URI due to auth.expo.dev being down
       const redirectUri = "https://api.hayotush.com/api/auth/google/callback";
-      const clientId =
-        "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com";
 
-      // Send the authorization code to the backend
-      const response = await authService.oauthLogin("google", {
+      const token = await authService.oauthLogin("google", {
         code,
         redirectUri,
-        clientId,
         state,
-        codeVerifier, // Include PKCE code verifier
+        codeVerifier,
       });
 
-      // Set the user after successful login
-      const currentUser = await authService.getUser();
-      setUser(currentUser);
-
-      return response;
+      if (token) {
+        const userData = await authService.getUser();
+        setUser(userData);
+        return { success: true, user: userData };
+      }
     } catch (error) {
       console.error("Google login error:", error);
       throw error;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  return { user, isLoading, loginWithGoogle };
-};
+  // Regular email/password login
+  const login = useCallback(async (email, password) => {
+    try {
+      setIsLoading(true);
+      const token = await authService.login(email, password);
+      if (token) {
+        const userData = await authService.getUser();
+        setUser(userData);
+        return { success: true, user: userData };
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Logout
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+      setUser(null);
+      return { success: true };
+    } catch (error) {
+      console.error("Logout error:", error);
+      throw error;
+    }
+  }, []);
+
+  // Create user (signup)
+  const createUser = useCallback(async (userData) => {
+    try {
+      setIsLoading(true);
+      const result = await authService.createUser(userData);
+      if (result?.token) {
+        const userData = await authService.getUser();
+        setUser(userData);
+        return { success: true, user: userData };
+      }
+    } catch (error) {
+      console.error("Create user error:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return {
+    user,
+    isLoading,
+    loginWithGoogle,
+    login,
+    logout,
+    createUser,
+    isAuthenticated: !!user,
+  };
+}
