@@ -3,7 +3,8 @@
 // Includes real device location via expo-location
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, FlatList, SafeAreaView, StyleSheet, Text } from "react-native";
+import { View, FlatList, StyleSheet, Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from "expo-location";
 import {
   Searchbar,
@@ -15,7 +16,8 @@ import {
   Menu,
 } from "react-native-paper";
 import SearchResultCard from "../../components/search/SearchResultCard";
-import { COLORS, SIZING } from "../../theme/theme";
+import { SIZING, getColors } from "../../theme/theme";
+import { useTheme } from "../../context/ThemeContext";
 import placesService from "../../services/placesService";
 import gamificationService from "../../services/gamificationService";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -48,6 +50,9 @@ const distanceMeters = (lat1, lon1, lat2, lon2) => {
 const RATING_OPTIONS = [0, 3.5, 4.0, 4.5, 5.0];
 
 export default function SearchScreen() {
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+  const styles = createStyles(colors);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all_pets");
   const [minRating, setMinRating] = useState(0);
@@ -193,205 +198,202 @@ export default function SearchScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { marginTop: insets.top }]}>
-      <View style={{ flex: 1, backgroundColor: COLORS.background }}>
-        <View
-          style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 4 }}
-        >
-          <Searchbar
-            placeholder={t("search.placeholder")}
-            value={query}
-            iconColor={COLORS.primary}
-            inputStyle={{ color: COLORS.dark }}
-            style={styles.searchbar}
-            onChangeText={(t) => {
-              setQuery(t);
-              if (!t) setSessionToken(genSessionToken());
-            }}
-            onIconPress={() => runSearch()}
-            onSubmitEditing={() => runSearch()}
-          />
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 4 }}>
+        <Searchbar
+          placeholder={t("search.placeholder")}
+          value={query}
+          iconColor={colors.primary}
+          inputStyle={{ color: colors.text }}
+          style={styles.searchbar}
+          onChangeText={(t) => {
+            setQuery(t);
+            if (!t) setSessionToken(genSessionToken());
+          }}
+          onIconPress={() => runSearch()}
+          onSubmitEditing={() => runSearch()}
+        />
 
-          <View style={styles.categoryContainer}>
-            <FlatList
-              data={CATEGORIES}
-              horizontal
-              keyExtractor={(i) => i.value}
-              showsHorizontalScrollIndicator={false}
-              renderItem={({ item: c }) => (
-                <Chip
-                  selected={category === c.value}
-                  onPress={() =>
-                    setCategory(category === c.value ? "all_pets" : c.value)
-                  }
-                  style={{
-                    marginRight: 6,
-                    backgroundColor:
-                      category === c.value ? COLORS.primary : COLORS.white,
-                    borderColor: COLORS.neutral + "33",
-                    borderWidth: 1,
-                  }}
-                  textStyle={{
-                    color: category === c.value ? COLORS.white : COLORS.dark,
-                  }}
-                >
-                  {c.label}
-                </Chip>
-              )}
-            />
-          </View>
-
-          <View style={{ marginTop: 8 }}>
-            <SegmentedButtons
-              value={sortBy}
-              onValueChange={setSortBy}
-              buttons={SORTS.map((s) => ({ value: s.value, label: s.label }))}
-              style={{ backgroundColor: COLORS.white }}
-              theme={styles.segmentedButtons}
-            />
-          </View>
-
-          <View
-            style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}
-          >
-            <Chip
-              selected={openNow}
-              onPress={() => setOpenNow((v) => !v)}
-              icon="clock-outline"
-              style={{
-                marginRight: 6,
-                backgroundColor: openNow ? COLORS.primary : COLORS.white,
-                borderColor: COLORS.neutral + "33",
-                borderWidth: 1,
-              }}
-              textStyle={{ color: openNow ? COLORS.white : COLORS.dark }}
-            >
-              {t("filter.open_now")}
-            </Chip>
-
-            <Menu
-              visible={ratingMenuVisible}
-              onDismiss={() => setRatingMenuVisible(false)}
-              anchor={
-                <Chip
-                  onPress={() => setRatingMenuVisible(true)}
-                  icon="star"
-                  style={{
-                    backgroundColor: COLORS.white,
-                    borderColor: COLORS.neutral + "33",
-                    borderWidth: 1,
-                  }}
-                >{`${t("filter.min_rating")}: ${minRating.toFixed(1)}`}</Chip>
-              }
-            >
-              {RATING_OPTIONS.map((val) => (
-                <Menu.Item
-                  key={val}
-                  onPress={() => {
-                    setMinRating(val);
-                    setRatingMenuVisible(false);
-                  }}
-                  title={val.toFixed(1)}
-                />
-              ))}
-            </Menu>
-          </View>
-        </View>
-
-        <Divider />
-
-        {loading && data.length === 0 ? (
-          <View
-            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-          >
-            <ActivityIndicator />
-          </View>
-        ) : (
+        <View style={styles.categoryContainer}>
           <FlatList
-            data={data}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <SearchResultCard item={item} category={category} />
+            data={CATEGORIES}
+            horizontal
+            keyExtractor={(i) => i.value}
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item: c }) => (
+              <Chip
+                selected={category === c.value}
+                onPress={() =>
+                  setCategory(category === c.value ? "all_pets" : c.value)
+                }
+                style={{
+                  marginRight: 6,
+                  backgroundColor:
+                    category === c.value ? colors.primary : colors.surface,
+                  borderColor: colors.border,
+                  borderWidth: 1,
+                }}
+                textStyle={{
+                  color: category === c.value ? colors.white : colors.text,
+                }}
+              >
+                {c.label}
+              </Chip>
             )}
-            onRefresh={handleRefresh}
-            refreshing={refreshing}
-            onEndReachedThreshold={0.6}
-            onEndReached={() => {
-              if (nextPageToken && !loading) {
-                runSearch({ pageToken: nextPageToken });
-              }
-            }}
-            ListEmptyComponent={
-              !loading ? (
-                <View style={{ padding: 16 }}>
-                  <Text style={{ color: COLORS.neutral }}>
-                    {errorMsg
-                      ? `${t("search.no_results_error_prefix")}: ${errorMsg}`
-                      : t("search.no_results")}
-                  </Text>
-                </View>
-              ) : null
-            }
-            ListFooterComponent={
-              loading ? (
-                <ActivityIndicator style={{ marginVertical: 12 }} />
-              ) : null
-            }
-            contentContainerStyle={{ paddingBottom: 24 }}
           />
-        )}
-
-        <View style={styles.clearButtonContainer}>
-          <Button
-            mode="contained-tonal"
-            icon="filter-remove"
-            textColor={COLORS.dark}
-            style={{ backgroundColor: COLORS.accent }}
-            onPress={() => {
-              setCategory(undefined);
-              setMinRating(0);
-              setOpenNow(false);
-              setSortBy("distance");
-              setRadiusMeters(5000);
-              setSessionToken(genSessionToken());
-              runSearch();
-            }}
-          >
-            {t("action.clear_filters")}
-          </Button>
         </View>
+
+        <View style={{ marginTop: 8 }}>
+          <SegmentedButtons
+            value={sortBy}
+            onValueChange={setSortBy}
+            buttons={SORTS.map((s) => ({ value: s.value, label: s.label }))}
+            style={{ backgroundColor: colors.surface }}
+            theme={styles.segmentedButtons}
+          />
+        </View>
+
+        <View
+          style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}
+        >
+          <Chip
+            selected={openNow}
+            onPress={() => setOpenNow((v) => !v)}
+            icon="clock-outline"
+            style={{
+              marginRight: 6,
+              backgroundColor: openNow ? colors.primary : colors.surface,
+              borderColor: colors.border,
+              borderWidth: 1,
+            }}
+            textStyle={{ color: openNow ? colors.white : colors.text }}
+          >
+            {t("filter.open_now")}
+          </Chip>
+
+          <Menu
+            visible={ratingMenuVisible}
+            onDismiss={() => setRatingMenuVisible(false)}
+            anchor={
+              <Chip
+                onPress={() => setRatingMenuVisible(true)}
+                icon="star"
+                style={{
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  borderWidth: 1,
+                }}
+              >{`${t("filter.min_rating")}: ${minRating.toFixed(1)}`}</Chip>
+            }
+          >
+            {RATING_OPTIONS.map((val) => (
+              <Menu.Item
+                key={val}
+                onPress={() => {
+                  setMinRating(val);
+                  setRatingMenuVisible(false);
+                }}
+                title={val.toFixed(1)}
+              />
+            ))}
+          </Menu>
+        </View>
+      </View>
+
+      <Divider />
+
+      {loading && data.length === 0 ? (
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        >
+          <ActivityIndicator />
+        </View>
+      ) : (
+        <FlatList
+          data={data}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <SearchResultCard item={item} category={category} />
+          )}
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+          onEndReachedThreshold={0.6}
+          onEndReached={() => {
+            if (nextPageToken && !loading) {
+              runSearch({ pageToken: nextPageToken });
+            }
+          }}
+          ListEmptyComponent={
+            !loading ? (
+              <View style={{ padding: 16 }}>
+                <Text style={{ color: colors.textSecondary }}>
+                  {errorMsg
+                    ? `${t("search.no_results_error_prefix")}: ${errorMsg}`
+                    : t("search.no_results")}
+                </Text>
+              </View>
+            ) : null
+          }
+          ListFooterComponent={
+            loading ? (
+              <ActivityIndicator style={{ marginVertical: 12 }} />
+            ) : null
+          }
+          contentContainerStyle={{ paddingBottom: 24 }}
+        />
+      )}
+
+      <View style={styles.clearButtonContainer}>
+        <Button
+          mode="contained-tonal"
+          icon="filter-remove"
+          textColor={colors.text}
+          style={{ backgroundColor: colors.accent }}
+          onPress={() => {
+            setCategory(undefined);
+            setMinRating(0);
+            setOpenNow(false);
+            setSortBy("distance");
+            setRadiusMeters(5000);
+            setSessionToken(genSessionToken());
+            runSearch();
+          }}
+        >
+          {t("action.clear_filters")}
+        </Button>
       </View>
     </SafeAreaView>
   );
 }
 
 // סגנונות העיצוב
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    borderRadius: SIZING.radius_md,
-  },
-  searchbar: {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.neutral + "33",
-    borderWidth: 1,
-  },
-  categoryContainer: {
-    marginTop: 8,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  segmentedButtons: {
-    colors: {
-      secondaryContainer: COLORS.primary,
-      onSecondaryContainer: COLORS.white,
-      primary: COLORS.primary,
+const createStyles = (colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      borderRadius: SIZING.radius_md,
     },
-  },
-  clearButtonContainer: {
-    position: "absolute",
-    right: 12,
-    bottom: 20,
-  },
-});
+    searchbar: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderWidth: 1,
+    },
+    categoryContainer: {
+      marginTop: 8,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    segmentedButtons: {
+      colors: {
+        secondaryContainer: colors.primary,
+        onSecondaryContainer: colors.white,
+        primary: colors.primary,
+      },
+    },
+    clearButtonContainer: {
+      position: "absolute",
+      right: 12,
+      bottom: 20,
+    },
+  });

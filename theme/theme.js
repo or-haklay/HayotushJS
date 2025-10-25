@@ -4,32 +4,37 @@
  * פלטת הצבעים הראשית של האפליקציה, מבוססת על הלוגו והפילוסופיה העיצובית.
  * כל צבע נבחר כדי לעורר רגש ספציפי של ביטחון, חום וניקיון.
  */
-export const COLORS = {
+// פלטת צבעים למצב בהיר
+const lightColors = {
   primary: "#017A82", // כחול-ירקרק (Teal)
   accent: "#FFC107", // חרדל-זהב (Mustard)
   neutral: "#546E7A", // אפור קר (Cool Gray)
   background: "#F8F9FA", // לבן-שמנת (Off-White)
-  dark: "#132e36", // שחור כהה (Dark Charcoal)
+  surface: "#FFFFFF", // צבע פני שטח
+  card: "#FFFFFF", // צבע כרטיסיות
+  text: "#212121", // צבע טקסט ראשי
+  textSecondary: "#757575", // צבע טקסט משני
+  border: "#E0E0E0", // צבע גבול
+  shadow: "#000000", // צבע צל
 
   // צבעים שימושיים נוספים
   white: "#FFFFFF",
   black: "#212121",
   error: "#D32F2F", // אדום לשגיאות
   success: "#388E3C", // ירוק להצלחה
+  warning: "#FF9800", // כתום לאזהרות
+  info: "#2196F3", // כחול למידע
   disabled: "#BDBDBD", // אפור לכפתורים לא פעילים
 
-  // צבעים נוספים שחסרים בקומפוננטים
-  surface: "#FFFFFF", // צבע פני שטח
-  shadow: "#000000", // צבע צל
-  border: "#E0E0E0", // צבע גבול
-  text: "#212121", // צבע טקסט ראשי
-  textSecondary: "#757575", // צבע טקסט משני
+  // צבעים על רקעים
   onPrimary: "#FFFFFF", // צבע טקסט על primary
-  onSecondary: "#FFFFFF", // צבע טקסט על secondary
+  onSecondary: "#212121", // צבע טקסט על secondary
   onSurface: "#212121", // צבע טקסט על surface
   onBackground: "#212121", // צבע טקסט על background
   onError: "#FFFFFF", // צבע טקסט על error
   onSuccess: "#FFFFFF", // צבע טקסט על success
+  onWarning: "#FFFFFF", // צבע טקסט על warning
+  onInfo: "#FFFFFF", // צבע טקסט על info
   onDisabled: "#757575", // צבע טקסט על disabled
   onNeutral: "#FFFFFF", // צבע טקסט על neutral
   onAccent: "#212121", // צבע טקסט על accent
@@ -42,6 +47,58 @@ export const COLORS = {
   lightGray: "#F5F5F5", // אפור בהיר לרקע
   errorLight: "#FFEBEE", // אדום בהיר לרקע כפתור מחיקה
 };
+
+// פלטת צבעים למצב חשוך - נברשת טורקיזית כהה לחיותוש
+const darkColors = {
+  primary: "#00B8A9", // טורקיז בהיר שמתחבר ללוגו
+  accent: "#FFD54F", // צהוב-זהב רך יותר
+  neutral: "#334B4B", // כהה עם נגיעה טורקיזית
+  background: "#0E1A1A", // טורקיז כהה מאוד, כמעט שחור
+  surface: "#1A2A2A", // מעט בהיר יותר מהרקע הראשי
+  card: "#1A2A2A", // רקע כרטיסים
+  text: "#E0E0E0", // אפור בהיר לטקסט ראשי
+  textSecondary: "#A0B0B0", // אפור-טורקיזי רך לטקסט משני
+  border: "#263737", // גוון כהה מתון לגבולות
+  shadow: "#000000", // צבע צל
+
+  // צבעים שימושיים נוספים
+  white: "#E0E0E0", // אפור בהיר לטקסט על רקע כהה
+  black: "#000000",
+  error: "#FF6F61", // אדום חם, רך ולא צורם
+  success: "#81C784", // ירוק בהיר רגוע
+  warning: "#FFD54F", // צהוב-זהב רך
+  info: "#00B8A9", // טורקיז בהיר
+  disabled: "#334B4B", // כהה עם נגיעה טורקיזית
+
+  // צבעים על רקעים
+  onPrimary: "#000000", // שחור על טורקיז בהיר
+  onSecondary: "#000000", // שחור על צהוב-זהב
+  onSurface: "#E0E0E0", // אפור בהיר על surface כהה
+  onBackground: "#E0E0E0", // אפור בהיר על background כהה
+  onError: "#FFFFFF", // לבן על אדום
+  onSuccess: "#FFFFFF", // לבן על ירוק
+  onWarning: "#000000", // שחור על צהוב-זהב
+  onInfo: "#FFFFFF", // לבן על טורקיז
+  onDisabled: "#A0B0B0", // אפור-טורקיזי על disabled
+  onNeutral: "#E0E0E0", // אפור בהיר על neutral
+  onAccent: "#000000", // שחור על צהוב-זהב
+  onDark: "#E0E0E0", // אפור בהיר על dark
+  onWhite: "#000000", // שחור על white
+  onBlack: "#E0E0E0", // אפור בהיר על black
+  secondary: "#FFD54F", // צהוב-זהב רך
+
+  // צבעים נוספים לאווטר תמונת פרופיל
+  lightGray: "#263737", // גוון כהה מתון לרקע
+  errorLight: "#4A1A1A", // אדום כהה יותר לרקע כפתור מחיקה
+};
+
+// פונקציה לקבלת צבעים לפי מצב
+export const getColors = (isDark = false) => {
+  return isDark ? darkColors : lightColors;
+};
+
+// צבעים ברירת מחדל (מצב בהיר)
+export const COLORS = lightColors;
 
 export const FONTS = {
   h1: {

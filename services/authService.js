@@ -103,13 +103,27 @@ async function refreshAuthHeaderFromStorage() {
 
 async function oauthLogin(provider, payload) {
   console.log("🔍 oauthLogin called with:", { provider, payload });
+  console.log("🔍 Payload keys:", Object.keys(payload));
+  console.log("🔍 redirectUri value:", payload.redirectUri);
 
   // Force clientId for Google OAuth - Use Web Client ID
   if (provider === "google") {
     payload.clientId =
       "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com";
+    // Force redirectUri if missing
+    if (!payload.redirectUri) {
+      payload.redirectUri = "https://api.hayotush.com/api/auth/google/callback";
+      console.log("🔧 Forced redirectUri in authService:", payload.redirectUri);
+    }
     console.log("🔧 Forced clientId in authService:", payload.clientId);
   }
+
+  console.log("🔍 Final payload before sending:", {
+    code: payload.code ? payload.code.substring(0, 20) + "..." : "missing",
+    redirectUri: payload.redirectUri,
+    clientId: payload.clientId,
+    state: payload.state ? payload.state.substring(0, 20) + "..." : "missing",
+  });
 
   const { data } = await httpServices.post(`/auth/${provider}`, payload);
   await setToken(data.token);

@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
 import { View, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
-import { FONTS, SIZING } from "../../theme/theme";
+import { FONTS, SIZING, getColors } from "../../theme/theme";
+import { useTheme } from "../../context/ThemeContext";
 import { DAILY_TIPS } from "../../data/dailyTips";
 import { useTranslation } from "react-i18next";
 
@@ -32,6 +33,8 @@ function getDailyIndex(seed, modulo) {
 
 export default function DailyTipCard({ petSpecies, userId }) {
   const { t, i18n } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   const lang = i18n.language && i18n.language.startsWith("he") ? "he" : "en";
 
   const { tip, category } = useMemo(() => {
@@ -48,6 +51,8 @@ export default function DailyTipCard({ petSpecies, userId }) {
 
   if (!tip) return null;
 
+  const styles = createStyles(colors, isDark);
+
   return (
     <View style={styles.tipContainer}>
       <Text style={styles.tipTitle}>{t("daily_tip.title")}</Text>
@@ -56,23 +61,24 @@ export default function DailyTipCard({ petSpecies, userId }) {
   );
 }
 
-const styles = StyleSheet.create({
-  tipContainer: {
-    backgroundColor: "#FFF8E1",
-    borderColor: "#F2A90044",
-    borderWidth: 1,
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: SIZING.margin,
-  },
-  tipTitle: {
-    ...FONTS.h3,
-    color: "#8B6A00",
-    marginBottom: 6,
-  },
-  tipText: {
-    ...FONTS.body,
-    color: "#6A5E00",
-    lineHeight: 22,
-  },
-});
+const createStyles = (colors, isDark) =>
+  StyleSheet.create({
+    tipContainer: {
+      backgroundColor: isDark ? `${colors.accent}20` : `${colors.accent}15`, // שקיפות מוגברת
+      borderColor: isDark ? `${colors.accent}40` : `${colors.accent}30`,
+      borderWidth: 1,
+      padding: 12,
+      borderRadius: 12,
+      marginBottom: SIZING.margin,
+    },
+    tipTitle: {
+      ...FONTS.h3,
+      color: isDark ? colors.accent : "#8B6A00",
+      marginBottom: 6,
+    },
+    tipText: {
+      ...FONTS.body,
+      color: isDark ? colors.text : "#6A5E00",
+      lineHeight: 22,
+    },
+  });

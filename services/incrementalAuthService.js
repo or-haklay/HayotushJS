@@ -67,23 +67,6 @@ class IncrementalAuthService {
     }
   }
 
-  // Request calendar access specifically
-  async requestCalendarAccess() {
-    const calendarScopes = [
-      "https://www.googleapis.com/auth/calendar",
-      "https://www.googleapis.com/auth/calendar.events",
-    ];
-
-    // Check if already granted
-    const needsAccess = calendarScopes.filter((scope) => !this.hasScope(scope));
-
-    if (needsAccess.length === 0) {
-      return { success: true, alreadyGranted: true };
-    }
-
-    return await this.requestAdditionalScopes(needsAccess);
-  }
-
   // Request location access
   async requestLocationAccess() {
     const locationScopes = [

@@ -17,11 +17,14 @@ import { LineChart, PieChart } from "react-native-chart-kit";
 import { Dimensions } from "react-native";
 import { listExpenses } from "../../../../services/expensesService";
 import gamificationService from "../../../../services/gamificationService";
-import { COLORS, FONTS, SIZING } from "../../../../theme/theme";
+import { FONTS, SIZING, getColors, COLORS } from "../../../../theme/theme";
+import { useTheme } from "../../../../context/ThemeContext";
 
 export default function ExpensesSummaryScreen() {
   const { t } = useTranslation();
   const { petId } = useLocalSearchParams();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
   const [mode, setMode] = useState("stack");
@@ -375,7 +378,7 @@ export default function ExpensesSummaryScreen() {
               alignItems: "center",
             }}
           >
-            <Text style={{ color: COLORS.error, textAlign: "center" }}>
+            <Text style={{ color: colors.error, textAlign: "center" }}>
               {chartError}
             </Text>
             <Button
@@ -399,7 +402,9 @@ export default function ExpensesSummaryScreen() {
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: COLORS.neutral, textAlign: "center" }}>
+              <Text
+                style={{ color: colors.textSecondary, textAlign: "center" }}
+              >
                 אין נתונים להצגה
               </Text>
             </View>
@@ -434,11 +439,11 @@ export default function ExpensesSummaryScreen() {
                     data: lineChartData.map((item) => item.y),
                     color: (opacity = 1) =>
                       selectedCategory
-                        ? (CAT_COLORS[selectedCategory] || COLORS.primary) +
+                        ? (CAT_COLORS[selectedCategory] || colors.primary) +
                           Math.floor(opacity * 255)
                             .toString(16)
                             .padStart(2, "0")
-                        : COLORS.primary +
+                        : colors.primary +
                           Math.floor(opacity * 255)
                             .toString(16)
                             .padStart(2, "0"),
@@ -453,12 +458,12 @@ export default function ExpensesSummaryScreen() {
                 backgroundGradientFromOpacity: 0,
                 backgroundGradientToOpacity: 0,
                 color: (opacity = 1) =>
-                  COLORS.primary +
+                  colors.primary +
                   Math.floor(opacity * 255)
                     .toString(16)
                     .padStart(2, "0"),
                 labelColor: (opacity = 1) =>
-                  COLORS.neutral +
+                  colors.textSecondary +
                   Math.floor(opacity * 255)
                     .toString(16)
                     .padStart(2, "0"),
@@ -468,7 +473,7 @@ export default function ExpensesSummaryScreen() {
                 propsForDots: {
                   r: summaryType === "yearly" ? "4" : "0",
                   strokeWidth: "2",
-                  stroke: COLORS.primary,
+                  stroke: colors.primary,
                 },
               }}
               bezier
@@ -499,7 +504,7 @@ export default function ExpensesSummaryScreen() {
                     marginRight: 8,
                   }}
                 />
-                <Text style={[FONTS.body, { color: COLORS.neutral }]}>
+                <Text style={[FONTS.body, { color: colors.textSecondary }]}>
                   {getCategoryLabel(selectedCategory)}
                 </Text>
               </View>
@@ -516,7 +521,9 @@ export default function ExpensesSummaryScreen() {
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: COLORS.neutral, textAlign: "center" }}>
+              <Text
+                style={{ color: colors.textSecondary, textAlign: "center" }}
+              >
                 אין נתונים להצגה
               </Text>
             </View>
@@ -539,12 +546,12 @@ export default function ExpensesSummaryScreen() {
               height={220}
               chartConfig={{
                 color: (opacity = 1) =>
-                  COLORS.primary +
+                  colors.primary +
                   Math.floor(opacity * 255)
                     .toString(16)
                     .padStart(2, "0"),
                 labelColor: (opacity = 1) =>
-                  COLORS.neutral +
+                  colors.textSecondary +
                   Math.floor(opacity * 255)
                     .toString(16)
                     .padStart(2, "0"),
@@ -655,7 +662,7 @@ export default function ExpensesSummaryScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={load} />

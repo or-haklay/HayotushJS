@@ -16,11 +16,14 @@ import {
   updateExpense,
   listExpenses,
 } from "../../../../services/expensesService";
-import { COLORS, FONTS } from "../../../../theme/theme";
+import { FONTS, getColors } from "../../../../theme/theme";
+import { useTheme } from "../../../../context/ThemeContext";
 import { useToast } from "../../../../context/ToastContext";
 
 export default function ExpenseFormScreen() {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   // Safe useToast with error handling
   let showSuccess, showError;
   try {
@@ -121,7 +124,7 @@ export default function ExpenseFormScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.white, padding: 16 }}>
+    <View style={{ flex: 1, backgroundColor: colors.surface, padding: 16 }}>
       <Text style={FONTS.h2}>
         {expenseId ? t("expenses.edit_title") : t("expenses.add_title")}
       </Text>
@@ -149,7 +152,7 @@ export default function ExpenseFormScreen() {
       />
 
       <View style={{ marginTop: 12 }}>
-        <Text style={{ marginBottom: 8, fontSize: 16, color: COLORS.dark }}>
+        <Text style={{ marginBottom: 8, fontSize: 16, color: colors.text }}>
           {t("expenses.fields.category")}
         </Text>
         <FlatList
@@ -164,12 +167,12 @@ export default function ExpenseFormScreen() {
               style={{
                 marginRight: 6,
                 backgroundColor:
-                  category === c.value ? COLORS.primary : COLORS.white,
-                borderColor: COLORS.neutral + "33",
+                  category === c.value ? colors.primary : colors.surface,
+                borderColor: colors.border,
                 borderWidth: 1,
               }}
               textStyle={{
-                color: category === c.value ? COLORS.white : COLORS.dark,
+                color: category === c.value ? colors.white : colors.text,
               }}
             >
               {c.label}
@@ -209,7 +212,7 @@ export default function ExpenseFormScreen() {
         mode="contained"
         onPress={submit}
         loading={loading}
-        style={{ marginTop: 16, backgroundColor: COLORS.primary }}
+        style={{ marginTop: 16, backgroundColor: colors.primary }}
       >
         {expenseId
           ? t("expenses.actions.save_changes")
@@ -220,7 +223,7 @@ export default function ExpenseFormScreen() {
         visible={!!err}
         onDismiss={() => setErr("")}
         duration={2500}
-        style={{ backgroundColor: COLORS.error }}
+        style={{ backgroundColor: colors.error }}
       >
         {err}
       </Snackbar>

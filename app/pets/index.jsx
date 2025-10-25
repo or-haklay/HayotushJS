@@ -21,7 +21,8 @@ import petService from "../../services/petService";
 import { listExpenses } from "../../services/expensesService";
 import { listReminders } from "../../services/remindersService";
 import { listMedicalRecords } from "../../services/medicalRecordsService";
-import { COLORS, FONTS } from "../../theme/theme";
+import { FONTS, getColors } from "../../theme/theme";
+import { useTheme } from "../../context/ThemeContext";
 import { useTranslation } from "react-i18next";
 
 const PlaceholderImage = require("../../assets/images/dogs/dog-think.png");
@@ -33,6 +34,8 @@ export default function PetProfile() {
   const { petId } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
 
   // העברת הפונקציה לתוך הקומפוננטה כדי ש-t יהיה זמין
   const getAgeString = useCallback(
@@ -213,7 +216,7 @@ export default function PetProfile() {
   }, [load]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={load} />
@@ -224,12 +227,12 @@ export default function PetProfile() {
           {photoUrl ? (
             <Card.Cover
               source={{ uri: photoUrl }}
-              style={{ height: 200, backgroundColor: COLORS.white }}
+              style={{ height: 200, backgroundColor: colors.surface }}
             />
           ) : (
             <Card.Cover
               source={PlaceholderImage}
-              style={{ height: 200, backgroundColor: COLORS.white }}
+              style={{ height: 200, backgroundColor: colors.surface }}
             />
           )}
           <Card.Title
@@ -271,7 +274,10 @@ export default function PetProfile() {
             </View>
             {pet?.notes ? (
               <Text
-                style={[FONTS.body, { marginTop: 4, color: COLORS.neutral }]}
+                style={[
+                  FONTS.body,
+                  { marginTop: 4, color: colors.textSecondary },
+                ]}
                 numberOfLines={3}
               >
                 {pet.notes}
@@ -438,7 +444,7 @@ export default function PetProfile() {
               })}`}
               left={(props) => <List.Icon {...props} icon="calendar-month" />}
               right={(props) => (
-                <Text style={[FONTS.h3, { color: COLORS.primary }]}>
+                <Text style={[FONTS.h3, { color: colors.primary }]}>
                   {monthTotal.toFixed(0)}
                   {t("common.currency")}
                 </Text>
@@ -450,7 +456,7 @@ export default function PetProfile() {
               description={`${new Date().getFullYear()}`}
               left={(props) => <List.Icon {...props} icon="calendar" />}
               right={(props) => (
-                <Text style={[FONTS.h3, { color: COLORS.primary }]}>
+                <Text style={[FONTS.h3, { color: colors.primary }]}>
                   {yearTotal.toFixed(0)}
                   {t("common.currency")}
                 </Text>
@@ -464,7 +470,7 @@ export default function PetProfile() {
         visible={!!err}
         onDismiss={() => setErr("")}
         duration={2500}
-        style={{ backgroundColor: COLORS.error }}
+        style={{ backgroundColor: colors.error }}
       >
         {err}
       </Snackbar>
@@ -493,7 +499,7 @@ export default function PetProfile() {
             </Button>
             <Button
               mode="contained"
-              buttonColor={COLORS.error}
+              buttonColor={colors.error}
               onPress={handleDeleteConfirm}
               disabled={deleteConfirmText.trim() !== pet?.name}
             >

@@ -17,7 +17,8 @@ import {
   Card,
 } from "react-native-paper";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { COLORS, FONTS } from "../../theme/theme";
+import { FONTS, getColors } from "../../theme/theme";
+import { useTheme } from "../../context/ThemeContext";
 import petService from "../../services/petService";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../context/ToastContext";
@@ -27,6 +28,8 @@ export default function PetForm() {
   const router = useRouter();
   const { t } = useTranslation();
   const { showSuccess, showError } = useToast();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
 
   const [name, setName] = useState("");
   const [species, setSpecies] = useState("dog");
@@ -108,7 +111,7 @@ export default function PetForm() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.white, padding: 16 }}>
+    <View style={{ flex: 1, backgroundColor: colors.surface, padding: 16 }}>
       <Text style={FONTS.h2}>
         {petId ? t("pets.edit_pet") : t("pets.add_pet")}
       </Text>
@@ -122,7 +125,7 @@ export default function PetForm() {
       />
 
       <View style={{ marginTop: 12 }}>
-        <Text style={{ marginBottom: 8, fontSize: 16, color: COLORS.dark }}>
+        <Text style={{ marginBottom: 8, fontSize: 16, color: colors.text }}>
           {t("pets.species")}
         </Text>
         <Menu
@@ -216,7 +219,7 @@ export default function PetForm() {
       </TouchableOpacity>
 
       <View style={{ marginTop: 12 }}>
-        <Text style={{ marginBottom: 8, fontSize: 16, color: COLORS.dark }}>
+        <Text style={{ marginBottom: 8, fontSize: 16, color: colors.text }}>
           {t("pets.sex_optional")}
         </Text>
         <Menu
@@ -289,7 +292,7 @@ export default function PetForm() {
         mode="contained"
         onPress={submit}
         loading={loading}
-        style={{ marginTop: 16, backgroundColor: COLORS.primary }}
+        style={{ marginTop: 16, backgroundColor: colors.primary }}
       >
         {petId ? t("pets.update") : t("pets.create")}
       </Button>

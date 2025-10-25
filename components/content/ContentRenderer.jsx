@@ -1,9 +1,13 @@
 import React from "react";
 import { View, Image } from "react-native";
 import { Text } from "react-native-paper";
-import { COLORS, SIZING, FONTS } from "../../theme/theme";
+import { COLORS, SIZING, FONTS, getColors } from "../../theme/theme";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function ContentRenderer({ blocks }) {
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+
   if (!blocks || !Array.isArray(blocks)) return null;
 
   const isHebrew = (s) => typeof s === "string" && /[\u0590-\u05FF]/.test(s);
@@ -21,7 +25,7 @@ export default function ContentRenderer({ blocks }) {
               <Text
                 style={{
                   ...FONTS.body,
-                  color: COLORS.dark,
+                  color: colors.text,
                   lineHeight: 22,
                   ...dirStyles(b.text),
                 }}
@@ -31,7 +35,7 @@ export default function ContentRenderer({ blocks }) {
               <View
                 style={{
                   height: 1,
-                  backgroundColor: COLORS.neutral + "33",
+                  backgroundColor: colors.border,
                   marginVertical: 10,
                 }}
               />
@@ -43,8 +47,8 @@ export default function ContentRenderer({ blocks }) {
             <View
               key={idx}
               style={{
-                backgroundColor: "#FFF8E1",
-                borderColor: "#F2A90044",
+                backgroundColor: isDark ? "#3A3A1A" : "#FFF8E1",
+                borderColor: isDark ? "#FFD54F44" : "#F2A90044",
                 borderWidth: 1,
                 padding: 12,
                 borderRadius: 12,

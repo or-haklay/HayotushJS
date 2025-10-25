@@ -14,7 +14,8 @@ import { useRouter } from "expo-router";
 import { usePetCreation } from "../../../context/PetCreationContext";
 import { StepNavigationHeader } from "./_layout";
 import petService from "../../../services/petService";
-import { COLORS } from "../../../theme/theme";
+import { getColors } from "../../../theme/theme";
+import { useTheme } from "../../../context/ThemeContext";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -24,6 +25,8 @@ export default function Step2() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { petData, setPetData } = usePetCreation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   const [loading, setLoading] = useState(false);
   const [createProgress, setCreateProgress] = useState(0);
   const [createStatus, setCreateStatus] = useState("");
@@ -252,7 +255,7 @@ export default function Step2() {
                   style={{
                     marginBottom: 16,
                     padding: 16,
-                    backgroundColor: COLORS.background,
+                    backgroundColor: colors.background,
                     borderRadius: 8,
                   }}
                 >
@@ -267,7 +270,7 @@ export default function Step2() {
                   </Text>
                   <ProgressBar
                     progress={createProgress / 100}
-                    color={COLORS.primary}
+                    color={colors.primary}
                     style={{ height: 8, borderRadius: 4 }}
                   />
                   <View

@@ -10,7 +10,8 @@ import {
   Alert,
   Linking,
 } from "react-native";
-import { COLORS, FONTS, SIZING } from "../../theme/theme";
+import { getColors, FONTS, SIZING } from "../../theme/theme";
+import { useTheme } from "../../context/ThemeContext";
 import authService from "../../services/authService";
 import Joi from "joi";
 import { useRouter } from "expo-router";
@@ -47,11 +48,15 @@ const LoginScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  // מסך LOGIN תמיד בהיר
+  const colors = getColors(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  const styles = createStyles(colors);
 
   const openURL = (url) =>
     Linking.openURL(url).catch((err) =>
@@ -100,7 +105,7 @@ const LoginScreen = () => {
       <KeyboardAwareScrollView
         contentContainerStyle={{
           flexGrow: 1,
-          backgroundColor: COLORS.accent,
+          backgroundColor: colors.accent,
           paddingBottom: (insets?.bottom || 16) + SIZING.padding * 2,
         }}
         enableOnAndroid={true}
@@ -178,7 +183,7 @@ const LoginScreen = () => {
               mode="text"
               onPress={() => router.push("/(auth)/signup")}
               style={styles.registerButton}
-              labelStyle={{ color: COLORS.primary, fontWeight: "600" }}
+              labelStyle={{ color: colors.primary, fontWeight: "600" }}
             >
               {t("auth.login.no_account")}
             </Button>
@@ -189,101 +194,102 @@ const LoginScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: COLORS.background },
-  keyboardAvoidingView: { flex: 1 },
+const createStyles = (colors) =>
+  StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.background },
+    keyboardAvoidingView: { flex: 1 },
 
-  header: {
-    alignItems: "center",
-    marginBottom: SIZING.base,
-    borderBottomLeftRadius: SIZING.radius_3xl,
-    borderBottomRightRadius: SIZING.radius_3xl,
-    overflow: "hidden",
-    backgroundColor: COLORS.background,
-    width: "100%",
-    height: "30%",
-    justifyContent: "flex-end",
-  },
-  image: {
-    width: "90%",
-    height: "90%",
-    zIndex: -1,
-    resizeMode: "contain",
-    marginTop: SIZING.margin,
-  },
-  welcomeTitle: {
-    ...FONTS.h1,
-    textAlign: "center",
-    fontSize: 36,
-    fontWeight: "bold",
-    color: COLORS.black,
-    marginBottom: SIZING.base,
-  },
-  form: {
-    flex: 1,
-    paddingHorizontal: SIZING.padding,
-    paddingTop: SIZING.padding,
-    paddingBottom: SIZING.padding,
-  },
-  footer: {
-    paddingTop: SIZING.base,
-    paddingBottom: SIZING.padding * 2,
-    minHeight: 100,
+    header: {
+      alignItems: "center",
+      marginBottom: SIZING.base,
+      borderBottomLeftRadius: SIZING.radius_3xl,
+      borderBottomRightRadius: SIZING.radius_3xl,
+      overflow: "hidden",
+      backgroundColor: colors.background,
+      width: "100%",
+      height: "30%",
+      justifyContent: "flex-end",
+    },
+    image: {
+      width: "90%",
+      height: "90%",
+      zIndex: -1,
+      resizeMode: "contain",
+      marginTop: SIZING.margin,
+    },
+    welcomeTitle: {
+      ...FONTS.h1,
+      textAlign: "center",
+      fontSize: 36,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: SIZING.base,
+    },
+    form: {
+      flex: 1,
+      paddingHorizontal: SIZING.padding,
+      paddingTop: SIZING.padding,
+      paddingBottom: SIZING.padding,
+    },
+    footer: {
+      paddingTop: SIZING.base,
+      paddingBottom: SIZING.padding * 2,
+      minHeight: 100,
 
-    zIndex: 20,
-  },
-  loginText: {
-    ...FONTS.body,
-    fontFamily: "Rubik",
-    color: COLORS.black,
-    textAlign: "center",
-    marginBottom: SIZING.padding,
-  },
-  input: {
-    marginBottom: SIZING.base,
-    fontSize: 16,
-    backgroundColor: COLORS.white,
-  },
-  button: {
-    backgroundColor: COLORS.primary,
-    padding: SIZING.base,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: SIZING.radius_md,
-    marginHorizontal: SIZING.margin + SIZING.base,
-    zIndex: 10,
-    elevation: 5,
-  },
-  buttonLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  registerButton: {
-    ...FONTS.body,
-    marginTop: SIZING.base,
-    marginHorizontal: SIZING.margin + SIZING.base,
-    paddingVertical: SIZING.base / 2,
-    zIndex: 10,
-  },
-  dividerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: SIZING.base,
-    marginHorizontal: SIZING.margin,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: COLORS.gray,
-  },
-  dividerText: {
-    marginHorizontal: SIZING.base,
-    color: COLORS.gray,
-    fontSize: 16,
-  },
-  contentWrapper: {
-    flex: 1,
-  },
-});
+      zIndex: 20,
+    },
+    loginText: {
+      ...FONTS.body,
+      fontFamily: "Rubik",
+      color: colors.text,
+      textAlign: "center",
+      marginBottom: SIZING.padding,
+    },
+    input: {
+      marginBottom: SIZING.base,
+      fontSize: 16,
+      backgroundColor: colors.surface,
+    },
+    button: {
+      backgroundColor: colors.primary,
+      padding: SIZING.base,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      borderRadius: SIZING.radius_md,
+      marginHorizontal: SIZING.margin + SIZING.base,
+      zIndex: 10,
+      elevation: 5,
+    },
+    buttonLabel: {
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    registerButton: {
+      ...FONTS.body,
+      marginTop: SIZING.base,
+      marginHorizontal: SIZING.margin + SIZING.base,
+      paddingVertical: SIZING.base / 2,
+      zIndex: 10,
+    },
+    dividerContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginVertical: SIZING.base,
+      marginHorizontal: SIZING.margin,
+    },
+    divider: {
+      flex: 1,
+      height: 1,
+      backgroundColor: colors.border,
+    },
+    dividerText: {
+      marginHorizontal: SIZING.base,
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
+    contentWrapper: {
+      flex: 1,
+    },
+  });
 
 export default LoginScreen;

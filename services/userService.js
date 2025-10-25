@@ -7,11 +7,26 @@ export async function getMe() {
     const { data } = await httpServices.get("/users/me");
     return data?.user ?? data;
   } catch (e) {
+    console.error("Error in getMe:", e);
+
+    // אם השגיאה היא 401, לא ננסה fallback
+    if (e?.response?.status === 401) {
+      throw e;
+    }
+
     // Fallback אם אין /me
     if (e?.response?.status === 404) {
-      const id = await authService.getUserId();
-      const { data } = await httpServices.get(`/users/${id}`);
-      return data?.user ?? data;
+      try {
+        const id = await authService.getUserId();
+        if (!id) {
+          throw new Error("No user ID found");
+        }
+        const { data } = await httpServices.get(`/users/${id}`);
+        return data?.user ?? data;
+      } catch (fallbackError) {
+        console.error("Fallback error:", fallbackError);
+        throw e; // Throw original error
+      }
     }
     throw e;
   }

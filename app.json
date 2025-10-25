@@ -7,8 +7,11 @@
     "orientation": "portrait",
     "icon": "./assets/images/android-chrome-512x512.png",
     "scheme": "hayotush",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "linking": {
+      "prefixes": ["hayotush://", "https://hayotush.com"]
+    },
     "plugins": [
       "expo-router",
       "expo-web-browser",
@@ -22,6 +25,12 @@
           "androidMode": "default",
           "androidCollapsedTitle": "התראות חדשות"
         }
+      ],
+      [
+        "react-native-maps",
+        {
+          "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
       ]
     ],
     "experiments": {
@@ -29,7 +38,7 @@
     },
     "extra": {
       "EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
-      "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "387230820014-7nq8eac3v8u107au3bb3firb33b3c8d6.apps.googleusercontent.com",
+      "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
       "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
       "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
       "EXPO_PUBLIC_API_URL": "https://api.hayotush.com/api",
@@ -54,14 +63,36 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
         "NOTIFICATIONS"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "hayotush"
+            },
+            {
+              "scheme": "https",
+              "host": "hayotush.com"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "ios": {
-      "bundleIdentifier": "com.hayotush.app"
+      "bundleIdentifier": "com.hayotush.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "האפליקציה זקוקה למיקום כדי לעקוב אחר הטיולים שלך",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "האפליקציה זקוקה למיקום כדי לעקוב אחר הטיולים שלך גם ברקע",
+        "NSLocationAlwaysUsageDescription": "האפליקציה זקוקה למיקום כדי לעקוב אחר הטיולים שלך גם ברקע"
+      }
     }
   }
 }

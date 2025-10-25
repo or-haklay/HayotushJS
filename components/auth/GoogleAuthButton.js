@@ -6,7 +6,7 @@ import { makeRedirectUri } from "expo-auth-session";
 import Constants from "expo-constants";
 import { Button } from "react-native-paper";
 import { useRouter } from "expo-router";
-import authService from "../../services/authService";
+import { useAuth } from "../../hooks/useAuth";
 import { COLORS, SIZING } from "../../theme/theme";
 import * as Crypto from "expo-crypto";
 
@@ -14,6 +14,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function GoogleAuthButton() {
   const router = useRouter();
+  const { loginWithGoogle } = useAuth();
 
   // Detect Expo Go vs. real build
   const isExpoGo = Constants.appOwnership === "expo";
@@ -66,19 +67,13 @@ export default function GoogleAuthButton() {
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId, // used in Expo Go (proxy)
-    androidClientId: webClientId, // Use web client for Android builds
-    iosClientId: webClientId, // Use web client for iOS builds
+    androidClientId: androidClientId || webClientId, // Use proper Android client ID
+    iosClientId: iosClientId || webClientId, // Use proper iOS client ID
     webClientId, // used in Web
     responseType: "code",
     usePKCE: false, // 👈 Disable PKCE to avoid code_verifier issues
     state: state, // CSRF protection
-    scopes: [
-      "openid",
-      "email",
-      "profile",
-      "https://www.googleapis.com/auth/calendar",
-      "https://www.googleapis.com/auth/calendar.events",
-    ],
+    scopes: ["openid", "email", "profile"],
     // Secure parameters
     extraParams: {
       access_type: "offline",
@@ -111,19 +106,36 @@ export default function GoogleAuthButton() {
         const activeClientId = isExpoGo
           ? expoClientId
           : Platform.OS === "ios"
-          ? iosClientId
-          : webClientId; // Use webClientId as fallback for Android
+          ? iosClientId || webClientId
+          : androidClientId || webClientId; // Use proper Android client ID
+
+        // Force redirectUri to be sure it's sent
+        const finalRedirectUri =
+          redirectUri || "https://api.hayotush.com/api/auth/google/callback";
+
+        console.log("🔍 About to send to loginWithGoogle:", {
+          code: code ? code.substring(0, 20) + "..." : "missing",
+          redirectUri: finalRedirectUri,
+          clientId: activeClientId,
+          platform: Platform.OS,
+          state: returnedState
+            ? returnedState.substring(0, 20) + "..."
+            : "missing",
+        });
 
         try {
-          await authService.oauthLogin("google", {
+          const result = await loginWithGoogle({
             code,
-            redirectUri,
+            redirectUri: finalRedirectUri,
             clientId: activeClientId,
             platform: Platform.OS,
             state: returnedState, // Include state for backend verification
             // No codeVerifier - PKCE is disabled
           });
-          router.replace("/(tabs)/home");
+
+          if (result?.success) {
+            router.replace("/(tabs)/home");
+          }
         } catch (e) {
           console.error("❌ Google OAuth exchange failed:", e);
         }
@@ -150,8 +162,8 @@ export default function GoogleAuthButton() {
   const missingId =
     (isExpoGo && !expoClientId) ||
     (!isExpoGo &&
-      ((Platform.OS === "android" && !webClientId) ||
-        (Platform.OS === "ios" && !iosClientId)));
+      ((Platform.OS === "android" && !androidClientId && !webClientId) ||
+        (Platform.OS === "ios" && !iosClientId && !webClientId)));
 
   if (missingId) {
     // console.error("Missing Google clientId for current platform");

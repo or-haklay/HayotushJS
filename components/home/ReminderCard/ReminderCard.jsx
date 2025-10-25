@@ -1,7 +1,8 @@
 import React from "react";
 import { View, TouchableOpacity } from "react-native";
 import { Text } from "react-native-paper";
-import styles from "./styles";
+import { createStyles } from "./styles";
+import { useTheme } from "../../../context/ThemeContext";
 
 const ReminderCard = ({
   reminderText1,
@@ -11,6 +12,9 @@ const ReminderCard = ({
   buttonText,
   onButtonPress,
 }) => {
+  const { isDark } = useTheme();
+  const styles = createStyles(isDark);
+
   return (
     <View style={styles.reminderCard}>
       <View style={styles.reminderTextContainer}>

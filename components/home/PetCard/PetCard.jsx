@@ -2,10 +2,13 @@ import React from "react";
 import { View, TouchableOpacity, Image } from "react-native";
 import { Text } from "react-native-paper";
 import { useRouter } from "expo-router";
-import styles from "./styles";
+import { createStyles } from "./styles";
+import { useTheme } from "../../../context/ThemeContext";
 
 const PetCard = ({ pet, onPress = null }) => {
   const router = useRouter();
+  const { isDark } = useTheme();
+  const styles = createStyles(isDark);
 
   const handlePress = () => {
     if (onPress) {

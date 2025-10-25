@@ -24,8 +24,9 @@ import {
   Badge,
 } from "react-native-paper";
 import placesService from "../../services/placesService";
-import config from "../../config.json";
-import { COLORS } from "../../theme/theme";
+// import config from "../../config.json"; // קובץ לא קיים
+import { getColors, COLORS } from "../../theme/theme";
+import { useTheme } from "../../context/ThemeContext";
 import { useTranslation } from "react-i18next";
 
 // Mock details API (replace with proxy /details/:place_id)
@@ -39,7 +40,7 @@ const toText = (v) => {
 const absolutePhoto = (name, maxWidth = 900) => {
   if (!name) return null;
   const rel = placesService.getPhotoUrl(name, maxWidth); // returns /api/places/photo?...
-  const base = (config.URL || "").replace(/\/$/, "");
+  const base = "https://api.hayotush.com/api"; // URL קבוע
   return `${base}${rel.startsWith("/") ? "" : "/"}${rel}`;
 };
 
@@ -47,6 +48,8 @@ export default function ServiceDetailsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id, name } = useLocalSearchParams();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState(null);
 
@@ -111,7 +114,7 @@ export default function ServiceDetailsScreen() {
                   height: 180,
                   borderRadius: 12,
                   marginHorizontal: 8,
-                  backgroundColor: COLORS.background,
+                  backgroundColor: colors.background,
                 }}
               />
             );
@@ -123,9 +126,9 @@ export default function ServiceDetailsScreen() {
         <Card
           style={{
             margin: 12,
-            backgroundColor: COLORS.white,
+            backgroundColor: colors.surface,
             elevation: 3,
-            shadowColor: COLORS.black,
+            shadowColor: colors.shadow,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.1,
             shadowRadius: 4,
@@ -142,11 +145,11 @@ export default function ServiceDetailsScreen() {
                 <Chip
                   compact
                   icon={details.currentOpeningHours.openNow ? "check" : "close"}
-                  selectedColor={COLORS.white}
+                  selectedColor={colors.white}
                   style={{
                     backgroundColor: details.currentOpeningHours.openNow
-                      ? COLORS.success
-                      : COLORS.error,
+                      ? colors.success
+                      : colors.error,
                   }}
                 >
                   {details.currentOpeningHours.openNow
@@ -159,7 +162,7 @@ export default function ServiceDetailsScreen() {
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    backgroundColor: COLORS.primary,
+                    backgroundColor: colors.primary,
                     paddingHorizontal: 12,
                     paddingVertical: 6,
                     borderRadius: 16,
@@ -168,7 +171,7 @@ export default function ServiceDetailsScreen() {
                 >
                   <Text
                     style={{
-                      color: COLORS.white,
+                      color: colors.white,
                       fontSize: 14,
                       fontWeight: "bold",
                       marginRight: 4,
@@ -178,7 +181,7 @@ export default function ServiceDetailsScreen() {
                   </Text>
                   <Text
                     style={{
-                      color: COLORS.white,
+                      color: colors.white,
                       fontSize: 14,
                       fontWeight: "bold",
                     }}
@@ -188,7 +191,7 @@ export default function ServiceDetailsScreen() {
                 </View>
               )}
               {typeof details.userRatingCount === "number" && (
-                <Chip compact style={{ backgroundColor: COLORS.background }}>
+                <Chip compact style={{ backgroundColor: colors.background }}>
                   {`${details.userRatingCount} ${t("details.reviews")}`}
                 </Chip>
               )}
@@ -197,7 +200,7 @@ export default function ServiceDetailsScreen() {
                   <Chip
                     key={t}
                     compact
-                    style={{ backgroundColor: COLORS.background }}
+                    style={{ backgroundColor: colors.background }}
                   >
                     {t}
                   </Chip>
@@ -217,7 +220,7 @@ export default function ServiceDetailsScreen() {
               icon="phone"
               onPress={handleCall}
               mode="contained"
-              style={{ backgroundColor: COLORS.primary, marginVertical: 4 }}
+              style={{ backgroundColor: colors.primary, marginVertical: 4 }}
             >
               {t("details.call")}
             </Button>
@@ -253,9 +256,9 @@ export default function ServiceDetailsScreen() {
           style={{
             marginHorizontal: 12,
             marginTop: 4,
-            backgroundColor: COLORS.white,
+            backgroundColor: colors.surface,
             elevation: 2,
-            shadowColor: COLORS.black,
+            shadowColor: colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.08,
             shadowRadius: 3,
@@ -300,7 +303,7 @@ export default function ServiceDetailsScreen() {
           <View
             style={{
               height: 2,
-              backgroundColor: COLORS.primary,
+              backgroundColor: colors.primary,
               width: 40,
               borderRadius: 1,
             }}
@@ -317,7 +320,7 @@ export default function ServiceDetailsScreen() {
   }, [details?.reviews]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Appbar.Header elevated>
         <Appbar.BackAction onPress={() => router.back()} />
         <Appbar.Content title={title} />
@@ -326,7 +329,7 @@ export default function ServiceDetailsScreen() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              backgroundColor: COLORS.primary,
+              backgroundColor: colors.primary,
               paddingHorizontal: 12,
               paddingVertical: 6,
               borderRadius: 20,
@@ -372,9 +375,9 @@ export default function ServiceDetailsScreen() {
               style={{
                 marginHorizontal: 12,
                 marginVertical: 4,
-                backgroundColor: COLORS.white,
+                backgroundColor: colors.surface,
                 elevation: 1,
-                shadowColor: COLORS.black,
+                shadowColor: colors.shadow,
                 shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: 0.05,
                 shadowRadius: 2,
@@ -400,7 +403,7 @@ export default function ServiceDetailsScreen() {
                   </Text>
                   <View
                     style={{
-                      backgroundColor: COLORS.primary,
+                      backgroundColor: colors.primary,
                       paddingHorizontal: 8,
                       paddingVertical: 4,
                       borderRadius: 12,
@@ -410,7 +413,7 @@ export default function ServiceDetailsScreen() {
                   >
                     <Text
                       style={{
-                        color: COLORS.white,
+                        color: colors.white,
                         fontSize: 12,
                         fontWeight: "bold",
                         marginRight: 2,
@@ -420,7 +423,7 @@ export default function ServiceDetailsScreen() {
                     </Text>
                     <Text
                       style={{
-                        color: COLORS.white,
+                        color: colors.white,
                         fontSize: 11,
                         fontWeight: "bold",
                       }}

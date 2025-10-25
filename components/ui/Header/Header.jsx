@@ -1,7 +1,8 @@
 import React from "react";
 import { View, Image } from "react-native";
 import { Text, IconButton } from "react-native-paper";
-import styles from "./styles";
+import { createStyles } from "./styles";
+import { useTheme } from "../../../context/ThemeContext";
 import NotificationBell from "../NotificationBell";
 
 const Header = ({
@@ -12,6 +13,9 @@ const Header = ({
   showBackButton = false,
   onBackPress = null,
 }) => {
+  const { isDark } = useTheme();
+  const styles = createStyles(isDark);
+
   return (
     <View style={styles.header}>
       <View style={styles.leftSection}>

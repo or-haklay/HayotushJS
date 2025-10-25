@@ -9,13 +9,16 @@ import {
 } from "react-native";
 import { Text, ActivityIndicator } from "react-native-paper";
 import { useLocalSearchParams } from "expo-router";
-import { COLORS, SIZING, FONTS } from "../../../../theme/theme";
+import { COLORS, SIZING, FONTS, getColors } from "../../../../theme/theme";
+import { useTheme } from "../../../../context/ThemeContext";
 import ContentRenderer from "../../../../components/content/ContentRenderer";
 import * as contentService from "../../../../services/contentService";
 import gamificationService from "../../../../services/gamificationService";
 
 export default function LearnArticleScreen() {
   const { slug } = useLocalSearchParams();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   const [loading, setLoading] = useState(true);
   const [article, setArticle] = useState(null);
   const [saved, setSaved] = useState(false);
@@ -63,12 +66,21 @@ export default function LearnArticleScreen() {
   if (loading) {
     return (
       <ImageBackground
-        source={require("../../../../assets/images/pet-new-background.png")}
+        source={
+          isDark
+            ? require("../../../../assets/images/pet-new-background2.png")
+            : require("../../../../assets/images/pet-new-background.png")
+        }
         style={{ flex: 1 }}
         resizeMode="cover"
       >
         <SafeAreaView
-          style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.8)" }}
+          style={{
+            flex: 1,
+            backgroundColor: isDark
+              ? "rgba(14, 26, 26, 0.9)"
+              : "rgba(255, 255, 255, 0.8)",
+          }}
         >
           <View
             style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
@@ -83,12 +95,21 @@ export default function LearnArticleScreen() {
   if (!article) {
     return (
       <ImageBackground
-        source={require("../../../../assets/images/pet-new-background.png")}
+        source={
+          isDark
+            ? require("../../../../assets/images/pet-new-background2.png")
+            : require("../../../../assets/images/pet-new-background.png")
+        }
         style={{ flex: 1 }}
         resizeMode="cover"
       >
         <SafeAreaView
-          style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.8)" }}
+          style={{
+            flex: 1,
+            backgroundColor: isDark
+              ? "rgba(14, 26, 26, 0.9)"
+              : "rgba(255, 255, 255, 0.8)",
+          }}
         >
           <View
             style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
@@ -114,7 +135,12 @@ export default function LearnArticleScreen() {
       resizeMode="cover"
     >
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.8)" }}
+        style={{
+          flex: 1,
+          backgroundColor: isDark
+            ? "rgba(14, 26, 26, 0.9)"
+            : "rgba(255, 255, 255, 0.8)",
+        }}
       >
         <ScrollView
           style={{ flex: 1 }}
@@ -135,7 +161,7 @@ export default function LearnArticleScreen() {
             style={{
               marginTop: 12,
               marginHorizontal: SIZING.padding,
-              backgroundColor: COLORS.white,
+              backgroundColor: colors.background,
               borderRadius: 16,
               padding: SIZING.padding,
               borderWidth: 1,
@@ -147,7 +173,7 @@ export default function LearnArticleScreen() {
             <Text
               style={{
                 ...FONTS.h1,
-                color: COLORS.dark,
+                color: colors.text,
                 textAlign: "right",
                 writingDirection: "rtl",
               }}
@@ -157,7 +183,7 @@ export default function LearnArticleScreen() {
             {article.summary ? (
               <Text
                 style={{
-                  color: COLORS.neutral,
+                  color: colors.textSecondary,
                   marginTop: 6,
                   textAlign: "right",
                   writingDirection: "rtl",
@@ -174,7 +200,7 @@ export default function LearnArticleScreen() {
                 alignSelf: "flex-end",
                 paddingVertical: 6,
                 paddingHorizontal: 12,
-                backgroundColor: saved ? COLORS.accent : COLORS.white,
+                backgroundColor: saved ? colors.accent : colors.surface,
                 borderRadius: 12,
                 borderWidth: 1,
                 borderColor: COLORS.neutral + "44",
@@ -182,7 +208,7 @@ export default function LearnArticleScreen() {
             >
               <Text
                 style={{
-                  color: saved ? COLORS.white : COLORS.dark,
+                  color: saved ? colors.onAccent : colors.text,
                   textAlign: "right",
                   writingDirection: "rtl",
                 }}

@@ -23,13 +23,17 @@ import {
   listMedicalRecords,
   deleteMedicalRecord,
 } from "../../../../services/medicalRecordsService";
-import { COLORS, FONTS, SIZING } from "../../../../theme/theme";
+import { getColors, FONTS, SIZING, COLORS } from "../../../../theme/theme";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../../../../context/ThemeContext";
 
 export default function MedicalRecordsList() {
   const { petId } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+  const styles = createStyles(colors);
   const [rows, setRows] = useState([]);
   const [filteredRows, setFilteredRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -55,15 +59,15 @@ export default function MedicalRecordsList() {
 
   const RECORD_TYPE_COLORS = useMemo(
     () => ({
-      vaccine: COLORS.success,
-      checkup: COLORS.info,
-      lab: COLORS.warning,
-      surgery: COLORS.error,
-      doc: COLORS.primary,
-      medication: COLORS.secondary,
-      other: COLORS.neutral,
+      vaccine: colors.success,
+      checkup: colors.info,
+      lab: colors.warning,
+      surgery: colors.error,
+      doc: colors.primary,
+      medication: colors.secondary,
+      other: colors.neutral,
     }),
-    []
+    [colors]
   );
 
   const load = useCallback(async () => {
@@ -255,11 +259,11 @@ export default function MedicalRecordsList() {
                 styles.typeChip,
                 {
                   borderColor:
-                    RECORD_TYPE_COLORS[record.recordType] || COLORS.neutral,
+                    RECORD_TYPE_COLORS[record.recordType] || colors.neutral,
                 },
               ]}
               textStyle={{
-                color: RECORD_TYPE_COLORS[record.recordType] || COLORS.neutral,
+                color: RECORD_TYPE_COLORS[record.recordType] || colors.neutral,
               }}
             >
               {RECORD_TYPE_LABELS[record.recordType] || record.recordType}
@@ -372,7 +376,7 @@ export default function MedicalRecordsList() {
       <FAB
         icon="plus"
         style={styles.fab}
-        color={COLORS.white}
+        color={colors.white}
         onPress={() =>
           router.push({
             pathname: "/pets/[petId]/medical-records/new",
@@ -397,124 +401,125 @@ export default function MedicalRecordsList() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  header: {
-    padding: SIZING.padding,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
-  },
-  title: {
-    ...FONTS.h2,
-    color: COLORS.primary,
-    marginBottom: SIZING.base,
-  },
-  subtitle: {
-    ...FONTS.caption,
-    color: COLORS.neutral,
-  },
-  listContainer: {
-    padding: SIZING.padding,
-    paddingBottom: 96,
-  },
-  separator: {
-    height: SIZING.base,
-  },
-  recordCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: SIZING.radius_lg,
-  },
-  recordHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: SIZING.base,
-  },
-  recordInfo: {
-    flex: 1,
-    marginRight: SIZING.base,
-  },
-  recordName: {
-    ...FONTS.h4,
-    marginBottom: SIZING.base,
-    color: COLORS.black,
-  },
-  typeChip: {
-    alignSelf: "flex-start",
-  },
-  recordDate: {
-    ...FONTS.caption,
-    color: COLORS.neutral,
-    textAlign: "right",
-  },
-  recordDescription: {
-    ...FONTS.body,
-    color: COLORS.neutral,
-    marginBottom: SIZING.base,
-    fontStyle: "italic",
-  },
-  recordDetails: {
-    marginBottom: SIZING.base,
-  },
-  detailText: {
-    ...FONTS.caption,
-    color: COLORS.neutral,
-    marginBottom: 2,
-  },
-  detailLabel: {
-    fontWeight: "bold",
-    color: COLORS.black,
-  },
-  divider: {
-    marginVertical: SIZING.base,
-  },
-  recordActions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  actionButton: {
-    flex: 1,
-    marginRight: SIZING.base,
-  },
-  iconActions: {
-    flexDirection: "row",
-    gap: SIZING.base,
-  },
-  iconButton: {
-    margin: 0,
-  },
-  deleteButton: {
-    backgroundColor: COLORS.errorLight,
-  },
-  emptyContainer: {
-    padding: SIZING.padding * 2,
-    alignItems: "center",
-  },
-  emptyText: {
-    ...FONTS.h4,
-    color: COLORS.neutral,
-    marginBottom: SIZING.base,
-    textAlign: "center",
-  },
-  emptySubtext: {
-    ...FONTS.body,
-    color: COLORS.neutral,
-    marginBottom: SIZING.base,
-    textAlign: "center",
-    fontStyle: "italic",
-  },
-  fab: {
-    position: "absolute",
-    right: 16,
-    bottom: 24,
-    backgroundColor: COLORS.primary,
-  },
-  snackbar: {
-    backgroundColor: COLORS.error,
-  },
-});
+const createStyles = (colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      padding: SIZING.padding,
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    title: {
+      ...FONTS.h2,
+      color: colors.primary,
+      marginBottom: SIZING.base,
+    },
+    subtitle: {
+      ...FONTS.caption,
+      color: colors.textSecondary,
+    },
+    listContainer: {
+      padding: SIZING.padding,
+      paddingBottom: 96,
+    },
+    separator: {
+      height: SIZING.base,
+    },
+    recordCard: {
+      backgroundColor: colors.surface,
+      borderRadius: SIZING.radius_lg,
+    },
+    recordHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      marginBottom: SIZING.base,
+    },
+    recordInfo: {
+      flex: 1,
+      marginRight: SIZING.base,
+    },
+    recordName: {
+      ...FONTS.h4,
+      marginBottom: SIZING.base,
+      color: colors.text,
+    },
+    typeChip: {
+      alignSelf: "flex-start",
+    },
+    recordDate: {
+      ...FONTS.caption,
+      color: colors.textSecondary,
+      textAlign: "right",
+    },
+    recordDescription: {
+      ...FONTS.body,
+      color: colors.textSecondary,
+      marginBottom: SIZING.base,
+      fontStyle: "italic",
+    },
+    recordDetails: {
+      marginBottom: SIZING.base,
+    },
+    detailText: {
+      ...FONTS.caption,
+      color: colors.textSecondary,
+      marginBottom: 2,
+    },
+    detailLabel: {
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    divider: {
+      marginVertical: SIZING.base,
+    },
+    recordActions: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    actionButton: {
+      flex: 1,
+      marginRight: SIZING.base,
+    },
+    iconActions: {
+      flexDirection: "row",
+      gap: SIZING.base,
+    },
+    iconButton: {
+      margin: 0,
+    },
+    deleteButton: {
+      backgroundColor: colors.errorLight,
+    },
+    emptyContainer: {
+      padding: SIZING.padding * 2,
+      alignItems: "center",
+    },
+    emptyText: {
+      ...FONTS.h4,
+      color: colors.textSecondary,
+      marginBottom: SIZING.base,
+      textAlign: "center",
+    },
+    emptySubtext: {
+      ...FONTS.body,
+      color: colors.textSecondary,
+      marginBottom: SIZING.base,
+      textAlign: "center",
+      fontStyle: "italic",
+    },
+    fab: {
+      position: "absolute",
+      right: 16,
+      bottom: 24,
+      backgroundColor: colors.primary,
+    },
+    snackbar: {
+      backgroundColor: colors.error,
+    },
+  });

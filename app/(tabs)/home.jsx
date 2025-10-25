@@ -6,15 +6,17 @@ import {
   Image,
   ImageBackground,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, useTheme, ActivityIndicator, Button } from "react-native-paper";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import petService from "../../services/petService";
 import authService from "../../services/authService";
-import { SIZING, FONTS, COLORS } from "../../theme/theme";
+import { SIZING, FONTS, getColors } from "../../theme/theme";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../context/ToastContext";
+import { useTheme as useAppTheme } from "../../context/ThemeContext";
 
 // Import our new components
 import ScreenContainer from "../../components/ui/ScreenContainer";
@@ -32,7 +34,10 @@ const HomeScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { isDark } = useAppTheme();
+  const colors = getColors(isDark);
   const { showSuccess } = useToast();
+  const styles = createStyles(colors);
   const [user, setUser] = useState(null);
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,7 +92,7 @@ const HomeScreen = () => {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -162,10 +167,10 @@ const HomeScreen = () => {
               <Ionicons
                 name="notifications-outline"
                 size={30}
-                color={COLORS.white}
+                color={colors.white}
               />
             }
-            color={COLORS.primary}
+            color={colors.primary}
             onPress={() => {
               if (pets && pets.length > 0) {
                 router.push(`/pets/${pets[0].id || pets[0]._id}/reminders`);
@@ -181,10 +186,10 @@ const HomeScreen = () => {
               <MaterialCommunityIcons
                 name="cash-multiple"
                 size={30}
-                color={COLORS.white}
+                color={colors.white}
               />
             }
-            color={COLORS.accent}
+            color={colors.accent}
             onPress={() => {
               if (pets && pets.length > 0) {
                 router.push(`/pets/${pets[0].id || pets[0]._id}/expenses`);
@@ -197,9 +202,9 @@ const HomeScreen = () => {
           <QuickActionButton
             title={t("home.medical_records")}
             icon={
-              <Ionicons name="heart-outline" size={30} color={COLORS.white} />
+              <Ionicons name="heart-outline" size={30} color={colors.white} />
             }
-            color={COLORS.neutral}
+            color={colors.neutral}
             onPress={() => {
               if (pets && pets.length > 0) {
                 router.push(
@@ -218,54 +223,55 @@ const HomeScreen = () => {
 };
 
 // סגנונות העיצוב
-const styles = StyleSheet.create({
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SIZING.padding,
-    backgroundColor: COLORS.background,
-    margin: SIZING.pageMargin,
-    borderRadius: SIZING.radius_md,
-    elevation: 2,
-  },
+const createStyles = (colors) =>
+  StyleSheet.create({
+    centerContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: SIZING.padding,
+      backgroundColor: colors.background,
+      margin: SIZING.pageMargin,
+      borderRadius: SIZING.radius_md,
+      elevation: 2,
+    },
 
-  centerText: {
-    marginVertical: SIZING.margin,
-    textAlign: "center",
-    ...FONTS.body,
-  },
-  scrollViewContent: {
-    padding: SIZING.padding,
-  },
-  greeting: {
-    ...FONTS.h1,
-    color: COLORS.neutral,
-    marginTop: SIZING.margin,
-    marginBottom: SIZING.margin * 1.5,
-  },
-  sectionTitle: {
-    ...FONTS.h2,
-    color: COLORS.neutral,
-    marginBottom: SIZING.margin,
-  },
-  quickActionsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginHorizontal: -SIZING.base / 2,
-  },
-  placeholderImage: {
-    width: "60%",
-    maxHeight: 200,
-    marginBottom: SIZING.base,
-  },
-  headerTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    paddingHorizontal: SIZING.padding,
-  },
-});
+    centerText: {
+      marginVertical: SIZING.margin,
+      textAlign: "center",
+      ...FONTS.body,
+    },
+    scrollViewContent: {
+      padding: SIZING.padding,
+    },
+    greeting: {
+      ...FONTS.h1,
+      color: colors.textSecondary,
+      marginTop: SIZING.margin,
+      marginBottom: SIZING.margin * 1.5,
+    },
+    sectionTitle: {
+      ...FONTS.h2,
+      color: colors.textSecondary,
+      marginBottom: SIZING.margin,
+    },
+    quickActionsContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginHorizontal: -SIZING.base / 2,
+    },
+    placeholderImage: {
+      width: "60%",
+      maxHeight: 200,
+      marginBottom: SIZING.base,
+    },
+    headerTop: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      width: "100%",
+      paddingHorizontal: SIZING.padding,
+    },
+  });
 
 export default HomeScreen;

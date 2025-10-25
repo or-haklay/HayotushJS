@@ -1,5 +1,11 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { View, RefreshControl, FlatList, Alert, ScrollView } from "react-native";
+import {
+  View,
+  RefreshControl,
+  FlatList,
+  Alert,
+  ScrollView,
+} from "react-native";
 import { useLocalSearchParams, useFocusEffect, useRouter } from "expo-router";
 import {
   Text,
@@ -16,7 +22,8 @@ import {
   listExpenses,
   deleteExpense,
 } from "../../../../services/expensesService";
-import { COLORS, FONTS } from "../../../../theme/theme";
+import { FONTS, getColors } from "../../../../theme/theme";
+import { useTheme } from "../../../../context/ThemeContext";
 import { useTranslation } from "react-i18next";
 
 const CATEGORIES = ["Vet", "Food", "Grooming", "Toys", "Insurance", "Other"];
@@ -25,6 +32,8 @@ export default function ExpensesListScreen() {
   const { petId } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
 
   const [rows, setRows] = useState([]);
   const [category, setCategory] = useState(null);
@@ -89,7 +98,7 @@ export default function ExpensesListScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
       <View style={{ padding: 16, paddingBottom: 8 }}>
         <Text style={FONTS.h2}>{t("expenses.title")}</Text>
 
@@ -128,11 +137,11 @@ export default function ExpensesListScreen() {
               { value: "amount", label: t("expenses.sort.amount") },
               { value: "category", label: t("expenses.sort.category") },
             ]}
-            style={{ backgroundColor: COLORS.white }}
+            style={{ backgroundColor: colors.surface }}
             theme={{
               colors: {
-                secondaryContainer: COLORS.primary,
-                onSecondaryContainer: COLORS.white,
+                secondaryContainer: colors.primary,
+                onSecondaryContainer: colors.white,
               },
             }}
           />
@@ -146,7 +155,7 @@ export default function ExpensesListScreen() {
             <IconButton
               icon={order === "asc" ? "sort-ascending" : "sort-descending"}
               onPress={() => setOrder((o) => (o === "asc" ? "desc" : "asc"))}
-              iconColor={COLORS.primary}
+              iconColor={colors.primary}
             />
           </View>
         </View>
@@ -222,9 +231,9 @@ export default function ExpensesListScreen() {
           position: "absolute",
           right: 16,
           bottom: 24,
-          backgroundColor: COLORS.primary,
+          backgroundColor: colors.primary,
         }}
-        color={COLORS.white}
+        color={colors.white}
         onPress={() =>
           router.push({
             pathname: "/pets/[petId]/expenses/new",
@@ -237,7 +246,7 @@ export default function ExpensesListScreen() {
         visible={!!err}
         onDismiss={() => setErr("")}
         duration={2500}
-        style={{ backgroundColor: COLORS.error }}
+        style={{ backgroundColor: colors.error }}
       >
         {err}
       </Snackbar>

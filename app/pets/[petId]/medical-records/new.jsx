@@ -20,7 +20,8 @@ import {
   getMedicalRecord,
 } from "../../../../services/medicalRecordsService";
 import uploadService from "../../../../services/uploadService";
-import { COLORS, FONTS, SIZING } from "../../../../theme/theme";
+import { FONTS, SIZING, getColors, COLORS } from "../../../../theme/theme";
+import { useTheme } from "../../../../context/ThemeContext";
 import { useToast } from "../../../../context/ToastContext";
 
 const RECORD_TYPES = [
@@ -47,6 +48,9 @@ const RECORD_TYPES = [
 
 export default function NewMedicalRecord() {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+  const styles = createStyles(colors);
   // Safe useToast with error handling
   let showSuccess, showError;
   try {
@@ -473,117 +477,118 @@ export default function NewMedicalRecord() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  scrollContainer: {
-    padding: SIZING.padding,
-    paddingBottom: SIZING.padding * 2,
-  },
-  card: {
-    backgroundColor: COLORS.white,
-    borderRadius: SIZING.radius_lg,
-    elevation: 2,
-    marginBottom: SIZING.margin,
-  },
-  title: {
-    ...FONTS.h2,
-    marginBottom: SIZING.margin,
-    textAlign: "center",
-    color: COLORS.primary,
-  },
-  input: {
-    marginBottom: SIZING.base,
-    backgroundColor: COLORS.white,
-  },
-  typeButton: {
-    marginBottom: SIZING.base,
-    borderColor: COLORS.primary,
-    borderWidth: 1,
-  },
-  dateButton: {
-    marginBottom: SIZING.base,
-    borderColor: COLORS.primary,
-    borderWidth: 1,
-  },
-  saveButton: {
-    marginTop: SIZING.margin,
-    backgroundColor: COLORS.primary,
-    paddingVertical: SIZING.base,
-  },
+const createStyles = (colors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollContainer: {
+      padding: SIZING.padding,
+      paddingBottom: SIZING.padding * 2,
+    },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: SIZING.radius_lg,
+      elevation: 2,
+      marginBottom: SIZING.margin,
+    },
+    title: {
+      ...FONTS.h2,
+      marginBottom: SIZING.margin,
+      textAlign: "center",
+      color: colors.primary,
+    },
+    input: {
+      marginBottom: SIZING.base,
+      backgroundColor: colors.surface,
+    },
+    typeButton: {
+      marginBottom: SIZING.base,
+      borderColor: colors.primary,
+      borderWidth: 1,
+    },
+    dateButton: {
+      marginBottom: SIZING.base,
+      borderColor: colors.primary,
+      borderWidth: 1,
+    },
+    saveButton: {
+      marginTop: SIZING.margin,
+      backgroundColor: COLORS.primary,
+      paddingVertical: SIZING.base,
+    },
 
-  // File upload styles
-  fileSection: {
-    marginTop: SIZING.margin,
-    padding: SIZING.base,
-    backgroundColor: COLORS.lightGray,
-    borderRadius: SIZING.radius_sm,
-  },
-  sectionTitle: {
-    ...FONTS.h4,
-    marginBottom: SIZING.base,
-    color: COLORS.neutral,
-  },
-  fileInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: COLORS.white,
-    padding: SIZING.base,
-    borderRadius: SIZING.radius_sm,
-    marginBottom: SIZING.base,
-  },
-  fileName: {
-    ...FONTS.body,
-    flex: 1,
-    marginRight: SIZING.base,
-  },
-  fileActions: {
-    flexDirection: "row",
-    gap: SIZING.base,
-  },
-  uploadButton: {
-    borderColor: COLORS.primary,
-    borderWidth: 1,
-    marginBottom: SIZING.base,
-  },
-  fileHelp: {
-    ...FONTS.caption,
-    color: COLORS.neutral,
-    fontStyle: "italic",
-    textAlign: "center",
-  },
+    // File upload styles
+    fileSection: {
+      marginTop: SIZING.margin,
+      padding: SIZING.base,
+      backgroundColor: colors.lightGray,
+      borderRadius: SIZING.radius_sm,
+    },
+    sectionTitle: {
+      ...FONTS.h4,
+      marginBottom: SIZING.base,
+      color: colors.textSecondary,
+    },
+    fileInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: colors.surface,
+      padding: SIZING.base,
+      borderRadius: SIZING.radius_sm,
+      marginBottom: SIZING.base,
+    },
+    fileName: {
+      ...FONTS.body,
+      flex: 1,
+      marginRight: SIZING.base,
+    },
+    fileActions: {
+      flexDirection: "row",
+      gap: SIZING.base,
+    },
+    uploadButton: {
+      borderColor: colors.primary,
+      borderWidth: 1,
+      marginBottom: SIZING.base,
+    },
+    fileHelp: {
+      ...FONTS.caption,
+      color: colors.textSecondary,
+      fontStyle: "italic",
+      textAlign: "center",
+    },
 
-  // Dialog styles
-  dialog: {
-    margin: SIZING.margin,
-  },
-  typeGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: SIZING.base,
-    justifyContent: "center",
-  },
-  typeChip: {
-    marginBottom: SIZING.base,
-  },
+    // Dialog styles
+    dialog: {
+      margin: SIZING.margin,
+    },
+    typeGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: SIZING.base,
+      justifyContent: "center",
+    },
+    typeChip: {
+      marginBottom: SIZING.base,
+    },
 
-  // Error styles
-  snackbar: {
-    backgroundColor: COLORS.error,
-  },
+    // Error styles
+    snackbar: {
+      backgroundColor: colors.error,
+    },
 
-  // Loading styles
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: COLORS.background,
-  },
-  loadingText: {
-    ...FONTS.h3,
-    color: COLORS.primary,
-  },
-});
+    // Loading styles
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: colors.background,
+    },
+    loadingText: {
+      ...FONTS.h3,
+      color: colors.primary,
+    },
+  });

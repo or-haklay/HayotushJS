@@ -32,35 +32,42 @@ export function useAuth() {
   }, []);
 
   // Login with Google OAuth
-  const loginWithGoogle = useCallback(async ({ code, state, codeVerifier }) => {
-    try {
-      setIsLoading(true);
+  const loginWithGoogle = useCallback(
+    async ({ code, state, codeVerifier, redirectUri, clientId, platform }) => {
+      try {
+        setIsLoading(true);
 
-      // Detect platform and get appropriate client ID
-      const isExpoGo =
-        typeof window !== "undefined" && window.location?.protocol === "exp:";
-      // Temporarily use server redirect URI due to auth.expo.dev being down
-      const redirectUri = "https://api.hayotush.com/api/auth/google/callback";
+        console.log("🔍 loginWithGoogle received:", {
+          code: code ? code.substring(0, 20) + "..." : "missing",
+          redirectUri,
+          clientId,
+          platform,
+          state: state ? state.substring(0, 20) + "..." : "missing",
+        });
 
-      const token = await authService.oauthLogin("google", {
-        code,
-        redirectUri,
-        state,
-        codeVerifier,
-      });
+        const token = await authService.oauthLogin("google", {
+          code,
+          redirectUri,
+          state,
+          codeVerifier,
+          clientId,
+          platform,
+        });
 
-      if (token) {
-        const userData = await authService.getUser();
-        setUser(userData);
-        return { success: true, user: userData };
+        if (token) {
+          const userData = await authService.getUser();
+          setUser(userData);
+          return { success: true, user: userData };
+        }
+      } catch (error) {
+        console.error("Google login error:", error);
+        throw error;
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Google login error:", error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   // Regular email/password login
   const login = useCallback(async (email, password) => {

@@ -1,34 +1,61 @@
 import React, { useEffect, useState, useCallback } from "react";
-import {
-  View,
-  FlatList,
-  Pressable,
-  SafeAreaView,
-  ImageBackground,
-} from "react-native";
+import { View, FlatList, Pressable, ImageBackground } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, ActivityIndicator, Searchbar, Chip } from "react-native-paper";
 import { useRouter } from "expo-router";
-import { COLORS, SIZING, FONTS } from "../../../theme/theme";
+import { COLORS, SIZING, FONTS, getColors } from "../../../theme/theme";
+import { useTheme } from "../../../context/ThemeContext";
 import * as contentService from "../../../services/contentService";
 
-const getCategoryColor = (categoryKey) => {
-  const colors = {
-    medical: "#E8F5E8", // ירוק דהוי
-    routine: "#FFF3E0", // כתום דהוי
-    grooming: "#F3E5F5", // סגול דהוי
-    training: "#E3F2FD", // כחול דהוי
-    snacks: "#FFF8E1", // צהוב דהוי
-    health: "#FFEBEE", // אדום דהוי
-    behavior: "#E0F2F1", // טורקיז דהוי
-    nutrition: "#F1F8E9", // ירוק בהיר דהוי
-    safety: "#FCE4EC", // ורוד דהוי
-    emergency: "#FFE0B2", // כתום בהיר דהוי
-  };
-  return colors[categoryKey] || "#F5F5F5"; // אפור דהוי כברירת מחדל
+const getCategoryColor = (categoryKey, isDark = false) => {
+  if (isDark) {
+    // צבעים כההים יותר במצב כהה
+    const darkColors = {
+      medical: "#1A2A1A", // ירוק כהה דהוי
+      routine: "#2A1A0A", // כתום כהה דהוי
+      grooming: "#2A1A2A", // סגול כהה דהוי
+      training: "#1A1A2A", // כחול כהה דהוי
+      snacks: "#2A2A0A", // צהוב כהה דהוי
+      health: "#2A0A0A", // אדום כהה דהוי
+      behavior: "#1A2A2A", // טורקיז כהה דהוי
+      nutrition: "#1A2A0A", // ירוק בהיר כהה דהוי
+      safety: "#2A0A1A", // ורוד כהה דהוי
+      emergency: "#2A1A0A", // כתום בהיר כהה דהוי
+    };
+    return darkColors[categoryKey] || "#1A1A1A"; // אפור כהה דהוי כברירת מחדל
+  } else {
+    // צבעים בהירים דהויים במצב בהיר
+    const lightColors = {
+      medical: "#E8F5E8", // ירוק דהוי
+      routine: "#FFF3E0", // כתום דהוי
+      grooming: "#F3E5F5", // סגול דהוי
+      training: "#E3F2FD", // כחול דהוי
+      snacks: "#FFF8E1", // צהוב דהוי
+      health: "#FFEBEE", // אדום דהוי
+      behavior: "#E0F2F1", // טורקיז דהוי
+      nutrition: "#F1F8E9", // ירוק בהיר דהוי
+      safety: "#FCE4EC", // ורוד דהוי
+      emergency: "#FFE0B2", // כתום בהיר דהוי
+    };
+    return lightColors[categoryKey] || "#F5F5F5"; // אפור דהוי כברירת מחדל
+  }
 };
 
 export default function LearnHome() {
   const router = useRouter();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+
+  // פונקציה לזיהוי שפה ויישור טקסט
+  const isHebrew = (text) =>
+    typeof text === "string" && /[\u0590-\u05FF]/.test(text);
+  const getTextDirection = (text) => {
+    if (isHebrew(text)) {
+      return { textAlign: "right", writingDirection: "rtl" };
+    } else {
+      return { textAlign: "left", writingDirection: "ltr" };
+    }
+  };
   const [loading, setLoading] = useState(true);
   const [cats, setCats] = useState([]);
   const [highlights, setHighlights] = useState([]);
@@ -93,12 +120,21 @@ export default function LearnHome() {
   if (loading) {
     return (
       <ImageBackground
-        source={require("../../../assets/images/pet-new-background.png")}
+        source={
+          isDark
+            ? require("../../../assets/images/pet-new-background2.png")
+            : require("../../../assets/images/pet-new-background.png")
+        }
         style={{ flex: 1 }}
         resizeMode="cover"
       >
         <SafeAreaView
-          style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.8)" }}
+          style={{
+            flex: 1,
+            backgroundColor: isDark
+              ? "rgba(14, 26, 26, 0.9)"
+              : "rgba(255, 255, 255, 0.8)",
+          }}
         >
           <View
             style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
@@ -117,7 +153,12 @@ export default function LearnHome() {
       resizeMode="cover"
     >
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: "rgba(255, 255, 255, 0.8)" }}
+        style={{
+          flex: 1,
+          backgroundColor: isDark
+            ? "rgba(14, 26, 26, 0.9)"
+            : "rgba(255, 255, 255, 0.8)",
+        }}
       >
         <View
           style={{
@@ -145,7 +186,7 @@ export default function LearnHome() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             style={{
-              backgroundColor: COLORS.white,
+              backgroundColor: colors.background,
               marginBottom: 8,
               textAlign: "right",
               writingDirection: "rtl",
@@ -188,7 +229,7 @@ export default function LearnHome() {
                     })
                   }
                   style={{
-                    backgroundColor: COLORS.white,
+                    backgroundColor: colors.background,
                     borderRadius: 12,
                     padding: 14,
                     marginBottom: 10,
@@ -199,9 +240,8 @@ export default function LearnHome() {
                   <Text
                     style={{
                       ...FONTS.h3,
-                      color: COLORS.dark,
-                      textAlign: "right",
-                      writingDirection: "rtl",
+                      color: colors.text,
+                      ...getTextDirection(item.title),
                     }}
                   >
                     {item.title}
@@ -209,10 +249,9 @@ export default function LearnHome() {
                   {item.summary ? (
                     <Text
                       style={{
-                        color: COLORS.neutral,
+                        color: colors.textSecondary,
                         marginTop: 6,
-                        textAlign: "right",
-                        writingDirection: "rtl",
+                        ...getTextDirection(item.summary),
                       }}
                       numberOfLines={2}
                     >
@@ -222,7 +261,7 @@ export default function LearnHome() {
                   {item.readingTimeMin ? (
                     <Text
                       style={{
-                        color: COLORS.neutral,
+                        color: colors.textSecondary,
                         marginTop: 6,
                         textAlign: "right",
                         writingDirection: "rtl",
@@ -254,7 +293,7 @@ export default function LearnHome() {
                   <Text
                     style={{
                       ...FONTS.h2,
-                      color: COLORS.dark,
+                      color: colors.text,
                       marginBottom: 12,
                       textAlign: "right",
                       writingDirection: "rtl",
@@ -278,7 +317,7 @@ export default function LearnHome() {
                         }
                         style={{
                           width: 200,
-                          backgroundColor: COLORS.white,
+                          backgroundColor: colors.background,
                           borderRadius: 12,
                           padding: 16,
                           borderWidth: 1,
@@ -288,7 +327,7 @@ export default function LearnHome() {
                         <Text
                           style={{
                             ...FONTS.h3,
-                            color: COLORS.dark,
+                            color: colors.text,
                             textAlign: "right",
                             writingDirection: "rtl",
                           }}
@@ -317,7 +356,7 @@ export default function LearnHome() {
                     }
                     style={{
                       flex: 1,
-                      backgroundColor: getCategoryColor(item.key),
+                      backgroundColor: getCategoryColor(item.key, isDark),
                       borderRadius: 12,
                       padding: 16,
                       borderWidth: 1,
@@ -327,7 +366,7 @@ export default function LearnHome() {
                     <Text
                       style={{
                         ...FONTS.h3,
-                        color: COLORS.dark,
+                        color: colors.text,
                         textAlign: "right",
                         writingDirection: "rtl",
                       }}
@@ -337,7 +376,7 @@ export default function LearnHome() {
                     {item.description ? (
                       <Text
                         style={{
-                          color: COLORS.neutral,
+                          color: colors.textSecondary,
                           marginTop: 6,
                           textAlign: "right",
                           writingDirection: "rtl",

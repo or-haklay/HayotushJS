@@ -15,8 +15,8 @@ import {
   updateReminder,
   listReminders,
 } from "../../../../services/remindersService";
-import calendarService from "../../../../services/calendarService";
-import { COLORS, FONTS } from "../../../../theme/theme";
+import { FONTS, getColors } from "../../../../theme/theme";
+import { useTheme } from "../../../../context/ThemeContext";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../../../context/ToastContext";
 
@@ -24,6 +24,8 @@ export default function NewReminder() {
   const { petId, reminderId } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   // Safe useToast with error handling
   let showSuccess, showError;
   try {
@@ -40,24 +42,10 @@ export default function NewReminder() {
   const [desc, setDesc] = useState("");
   const [date, setDate] = useState(new Date());
   const [time, setTime] = useState("09:00");
-  const [repeat, setRepeat] = useState("none");
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [syncWithGoogle, setSyncWithGoogle] = useState(true);
-  const [googleCalendarAvailable, setGoogleCalendarAvailable] = useState(false);
-
-  const INTERVALS = useMemo(
-    () => [
-      { value: "none", label: t("reminders.intervals.none") },
-      { value: "daily", label: t("reminders.intervals.daily") },
-      { value: "weekly", label: t("reminders.intervals.weekly") },
-      { value: "monthly", label: t("reminders.intervals.monthly") },
-      { value: "yearly", label: t("reminders.intervals.yearly") },
-    ],
-    [t]
-  );
 
   // בדיקה שה-petId קיים
   React.useEffect(() => {
@@ -80,26 +68,12 @@ export default function NewReminder() {
           setDate(new Date(found.date));
           setTime(found.time || "09:00");
           setRepeat(found.repeatInterval || "none");
-          setSyncWithGoogle(found.syncWithGoogle !== false);
         }
       } catch (e) {
         setErr(t("reminders.edit_load_error"));
       }
     })();
   }, [reminderId, petId]);
-
-  useEffect(() => {
-    checkGoogleCalendarAvailability();
-  }, []);
-
-  const checkGoogleCalendarAvailability = async () => {
-    try {
-      const response = await calendarService.checkAccess();
-      setGoogleCalendarAvailable(response.success);
-    } catch (error) {
-      setGoogleCalendarAvailable(false);
-    }
-  };
 
   const submit = async () => {
     if (!title.trim()) return setErr(t("reminders.title_required"));
@@ -116,8 +90,7 @@ export default function NewReminder() {
         description: desc?.trim(),
         date: combinedDate.toISOString(),
         time,
-        repeatInterval: repeat,
-        syncWithGoogle: googleCalendarAvailable ? syncWithGoogle : false,
+        syncWithGoogle: false,
       };
 
       let pointsAdded = 0;
@@ -161,7 +134,7 @@ export default function NewReminder() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.white, padding: 16 }}>
+    <View style={{ flex: 1, backgroundColor: colors.surface, padding: 16 }}>
       <Text style={FONTS.h2}>
         {reminderId
           ? t("reminders.edit_reminder")
@@ -226,66 +199,11 @@ export default function NewReminder() {
         />
       )}
 
-      <View style={{ marginTop: 12 }}>
-        <Text style={{ marginBottom: 8, fontSize: 16, color: COLORS.dark }}>
-          {t("reminders.frequency")}
-        </Text>
-        <FlatList
-          data={INTERVALS}
-          horizontal
-          keyExtractor={(item) => item.value}
-          showsHorizontalScrollIndicator={false}
-          renderItem={({ item: interval }) => (
-            <Chip
-              selected={repeat === interval.value}
-              onPress={() => setRepeat(interval.value)}
-              style={{
-                marginRight: 6,
-                backgroundColor:
-                  repeat === interval.value ? COLORS.primary : COLORS.white,
-                borderColor: COLORS.neutral + "33",
-                borderWidth: 1,
-              }}
-              textStyle={{
-                color: repeat === interval.value ? COLORS.white : COLORS.dark,
-              }}
-            >
-              {interval.label}
-            </Chip>
-          )}
-        />
-      </View>
-
-      <View
-        style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}
-      >
-        <Switch
-          value={syncWithGoogle}
-          onValueChange={setSyncWithGoogle}
-          disabled={!googleCalendarAvailable}
-          color={COLORS.primary}
-        />
-        <Text style={{ marginLeft: 8 }}>{t("reminders.sync_with_google")}</Text>
-      </View>
-
-      {!googleCalendarAvailable && (
-        <Text
-          style={{
-            marginTop: 8,
-            fontSize: 12,
-            color: COLORS.neutral,
-            fontStyle: "italic",
-          }}
-        >
-          {t("reminders.google_calendar_not_available")}
-        </Text>
-      )}
-
       <Button
         mode="contained"
         onPress={submit}
         loading={loading}
-        style={{ marginTop: 16, backgroundColor: COLORS.primary }}
+        style={{ marginTop: 16, backgroundColor: colors.primary }}
       >
         {reminderId ? t("reminders.save_changes") : t("reminders.save")}
       </Button>
@@ -294,7 +212,7 @@ export default function NewReminder() {
         visible={!!err}
         onDismiss={() => setErr("")}
         duration={2500}
-        style={{ backgroundColor: COLORS.error }}
+        style={{ backgroundColor: colors.error }}
       >
         {err}
       </Snackbar>

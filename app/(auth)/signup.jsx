@@ -19,7 +19,8 @@ import {
   HelperText,
   Divider,
 } from "react-native-paper";
-import { COLORS, SIZING, FONTS } from "../../theme/theme";
+import { getColors, SIZING, FONTS, COLORS } from "../../theme/theme";
+import { useTheme } from "../../context/ThemeContext";
 import { useRouter } from "expo-router";
 import LogoWithName from "../../components/ui/LogoWithName";
 import authService from "../../services/authService";
@@ -57,6 +58,8 @@ const SignUpScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  // מסך SIGNUP תמיד בהיר
+  const colors = getColors(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

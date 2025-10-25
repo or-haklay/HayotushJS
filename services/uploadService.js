@@ -1,13 +1,55 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import httpServices from "./httpServices";
 
 class UploadService {
+  // דחיסת תמונה נוספת כדי למנוע 413 errors
+  async compressImage(asset) {
+    try {
+      // בדיקה שהמודול זמין
+      if (!ImageManipulator) {
+        console.warn(
+          "ImageManipulator not available, returning original asset"
+        );
+        return asset;
+      }
+
+      const compressedImage = await ImageManipulator.manipulateAsync(
+        asset.uri,
+        [
+          {
+            resize: {
+              width: 800, // מקסימום רוחב 800 פיקסלים
+              height: 800, // מקסימום גובה 800 פיקסלים
+            },
+          },
+        ],
+        {
+          compress: 0.2, // דחיסה חזקה מאוד
+          format: "jpeg",
+        }
+      );
+
+      return {
+        ...asset,
+        uri: compressedImage.uri,
+        width: compressedImage.width,
+        height: compressedImage.height,
+        fileSize: compressedImage.fileSize,
+      };
+    } catch (error) {
+      console.error("Error compressing image:", error);
+      // אם הדחיסה נכשלת, נחזיר את התמונה המקורית
+      return asset;
+    }
+  }
+
   // בחירת תמונה מהגלריה
   async pickImage(aspectRatio = [1, 1]) {
     try {
       // בדיקה שהמודול זמין
-      if (!ImagePicker || !ImagePicker.MediaTypeOptions) {
+      if (!ImagePicker) {
         console.error("ImagePicker module not properly loaded:", ImagePicker);
         throw new Error("ImagePicker module not available");
       }
@@ -21,10 +63,11 @@ class UploadService {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: "Images",
         allowsEditing: true,
         aspect: aspectRatio,
-        quality: 0.8,
+        quality: 0.3, // דחיסה חזקה יותר כדי למנוע 413 errors
+        allowsMultipleSelection: false,
       });
 
       if (!result.canceled) {
@@ -56,7 +99,7 @@ class UploadService {
   async pickImageWithFlexibleAspect() {
     try {
       // בדיקה שהמודול זמין
-      if (!ImagePicker || !ImagePicker.MediaTypeOptions) {
+      if (!ImagePicker) {
         console.error("ImagePicker module not properly loaded:", ImagePicker);
         throw new Error("ImagePicker module not available");
       }
@@ -70,10 +113,11 @@ class UploadService {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: "Images",
         allowsEditing: true,
         // לא נגדיר aspect כדי לאפשר צורה גמישה לחלוטין
-        quality: 0.8,
+        quality: 0.3, // דחיסה חזקה יותר כדי למנוע 413 errors
+        allowsMultipleSelection: false,
       });
 
       if (!result.canceled) {
@@ -107,6 +151,8 @@ class UploadService {
   // העלאת קובץ לשרת
   async uploadFile(file, type, onProgress) {
     try {
+      console.log(`📤 מעלה קובץ: ${file.uri}, סוג: ${file.mimeType}`);
+
       const formData = new FormData();
       formData.append("file", {
         uri: file.uri,
@@ -135,6 +181,17 @@ class UploadService {
         data: error.response?.data,
         config: error.config,
       });
+
+      // טיפול מיוחד בשגיאת 413 - קובץ גדול מדי
+      if (error.response?.status === 413) {
+        const sizeError = new Error(
+          "הקובץ גדול מדי. אנא בחר תמונה קטנה יותר או נסה לצלם תמונה חדשה."
+        );
+        sizeError.status = 413;
+        sizeError.originalError = error;
+        throw sizeError;
+      }
+
       throw error;
     }
   }

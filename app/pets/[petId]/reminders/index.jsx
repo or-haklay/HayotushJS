@@ -1,5 +1,11 @@
 import React, { useCallback, useState, useMemo } from "react";
-import { View, RefreshControl, FlatList, ScrollView } from "react-native";
+import {
+  View,
+  RefreshControl,
+  FlatList,
+  ScrollView,
+  Linking,
+} from "react-native";
 import { useLocalSearchParams, useFocusEffect, useRouter } from "expo-router";
 import {
   Text,
@@ -17,7 +23,8 @@ import {
   completeReminder,
 } from "../../../../services/remindersService";
 import petService from "../../../../services/petService";
-import { COLORS, FONTS } from "../../../../theme/theme";
+import { COLORS, FONTS, getColors } from "../../../../theme/theme";
+import { useTheme } from "../../../../context/ThemeContext";
 import { useTranslation } from "react-i18next";
 
 const getId = (o) => (o?.id ?? o?._id) || null;
@@ -26,6 +33,8 @@ export default function RemindersList() {
   const { petId } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
 
   const [rows, setRows] = useState([]);
   const [pets, setPets] = useState([]);
@@ -67,7 +76,7 @@ export default function RemindersList() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ padding: 16, paddingBottom: 8 }}>
         <Text style={FONTS.h2}>{t("reminders.title")}</Text>
 
@@ -114,9 +123,7 @@ export default function RemindersList() {
         contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 96 }}
         renderItem={({ item }) => {
           const petName = petMap.get(item.petId) || "";
-          const description = `${new Date(item.date).toLocaleString(
-            "he-IL"
-          )} • ${item.repeatInterval}${
+          const description = `${new Date(item.date).toLocaleString("he-IL")}${
             petName && !selectedPetId ? " • " + petName : ""
           }`;
 

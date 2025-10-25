@@ -31,7 +31,8 @@ import { listExpenses } from "../../../services/expensesService";
 import { listReminders } from "../../../services/remindersService";
 import { listMedicalRecords } from "../../../services/medicalRecordsService";
 import uploadService from "../../../services/uploadService";
-import { COLORS, FONTS } from "../../../theme/theme";
+import { FONTS, getColors } from "../../../theme/theme";
+import { useTheme } from "../../../context/ThemeContext";
 import { useTranslation } from "react-i18next";
 
 const PlaceholderImageDog = require("../../../assets/images/dogs/dog-play.png");
@@ -45,6 +46,8 @@ export default function PetProfile() {
   const { petId } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
 
   // העברת הפונקציה לתוך הקומפוננטה כדי ש-t יהיה זמין
   const getAgeString = useCallback(
@@ -192,7 +195,7 @@ export default function PetProfile() {
                 position: "absolute",
                 bottom: 0,
                 right: 0,
-                backgroundColor: COLORS.primary,
+                backgroundColor: colors.primary,
                 borderRadius: 12,
                 width: 24,
                 height: 24,
@@ -203,7 +206,7 @@ export default function PetProfile() {
               <IconButton
                 icon="camera"
                 size={16}
-                iconColor={COLORS.white}
+                iconColor={colors.white}
                 style={{ margin: 0 }}
               />
             </View>
@@ -225,7 +228,7 @@ export default function PetProfile() {
                   position: "absolute",
                   bottom: 0,
                   right: 0,
-                  backgroundColor: COLORS.primary,
+                  backgroundColor: colors.primary,
                   borderRadius: 12,
                   width: 24,
                   height: 24,
@@ -236,7 +239,7 @@ export default function PetProfile() {
                 <IconButton
                   icon="camera"
                   size={16}
-                  iconColor={COLORS.white}
+                  iconColor={colors.white}
                   style={{ margin: 0 }}
                 />
               </View>
@@ -256,7 +259,7 @@ export default function PetProfile() {
                   position: "absolute",
                   bottom: 0,
                   right: 0,
-                  backgroundColor: COLORS.primary,
+                  backgroundColor: colors.primary,
                   borderRadius: 12,
                   width: 24,
                   height: 24,
@@ -267,7 +270,7 @@ export default function PetProfile() {
                 <IconButton
                   icon="camera"
                   size={16}
-                  iconColor={COLORS.white}
+                  iconColor={colors.white}
                   style={{ margin: 0 }}
                 />
               </View>
@@ -434,7 +437,7 @@ export default function PetProfile() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={load} />
@@ -447,14 +450,14 @@ export default function PetProfile() {
               <View style={{ position: "relative" }}>
                 <Card.Cover
                   source={{ uri: coverUrl }}
-                  style={{ height: 200, backgroundColor: COLORS.white }}
+                  style={{ height: 200, backgroundColor: colors.surface }}
                 />
                 <View
                   style={{
                     position: "absolute",
                     top: 8,
                     right: 8,
-                    backgroundColor: COLORS.primary,
+                    backgroundColor: colors.primary,
                     borderRadius: 16,
                     width: 32,
                     height: 32,
@@ -465,7 +468,7 @@ export default function PetProfile() {
                   <IconButton
                     icon="camera"
                     size={20}
-                    iconColor={COLORS.white}
+                    iconColor={colors.white}
                     style={{ margin: 0 }}
                   />
                 </View>
@@ -476,14 +479,14 @@ export default function PetProfile() {
               <View style={{ position: "relative" }}>
                 <Card.Cover
                   source={CoverPlaceholder}
-                  style={{ height: 200, backgroundColor: COLORS.white }}
+                  style={{ height: 200, backgroundColor: colors.surface }}
                 />
                 <View
                   style={{
                     position: "absolute",
                     top: 8,
                     right: 8,
-                    backgroundColor: COLORS.primary,
+                    backgroundColor: colors.primary,
                     borderRadius: 16,
                     width: 32,
                     height: 32,
@@ -494,7 +497,7 @@ export default function PetProfile() {
                   <IconButton
                     icon="camera"
                     size={20}
-                    iconColor={COLORS.white}
+                    iconColor={colors.white}
                     style={{ margin: 0 }}
                   />
                 </View>
@@ -540,7 +543,10 @@ export default function PetProfile() {
             </View>
             {pet?.notes ? (
               <Text
-                style={[FONTS.body, { marginTop: 4, color: COLORS.neutral }]}
+                style={[
+                  FONTS.body,
+                  { marginTop: 4, color: colors.textSecondary },
+                ]}
                 numberOfLines={3}
               >
                 {pet.notes}
@@ -707,7 +713,7 @@ export default function PetProfile() {
               })}`}
               left={(props) => <List.Icon {...props} icon="calendar-month" />}
               right={(props) => (
-                <Text style={[FONTS.h3, { color: COLORS.primary }]}>
+                <Text style={[FONTS.h3, { color: colors.primary }]}>
                   {monthTotal.toFixed(0)}
                   {t("common.currency")}
                 </Text>
@@ -719,7 +725,7 @@ export default function PetProfile() {
               description={`${new Date().getFullYear()}`}
               left={(props) => <List.Icon {...props} icon="calendar" />}
               right={(props) => (
-                <Text style={[FONTS.h3, { color: COLORS.primary }]}>
+                <Text style={[FONTS.h3, { color: colors.primary }]}>
                   {yearTotal.toFixed(0)}
                   {t("common.currency")}
                 </Text>
@@ -763,7 +769,7 @@ export default function PetProfile() {
                   mode="outlined"
                   onPress={handleRemoveImage}
                   icon="delete"
-                  textColor={COLORS.error}
+                  textColor={colors.error}
                   style={{ marginBottom: 16 }}
                 >
                   {t("pets.remove_image")}
@@ -806,7 +812,7 @@ export default function PetProfile() {
             </Button>
             <Button
               mode="contained"
-              buttonColor={COLORS.error}
+              buttonColor={colors.error}
               onPress={handleDeleteConfirm}
               disabled={deleteConfirmText.trim() !== pet?.name}
             >
@@ -820,7 +826,7 @@ export default function PetProfile() {
         visible={!!err}
         onDismiss={() => setErr("")}
         duration={2500}
-        style={{ backgroundColor: COLORS.error }}
+        style={{ backgroundColor: colors.error }}
       >
         {err}
       </Snackbar>

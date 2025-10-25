@@ -1,7 +1,11 @@
 import React from "react";
-import { View, SafeAreaView } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import styles from "./styles";
+import { View } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { createStyles } from "./styles";
+import { useTheme } from "../../../context/ThemeContext";
 
 const ScreenContainer = ({
   children,
@@ -10,10 +14,20 @@ const ScreenContainer = ({
   backgroundColor = null,
 }) => {
   const insets = useSafeAreaInsets();
+  const { isDark } = useTheme();
+  const styles = createStyles(isDark);
 
   if (safeArea) {
     return (
-      <SafeAreaView style={[styles.safeContainer, { backgroundColor }]}>
+      <SafeAreaView
+        style={[
+          styles.safeContainer,
+          {
+            backgroundColor:
+              backgroundColor || styles.container.backgroundColor,
+          },
+        ]}
+      >
         <View style={[styles.container, style]}>{children}</View>
       </SafeAreaView>
     );

@@ -69,13 +69,19 @@ httpServices.interceptors.response.use(
 
     if (status === 401) {
       console.log("🔐 Unauthorized - redirecting to login");
-      Alert.alert(
-        "Session Expired",
-        "Your session has expired. Please log in again."
-      );
 
-      await AsyncStorage.removeItem(TOKEN_KEY);
-      router.replace("/(auth)/login");
+      // בדיקה אם אנחנו כבר במסך התחברות
+      const currentRoute = router.canGoBack() ? "unknown" : "login";
+
+      Alert.alert("הפגישה פגה תוקף", "הפגישה שלך פגה תוקף. אנא התחבר שוב.", [
+        {
+          text: "התחבר",
+          onPress: async () => {
+            await AsyncStorage.removeItem(TOKEN_KEY);
+            router.replace("/(auth)/login");
+          },
+        },
+      ]);
     } else if (status === 500) {
       console.error("🚨 Server error:", error.response?.data);
     } else if (status === 404) {

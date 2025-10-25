@@ -2,34 +2,44 @@ import React, { useEffect } from "react";
 import {
   PaperProvider,
   MD3LightTheme as DefaultTheme,
+  MD3DarkTheme as DarkTheme,
 } from "react-native-paper";
-import { Stack, SplashScreen } from "expo-router";
+import { Stack, SplashScreen, Redirect } from "expo-router";
 import { View } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from "react-native-safe-area-context";
 import { useAuth } from "../hooks/useAuth";
-import { COLORS, SIZING } from "../theme/theme";
+import { COLORS, SIZING, getColors } from "../theme/theme";
 import { useFonts } from "expo-font";
 import "../services/i18n"; // Import i18n configuration
 import ToastProvider from "../context/ToastContext";
+import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import notificationService from "../services/notificationService";
 
 // מונע ממסך הפתיחה להסתתר אוטומטית
 SplashScreen.preventAutoHideAsync();
 
-const theme = {
-  ...DefaultTheme,
-  roundness: SIZING.radius_sm,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: COLORS.primary,
-    secondary: COLORS.accent,
-    background: COLORS.background,
-    surface: COLORS.white,
-  },
-};
-
-export default function RootLayout() {
+function AppContent() {
   const { isLoading, user } = useAuth();
+  const { isDark } = useTheme();
+
+  const colors = getColors(isDark);
+
+  const theme = {
+    ...(isDark ? DarkTheme : DefaultTheme),
+    roundness: SIZING.radius_sm,
+    colors: {
+      ...(isDark ? DarkTheme.colors : DefaultTheme.colors),
+      primary: colors.primary,
+      secondary: colors.accent,
+      background: colors.background,
+      surface: colors.surface,
+      onSurface: colors.text,
+      onBackground: colors.text,
+    },
+  };
 
   const [fontsLoaded, fontError] = useFonts({
     Rubik: require("../assets/fonts/Rubik.ttf"),
@@ -63,14 +73,40 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <PaperProvider theme={theme}>
         <ToastProvider>
-          <View style={{ flex: 1 }}>
-            <Stack screenOptions={{ headerShown: false }} />
-          </View>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.background },
+            }}
+          >
+            {user ? (
+              // User is authenticated - show main app
+              <>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="pets" />
+                <Stack.Screen name="welcome" />
+              </>
+            ) : (
+              // User is not authenticated - show auth screens
+              <>
+                <Stack.Screen name="welcome" />
+                <Stack.Screen name="(auth)" />
+              </>
+            )}
+          </Stack>
         </ToastProvider>
       </PaperProvider>
     </SafeAreaProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }

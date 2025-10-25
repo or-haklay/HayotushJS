@@ -1,19 +1,23 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Card, Chip, IconButton, Badge } from "react-native-paper";
 import { StyleSheet, Linking, Image, View } from "react-native";
-import { COLORS } from "../../theme/theme";
+import { getColors } from "../../theme/theme";
+import { useTheme } from "../../context/ThemeContext";
 import { useRouter } from "expo-router";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import placesService from "../../services/placesService";
-import config from "../../config.json";
+// import config from "../../config.json"; // קובץ לא קיים
 
 // This component uses hooks, so it must be a function component itself.
 // The renderItem in the FlatList should be a function that returns this component.
 const SearchResultCard = ({ item, category }) => {
   const { t } = useTranslation();
   const router = useRouter();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
+  const styles = createStyles(colors);
 
   const iconForType = (primaryType, types = []) => {
     const main = (primaryType || "").toLowerCase();
@@ -35,7 +39,7 @@ const SearchResultCard = ({ item, category }) => {
   const absolutePhoto = (name, maxWidth = 160) => {
     if (!name) return null;
     const rel = placesService.getPhotoUrl(name, maxWidth);
-    const base = (config.URL || "").replace(/\/$/, "");
+    const base = "https://api.hayotush.com/api"; // URL קבוע
     return `${base}${rel.startsWith("/") ? "" : "/"}${rel}`;
   };
 
@@ -115,7 +119,7 @@ const SearchResultCard = ({ item, category }) => {
               <MaterialCommunityIcons
                 name={leftIconName}
                 size={22}
-                color={COLORS.primary}
+                color={colors.primary}
               />
             </View>
           )
@@ -131,7 +135,7 @@ const SearchResultCard = ({ item, category }) => {
             <MaterialCommunityIcons
               name="navigation-variant-outline"
               size={26}
-              color={COLORS.primary}
+              color={colors.primary}
               onPress={openMaps}
             />
           </View>
@@ -143,11 +147,11 @@ const SearchResultCard = ({ item, category }) => {
             <Chip
               compact
               icon={item.currentOpeningHours.openNow ? "check" : "close"}
-              selectedColor={COLORS.white}
+              selectedColor={colors.white}
               style={{
                 backgroundColor: item.currentOpeningHours.openNow
-                  ? COLORS.success
-                  : COLORS.disabled,
+                  ? colors.success
+                  : colors.disabled,
               }}
             >
               {item.currentOpeningHours.openNow
@@ -156,7 +160,7 @@ const SearchResultCard = ({ item, category }) => {
             </Chip>
           )}
           {typeof item.userRatingCount === "number" && (
-            <Chip compact style={{ backgroundColor: COLORS.background }}>{`${
+            <Chip compact style={{ backgroundColor: colors.surface }}>{`${
               item.userRatingCount
             } ${t("details.reviews")}`}</Chip>
           )}
@@ -171,45 +175,46 @@ const SearchResultCard = ({ item, category }) => {
 
 export default SearchResultCard;
 
-const styles = StyleSheet.create({
-  card: {
-    marginHorizontal: 12,
-    marginVertical: 6,
-    backgroundColor: COLORS.white,
-  },
-  cardTitle: {
-    title: {
-      color: COLORS.dark,
+const createStyles = (colors) =>
+  StyleSheet.create({
+    card: {
+      marginHorizontal: 12,
+      marginVertical: 6,
+      backgroundColor: colors.surface,
     },
-    subtitle: {
-      color: COLORS.neutral,
+    cardTitle: {
+      title: {
+        color: colors.text,
+      },
+      subtitle: {
+        color: colors.textSecondary,
+      },
     },
-  },
-  badge: {
-    backgroundColor: COLORS.accent,
-    color: COLORS.black,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-  },
-  chipContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
-  thumb: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: COLORS.background,
-    marginLeft: 8,
-  },
-  thumbIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: COLORS.background,
-    marginLeft: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
+    badge: {
+      backgroundColor: colors.accent,
+      color: colors.black,
+      paddingHorizontal: 8,
+      borderRadius: 12,
+    },
+    chipContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 6,
+    },
+    thumb: {
+      width: 44,
+      height: 44,
+      borderRadius: 8,
+      backgroundColor: colors.background,
+      marginLeft: 8,
+    },
+    thumbIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 8,
+      backgroundColor: colors.background,
+      marginLeft: 8,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+  });

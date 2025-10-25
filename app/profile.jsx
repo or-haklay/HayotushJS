@@ -10,9 +10,11 @@ import {
   TouchableOpacity,
   Modal,
   ImageBackground,
+  Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import authService from "../services/authService";
 import {
   Text,
   TextInput,
@@ -28,12 +30,20 @@ import {
   IconButton,
 } from "react-native-paper";
 import Joi from "joi";
-import { COLORS, FONTS, SIZING } from "../../theme/theme";
-import userService from "../../services/userService";
-import petService from "../../services/petService";
-import * as gamificationService from "../../services/gamificationService";
+import { FONTS, SIZING, getColors } from "../theme/theme";
+import { useTheme as useAppTheme } from "../context/ThemeContext";
+
+const BRAND = {
+  primary: "#007C82", // טורקיז
+  accent: "#F2A900", // צהוב-כתום
+  dark: "#0F3B3C", // טורקיז כהה מאוד
+};
+import userService from "../services/userService";
+import petService from "../services/petService";
+import * as gamificationService from "../services/gamificationService";
 import { useTranslation } from "react-i18next";
-import uploadService from "../../services/uploadService";
+import uploadService from "../services/uploadService";
+import socialService from "../services/socialService";
 
 const dateToISO = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
 const safeNum = (v) =>
@@ -45,6 +55,9 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { isDark } = useAppTheme();
+  const colors = getColors(isDark);
+  const styles = createStyles(colors);
 
   // העברת ה-schemas לתוך הקומפוננטה כדי ש-t יהיה זמין
   const profileSchema = useMemo(
@@ -277,7 +290,7 @@ export default function ProfileScreen() {
     if (form.profilePicture) {
       return { uri: form.profilePicture };
     }
-    return require("../../assets/images/avatars/default-avatar-profile.png");
+    return require("../assets/images/avatars/default-avatar-profile.png");
   };
 
   // פונקציה לטעינה מחדש של הפרופיל
@@ -307,7 +320,6 @@ export default function ProfileScreen() {
         subscriptionExpiresAt: me.subscriptionExpiresAt || null,
         isAdmin: !!me.isAdmin,
         googleId: me.googleId || null,
-        facebookId: me.facebookId || null,
         lastActive: me.lastActive || null,
         createdAt: me.createdAt || null,
         updatedAt: me.updatedAt || null,
@@ -367,6 +379,19 @@ export default function ProfileScreen() {
   useEffect(() => {
     (async () => {
       try {
+        // בדיקה ראשונית של token validity
+        const token = await authService.getJWT();
+        if (!token) {
+          Alert.alert("שגיאת הרשאות", "לא נמצא token. אנא התחבר שוב.", [
+            {
+              text: "התחבר",
+              onPress: () => {
+                router.replace("/(auth)/login");
+              },
+            },
+          ]);
+          return;
+        }
         const me = await userService.getMe();
         setOriginal(me);
         setForm({
@@ -391,7 +416,6 @@ export default function ProfileScreen() {
           subscriptionExpiresAt: me.subscriptionExpiresAt || null,
           isAdmin: !!me.isAdmin,
           googleId: me.googleId || null,
-          facebookId: me.facebookId || null,
           lastActive: me.lastActive || null,
           createdAt: me.createdAt || null,
           updatedAt: me.updatedAt || null,
@@ -399,17 +423,35 @@ export default function ProfileScreen() {
         try {
           const myPets = await petService.getMyPets();
           setPets(Array.isArray(myPets) ? myPets : []);
-        } catch {}
+        } catch (petError) {
+          console.error("Failed to load pets:", petError);
+          setPets([]);
+        }
         try {
           const summary = await gamificationService.getSummary();
           setGSummary(summary);
-        } catch {}
+        } catch (gamificationError) {
+          console.error("Failed to load gamification data:", gamificationError);
+          setGSummary(null);
+        }
       } catch (e) {
         console.error("Failed to load profile", e);
-        Alert.alert(
-          t("profile.profile_load_error"),
-          t("profile.profile_load_error")
-        );
+        // בדיקה אם השגיאה היא 401 (Unauthorized)
+        if (e?.response?.status === 401) {
+          Alert.alert("שגיאת הרשאות", "הפגישה שלך פגה תוקף. אנא התחבר שוב.", [
+            {
+              text: "התחבר",
+              onPress: () => {
+                router.replace("/(auth)/login");
+              },
+            },
+          ]);
+        } else {
+          Alert.alert(
+            t("profile.profile_load_error"),
+            e?.response?.data?.message || t("profile.profile_load_error")
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -550,7 +592,6 @@ export default function ProfileScreen() {
       subscriptionExpiresAt: original.subscriptionExpiresAt || null,
       isAdmin: !!original.isAdmin,
       googleId: original.googleId || null,
-      facebookId: original.facebookId || null,
       lastActive: original.lastActive || null,
       createdAt: original.createdAt || null,
       updatedAt: original.updatedAt || null,
@@ -602,14 +643,40 @@ export default function ProfileScreen() {
     </View>
   );
 
+  const getSubscriptionIcon = (plan) => {
+    switch (plan) {
+      case "free":
+        return "account";
+      case "premium":
+        return "crown";
+      case "gold":
+        return "star";
+      default:
+        return "account";
+    }
+  };
+
+  const getSubscriptionLabel = (plan) => {
+    switch (plan) {
+      case "free":
+        return t("profile.subscription.free") || "חינמי";
+      case "premium":
+        return t("profile.subscription.premium") || "פרימיום";
+      case "gold":
+        return t("profile.subscription.gold") || "גולד";
+      default:
+        return t("profile.subscription.free") || "חינמי";
+    }
+  };
+
   const PlanBadge = () => (
     <View style={styles.rowWrap}>
       <Chip
-        icon="star"
-        selectedColor={COLORS.white}
+        icon={getSubscriptionIcon(form.subscriptionPlan)}
+        selectedColor="#FFFFFF"
         style={[styles.planChip, styles[form.subscriptionPlan] || styles.free]}
       >
-        {String(form.subscriptionPlan || t("details.free")).toUpperCase()}
+        {getSubscriptionLabel(form.subscriptionPlan)}
       </Chip>
       {form.subscriptionExpiresAt ? (
         <Text style={styles.metaText}>
@@ -655,7 +722,7 @@ export default function ProfileScreen() {
           <View style={styles.headerCard}>
             {/* Hero background */}
             <ImageBackground
-              source={require("../../assets/images/cover.png")}
+              source={require("../assets/images/cover.png")}
               style={styles.hero}
               resizeMode="cover"
             >
@@ -669,7 +736,7 @@ export default function ProfileScreen() {
                       size={120}
                       source={getProfileImageSource()}
                       style={styles.profileAvatar}
-                      defaultSource={require("../../assets/images/avatars/default-avatar-profile.png")}
+                      defaultSource={require("../assets/images/avatars/default-avatar-profile.png")}
                       onError={(error) => {
                         console.error("Error loading profile image:", error);
                         setForm((prev) => ({ ...prev, profilePicture: "" }));
@@ -681,7 +748,7 @@ export default function ProfileScreen() {
                   <IconButton
                     icon="camera"
                     size={22}
-                    iconColor={COLORS.white}
+                    iconColor="#FFFFFF"
                     style={styles.cameraIcon}
                   />
                 </View>
@@ -723,13 +790,23 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.avatarActions}>
               {!editMode ? (
-                <Button
-                  mode="contained"
-                  onPress={() => setEditMode(true)}
-                  style={styles.ctaBtn}
-                >
-                  {t("action.edit_profile")}
-                </Button>
+                <>
+                  <Button
+                    mode="contained"
+                    onPress={() => setEditMode(true)}
+                    style={styles.ctaBtn}
+                  >
+                    {t("action.edit_profile")}
+                  </Button>
+                  <Button
+                    mode="outlined"
+                    onPress={reloadProfile}
+                    icon="refresh"
+                    style={styles.refreshBtn}
+                  >
+                    רענן
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button mode="outlined" onPress={cancelEdit}>
@@ -778,7 +855,7 @@ export default function ProfileScreen() {
                       onPress={handleRemoveProfilePicture}
                       icon="delete"
                       style={[styles.imageOptionButton, styles.deleteButton]}
-                      textColor={COLORS.error}
+                      textColor="#DC3545"
                     >
                       {t("profile.image_remove")}
                     </Button>
@@ -898,7 +975,7 @@ export default function ProfileScreen() {
                         marginBottom: 8,
                         fontSize: 14,
                         fontWeight: "600",
-                        color: COLORS.primary,
+                        color: BRAND.primary,
                         textAlign: "center",
                       },
                     ]}
@@ -920,13 +997,13 @@ export default function ProfileScreen() {
                           {
                             marginLeft: index === 0 ? 0 : 12,
                             backgroundColor: d.isToday
-                              ? COLORS.primary
-                              : COLORS.white,
+                              ? BRAND.primary
+                              : "#FFFFFF",
                             borderColor: d.isToday
-                              ? COLORS.primary
+                              ? BRAND.primary
                               : d.allDone
-                              ? COLORS.success
-                              : COLORS.neutral + "30",
+                              ? "#28A745"
+                              : "#6C757D30",
                             borderWidth: d.isToday ? 2.5 : 1.5,
                           },
                         ]}
@@ -937,10 +1014,10 @@ export default function ProfileScreen() {
                             d.isToday && styles.todayText,
                             {
                               color: d.isToday
-                                ? COLORS.white
+                                ? "#FFFFFF"
                                 : d.allDone
-                                ? COLORS.success
-                                : COLORS.neutral,
+                                ? "#28A745"
+                                : "#6C757D",
                             },
                           ]}
                         >
@@ -953,10 +1030,10 @@ export default function ProfileScreen() {
                               d.isToday && styles.todayText,
                               {
                                 color: d.isToday
-                                  ? COLORS.white
+                                  ? "#FFFFFF"
                                   : d.allDone
-                                  ? COLORS.success
-                                  : COLORS.neutral,
+                                  ? "#28A745"
+                                  : "#6C757D",
                               },
                             ]}
                           >
@@ -967,9 +1044,7 @@ export default function ProfileScreen() {
                               style={{
                                 fontSize: 16,
                                 fontWeight: "bold",
-                                color: d.isToday
-                                  ? COLORS.white
-                                  : COLORS.success,
+                                color: d.isToday ? "#FFFFFF" : "#28A745",
                                 marginLeft: 4,
                               }}
                             >
@@ -1004,9 +1079,7 @@ export default function ProfileScreen() {
                     onPress={() => router.push(`/pets/${p._id || p.id}`)}
                   >
                     <Text style={styles.metaText}>{p.name}</Text>
-                    <Text style={{ fontSize: 20, color: COLORS.disabled }}>
-                      ▶
-                    </Text>
+                    <Text style={{ fontSize: 20, color: "#6C757D" }}>▶</Text>
                   </TouchableOpacity>
                 ))
               ) : (
@@ -1243,21 +1316,98 @@ export default function ProfileScreen() {
               <Divider style={{ marginVertical: SIZING.base }} />
 
               <View style={styles.rowWrap}>
-                <Chip
-                  icon={form.googleId ? "check-circle" : "google"}
-                  mode="outlined"
+                <TouchableOpacity
+                  onPress={() => {
+                    if (form.googleId) {
+                      // Disconnect Google
+                      Alert.alert(
+                        "נתק מגוגל",
+                        "האם אתה בטוח שברצונך לנתק את החשבון מגוגל?",
+                        [
+                          { text: "ביטול", style: "cancel" },
+                          {
+                            text: "נתק",
+                            style: "destructive",
+                            onPress: async () => {
+                              try {
+                                await socialService.disconnectGoogle();
+                                // Reload profile to reflect changes
+                                await reloadProfile();
+                                Alert.alert(
+                                  "הצלחה",
+                                  "החשבון נותק מגוגל בהצלחה"
+                                );
+                              } catch (error) {
+                                console.error(
+                                  "Error disconnecting Google:",
+                                  error
+                                );
+                                Alert.alert(
+                                  "שגיאה",
+                                  "שגיאה בניתוק מגוגל. נסה שוב מאוחר יותר."
+                                );
+                              }
+                            },
+                          },
+                        ]
+                      );
+                    } else {
+                      // Connect Google
+                      Alert.alert(
+                        "חבר לגוגל",
+                        "האם ברצונך לחבר את החשבון לגוגל?",
+                        [
+                          { text: "ביטול", style: "cancel" },
+                          {
+                            text: "חבר",
+                            onPress: async () => {
+                              try {
+                                const response =
+                                  await socialService.getGoogleAuthUrl();
+                                if (response.authUrl) {
+                                  // Open Google OAuth URL in browser
+                                  await Linking.openURL(response.authUrl);
+                                } else {
+                                  Alert.alert(
+                                    "מידע",
+                                    "פונקציונליות החיבור תהיה זמינה בקרוב"
+                                  );
+                                }
+                              } catch (error) {
+                                console.error(
+                                  "Error connecting Google:",
+                                  error
+                                );
+                                Alert.alert(
+                                  "שגיאה",
+                                  "שגיאה בחיבור לגוגל. נסה שוב מאוחר יותר."
+                                );
+                              }
+                            },
+                          },
+                        ]
+                      );
+                    }
+                  }}
                 >
-                  {form.googleId ? "Google connected" : "Connect Google"}
-                </Chip>
-                <Chip
-                  icon={form.facebookId ? "check-circle" : "facebook"}
-                  mode="outlined"
-                >
-                  {form.facebookId ? "Facebook connected" : "Connect Facebook"}
-                </Chip>
+                  <Chip
+                    icon={form.googleId ? "check-circle" : "google"}
+                    mode="outlined"
+                    style={{
+                      backgroundColor: form.googleId
+                        ? "#28A74520"
+                        : "transparent",
+                      borderColor: form.googleId ? "#28A745" : BRAND.primary,
+                    }}
+                  >
+                    {form.googleId ? "Google מחובר" : "חבר לגוגל"}
+                  </Chip>
+                </TouchableOpacity>
               </View>
               <HelperText type="info" visible>
-                {t("profile.social_linking_info")}
+                {form.googleId
+                  ? "החשבון שלך מחובר לגוגל. תוכל לנתק אותו בכל עת."
+                  : "חבר את החשבון שלך לגוגל לסנכרון נתונים וגיבוי אוטומטי."}
               </HelperText>
             </View>
           </List.Section>
@@ -1392,329 +1542,349 @@ export default function ProfileScreen() {
   );
 }
 
-const BRAND = {
-  primary: "#007C82", // טורקיז
-  accent: "#F2A900", // צהוב-כתום
-  dark: "#0F3B3C", // טורקיז כהה מאוד
-};
+const createStyles = (colors) =>
+  StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: colors.background },
+    kav: { flex: 1 },
+    container: {
+      flexGrow: 1,
+      padding: SIZING.padding,
+      backgroundColor: "#F5F7F8",
+      marginTop: SIZING.padding,
+    },
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: COLORS.background },
-  kav: { flex: 1 },
-  container: {
-    flexGrow: 1,
-    padding: SIZING.padding,
-    backgroundColor: "#F5F7F8",
-    marginTop: SIZING.padding,
-  },
+    /* --- HERO --- */
+    hero: {
+      height: 150,
+      marginHorizontal: -SIZING.padding,
+      marginBottom: -SIZING.margin * 2,
+      borderBottomLeftRadius: 28,
+      borderBottomRightRadius: 28,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      overflow: "hidden",
+      zIndex: 0,
+    },
+    heroShade: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.08)",
+    },
 
-  /* --- HERO --- */
-  hero: {
-    height: 150,
-    marginHorizontal: -SIZING.padding,
-    marginBottom: -SIZING.margin * 2,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    overflow: "hidden",
-    zIndex: 0,
-  },
-  heroShade: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.08)",
-  },
+    center: { flex: 1, alignItems: "center", justifyContent: "center" },
 
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+    /* כרטיס עליון "צף" */
+    headerCard: {
+      backgroundColor: "#FFFFFF",
+      borderRadius: 24,
+      paddingHorizontal: SIZING.padding,
+      paddingBottom: SIZING.padding,
+      marginBottom: SIZING.margin,
+      elevation: 6,
+      shadowColor: "#000",
+      shadowOpacity: 0.1,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
+    },
 
-  /* כרטיס עליון “צף” */
-  headerCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 24,
-    paddingHorizontal: SIZING.padding,
-    paddingBottom: SIZING.padding,
-    marginBottom: SIZING.margin,
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-  },
+    avatarActions: {
+      marginTop: SIZING.base,
+      flexDirection: "row",
+      gap: SIZING.base,
+    },
 
-  avatarActions: {
-    marginTop: SIZING.base,
-    flexDirection: "row",
-    gap: SIZING.base,
-  },
+    /* כותרות סקשנים */
+    sectionHeader: {
+      ...FONTS.h3,
+      color: BRAND.dark,
+      marginBottom: 6,
+    },
 
-  /* כותרות סקשנים */
-  sectionHeader: {
-    ...FONTS.h3,
-    color: BRAND.dark,
-    marginBottom: 6,
-  },
+    /* קלפים */
+    card: {
+      backgroundColor: "#FFFFFF",
+      borderRadius: 20,
+      padding: SIZING.padding,
+      marginBottom: SIZING.margin,
+      elevation: 2,
+      shadowColor: "#000",
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 6 },
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: "rgba(0,0,0,0.06)",
+    },
 
-  /* קלפים */
-  card: {
-    backgroundColor: COLORS.white,
-    borderRadius: 20,
-    padding: SIZING.padding,
-    marginBottom: SIZING.margin,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(0,0,0,0.06)",
-  },
+    input: { marginBottom: SIZING.base },
 
-  input: { marginBottom: SIZING.base },
+    rowWrap: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: SIZING.base,
+    },
+    rowBetween: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: SIZING.base,
+    },
 
-  rowWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: SIZING.base,
-  },
-  rowBetween: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: SIZING.base,
-  },
+    metaText: { ...FONTS.caption, color: "#5B6670" },
 
-  metaText: { ...FONTS.caption, color: "#5B6670" },
+    fieldRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingVertical: 8,
+    },
+    fieldLabel: { ...FONTS.caption, color: "#5B6670" },
+    fieldValue: { ...FONTS.body, color: "#000000", maxWidth: "60%" },
 
-  fieldRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-  },
-  fieldLabel: { ...FONTS.caption, color: "#5B6670" },
-  fieldValue: { ...FONTS.body, color: COLORS.black, maxWidth: "60%" },
+    /* צ'יפים */
+    planChip: {
+      marginRight: SIZING.base,
+      borderRadius: 20,
+      elevation: 2,
+      shadowColor: "#000",
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+    },
+    adminChip: {
+      marginLeft: SIZING.base,
+      backgroundColor: "#EAF4F5",
+      borderRadius: 20,
+    },
+    free: {
+      backgroundColor: "#D9E2E7",
+      borderColor: "#B0BEC5",
+      borderWidth: 1,
+    },
+    premium: {
+      backgroundColor: BRAND.primary,
+      borderColor: BRAND.primary,
+      borderWidth: 1,
+    },
+    gold: {
+      backgroundColor: BRAND.accent,
+      borderColor: BRAND.accent,
+      borderWidth: 1,
+    },
 
-  /* צ'יפים */
-  planChip: {
-    backgroundColor: BRAND.dark,
-    marginRight: SIZING.base,
-  },
-  adminChip: { marginLeft: SIZING.base, backgroundColor: "#EAF4F5" },
-  free: { backgroundColor: "#D9E2E7" },
-  premium: { backgroundColor: BRAND.primary },
-  gold: { backgroundColor: BRAND.accent },
+    divider: { marginVertical: 4, opacity: 0.6 },
 
-  divider: { marginVertical: 4, opacity: 0.6 },
+    /* --- אווטאר וטבעת דו-גוונית --- */
+    profilePictureSection: {
+      alignItems: "center",
+      marginBottom: SIZING.base,
+    },
+    profilePictureLabel: {
+      marginTop: SIZING.base,
+      fontSize: FONTS.body.fontSize,
+      color: "#5B6670",
+    },
+    profileAvatar: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: "#e9eef0",
+    },
+    avatarRingOuter: {
+      width: 136,
+      height: 136,
+      borderRadius: 68,
+      backgroundColor: BRAND.accent,
+      padding: 4,
+      alignItems: "center",
+      justifyContent: "center",
+      elevation: 4,
+      shadowColor: "#000",
+      shadowOpacity: 0.15,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 6 },
+    },
+    avatarRingInner: {
+      width: "100%",
+      height: "100%",
+      borderRadius: 64,
+      backgroundColor: BRAND.primary,
+      padding: 3,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    avatarOverlay: {
+      position: "absolute",
+      bottom: -2,
+      right: -2,
+      backgroundColor: BRAND.primary,
+      borderRadius: 16,
+      width: 34,
+      height: 34,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    cameraIcon: {
+      backgroundColor: "transparent",
+    },
 
-  /* --- אווטאר וטבעת דו-גוונית --- */
-  profilePictureSection: {
-    alignItems: "center",
-    marginBottom: SIZING.base,
-  },
-  profilePictureLabel: {
-    marginTop: SIZING.base,
-    fontSize: FONTS.body.fontSize,
-    color: "#5B6670",
-  },
-  profileAvatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#e9eef0",
-  },
-  avatarRingOuter: {
-    width: 136,
-    height: 136,
-    borderRadius: 68,
-    backgroundColor: BRAND.accent,
-    padding: 4,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
-  },
-  avatarRingInner: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 64,
-    backgroundColor: BRAND.primary,
-    padding: 3,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarOverlay: {
-    position: "absolute",
-    bottom: -2,
-    right: -2,
-    backgroundColor: BRAND.primary,
-    borderRadius: 16,
-    width: 34,
-    height: 34,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cameraIcon: {
-    backgroundColor: "transparent",
-  },
+    /* כפתור עיקרי */
+    ctaBtn: {
+      backgroundColor: BRAND.primary,
+      borderRadius: 16,
+      paddingHorizontal: 8,
+    },
+    refreshBtn: {
+      borderRadius: 16,
+      paddingHorizontal: 8,
+    },
 
-  /* כפתור עיקרי */
-  ctaBtn: {
-    backgroundColor: BRAND.primary,
-    borderRadius: 16,
-    paddingHorizontal: 8,
-  },
+    currentImageContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: SIZING.base,
+      paddingVertical: SIZING.base,
+      paddingHorizontal: SIZING.base,
+      backgroundColor: "rgba(0,124,130,0.07)",
+      borderRadius: 12,
+    },
 
-  currentImageContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: SIZING.base,
-    paddingVertical: SIZING.base,
-    paddingHorizontal: SIZING.base,
-    backgroundColor: "rgba(0,124,130,0.07)",
-    borderRadius: 12,
-  },
+    imageOptionsDialog: { margin: SIZING.base },
+    imageOptionsContainer: { padding: SIZING.base },
+    imageOptionButton: { marginBottom: SIZING.base },
+    deleteButton: {
+      backgroundColor: "rgba(220,53,69,0.06)",
+      borderColor: "#DC3545",
+      borderWidth: 1,
+    },
+    noImageText: {
+      fontSize: FONTS.body.fontSize,
+      color: "#5B6670",
+      marginTop: SIZING.base,
+      fontStyle: "italic",
+    },
 
-  imageOptionsDialog: { margin: SIZING.base },
-  imageOptionsContainer: { padding: SIZING.base },
-  imageOptionButton: { marginBottom: SIZING.base },
-  deleteButton: {
-    backgroundColor: "rgba(220,53,69,0.06)",
-    borderColor: COLORS.error,
-    borderWidth: 1,
-  },
-  noImageText: {
-    fontSize: FONTS.body.fontSize,
-    color: "#5B6670",
-    marginTop: SIZING.base,
-    fontStyle: "italic",
-  },
+    // Day cards for carousel
+    dayCard: {
+      width: 90,
+      height: 70,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      padding: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      elevation: 3,
+      shadowColor: "#000",
+      shadowOpacity: 0.12,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 3 },
+    },
+    todayCard: {
+      elevation: 6,
+      shadowOpacity: 0.25,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 6 },
+      transform: [{ scale: 1.08 }],
+      borderWidth: 2.5,
+    },
+    dayDate: {
+      fontSize: 13,
+      fontWeight: "700",
+      marginBottom: 6,
+      textAlign: "center",
+    },
+    dayProgress: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dayProgressText: {
+      fontSize: 12,
+      fontWeight: "600",
+      textAlign: "center",
+    },
+    todayText: {
+      fontWeight: "800",
+      textShadowColor: "rgba(0,0,0,0.3)",
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+    },
 
-  // Day cards for carousel
-  dayCard: {
-    width: 90,
-    height: 70,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    padding: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-  },
-  todayCard: {
-    elevation: 6,
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    transform: [{ scale: 1.08 }],
-    borderWidth: 2.5,
-  },
-  dayDate: {
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 6,
-    textAlign: "center",
-  },
-  dayProgress: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dayProgressText: {
-    fontSize: 12,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  todayText: {
-    fontWeight: "800",
-    textShadowColor: "rgba(0,0,0,0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
+    // Level system styles
+    levelDisplay: {
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: "rgba(0,0,0,0.1)",
+    },
+    levelInfo: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 8,
+    },
+    rankText: {
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    levelText: {
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    progressContainer: {
+      marginTop: 4,
+    },
+    progressText: {
+      fontSize: 12,
+      color: "#666",
+      marginBottom: 4,
+    },
+    progressBar: {
+      height: 6,
+      backgroundColor: "rgba(0,0,0,0.1)",
+      borderRadius: 3,
+      overflow: "hidden",
+    },
+    progressFill: {
+      height: "100%",
+      borderRadius: 3,
+    },
 
-  // Level system styles
-  levelDisplay: {
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.1)",
-  },
-  levelInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  rankText: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  levelText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  progressContainer: {
-    marginTop: 4,
-  },
-  progressText: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 4,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: "rgba(0,0,0,0.1)",
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 3,
-  },
-
-  // Rank-specific card styles
-  rankCard_wood: {
-    borderColor: "#8B4513",
-    borderWidth: 2,
-    shadowColor: "#8B4513",
-  },
-  rankCard_bronze: {
-    borderColor: "#CD7F32",
-    borderWidth: 2,
-    shadowColor: "#CD7F32",
-  },
-  rankCard_silver: {
-    borderColor: "#C0C0C0",
-    borderWidth: 2,
-    shadowColor: "#C0C0C0",
-  },
-  rankCard_gold: {
-    borderColor: "#FFD700",
-    borderWidth: 2,
-    shadowColor: "#FFD700",
-    elevation: 4,
-    shadowOpacity: 0.3,
-  },
-  rankCard_diamond: {
-    borderColor: "#B9F2FF",
-    borderWidth: 2,
-    shadowColor: "#B9F2FF",
-    elevation: 6,
-    shadowOpacity: 0.4,
-  },
-  rankCard_legendary: {
-    borderColor: "#FF6B6B",
-    borderWidth: 3,
-    shadowColor: "#FF6B6B",
-    elevation: 8,
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-  },
-});
+    // Rank-specific card styles
+    rankCard_wood: {
+      borderColor: "#8B4513",
+      borderWidth: 2,
+      shadowColor: "#8B4513",
+    },
+    rankCard_bronze: {
+      borderColor: "#CD7F32",
+      borderWidth: 2,
+      shadowColor: "#CD7F32",
+    },
+    rankCard_silver: {
+      borderColor: "#C0C0C0",
+      borderWidth: 2,
+      shadowColor: "#C0C0C0",
+    },
+    rankCard_gold: {
+      borderColor: "#FFD700",
+      borderWidth: 2,
+      shadowColor: "#FFD700",
+      elevation: 4,
+      shadowOpacity: 0.3,
+    },
+    rankCard_diamond: {
+      borderColor: "#B9F2FF",
+      borderWidth: 2,
+      shadowColor: "#B9F2FF",
+      elevation: 6,
+      shadowOpacity: 0.4,
+    },
+    rankCard_legendary: {
+      borderColor: "#FF6B6B",
+      borderWidth: 3,
+      shadowColor: "#FF6B6B",
+      elevation: 8,
+      shadowOpacity: 0.5,
+      shadowRadius: 12,
+    },
+  });

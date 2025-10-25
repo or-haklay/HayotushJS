@@ -9,7 +9,8 @@ import { Text, Button } from "react-native-paper";
 import { Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { COLORS, SIZING } from "@/theme/theme";
+import { COLORS, SIZING, getColors } from "@/theme/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 // הגדרת צבעים וגדלים ישירות כאן כדי למנוע בעיות import
 
@@ -27,6 +28,8 @@ export const StepNavigationHeader = ({
   onStepPress,
 }) => {
   const insets = useSafeAreaInsets();
+  const { isDark } = useTheme();
+  const colors = getColors(isDark);
   const renderStepButtons = () => {
     const steps = [];
     for (let i = 1; i <= total; i++) {
@@ -59,7 +62,11 @@ export const StepNavigationHeader = ({
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom + 10 }]}>
       <ImageBackground
-        source={require("../../../assets/images/pet-new-background.png")}
+        source={
+          isDark
+            ? require("../../../assets/images/pet-new-background2.png")
+            : require("../../../assets/images/pet-new-background.png")
+        }
         style={[styles.background, { paddingTop: insets.top + 10 }]}
       >
         {/* Progress Bar and Step Buttons at Top */}
