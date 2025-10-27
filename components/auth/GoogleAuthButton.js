@@ -23,8 +23,7 @@ export default function GoogleAuthButton() {
   // Generate secure state parameter for CSRF protection
   const [state, setState] = React.useState(null);
 
-  // Use secure redirect URI based on environment
-  // Temporarily use server redirect URI due to auth.expo.dev being down
+  // Use HTTPS redirect URI for OAuth (required by Google)
   const redirectUri = "https://api.hayotush.com/api/auth/google/callback";
 
   // Debug: Log the redirectUri being used (temporarily enabled for debugging)
@@ -66,12 +65,11 @@ export default function GoogleAuthButton() {
   }, []);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    expoClientId, // used in Expo Go (proxy)
-    androidClientId: androidClientId || webClientId, // Use proper Android client ID
-    iosClientId: iosClientId || webClientId, // Use proper iOS client ID
-    webClientId, // used in Web
-    responseType: "code",
-    usePKCE: false, // 👈 Disable PKCE to avoid code_verifier issues
+    expoClientId, // חשוב בפרוקסי
+    androidClientId: androidClientId, // נדרש עבור Android
+    iosClientId: iosClientId, // נדרש עבור iOS
+    webClientId: webClientId, // נדרש עבור Web
+    usePKCE: true,
     state: state, // CSRF protection
     scopes: ["openid", "email", "profile"],
     // Secure parameters
@@ -186,7 +184,7 @@ export default function GoogleAuthButton() {
     try {
       // Use secure authentication flow
       await promptAsync({
-        useProxy: false, // Don't use proxy since auth.expo.dev is down
+        useProxy: false, // Don't use proxy
         showInRecents: false, // Don't show in recent apps for security
         preferEphemeralSession: true, // Don't persist session
         // Additional security options

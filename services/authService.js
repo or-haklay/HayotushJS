@@ -110,10 +110,10 @@ async function oauthLogin(provider, payload) {
   if (provider === "google") {
     payload.clientId =
       "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com";
-    // Force redirectUri if missing
+    // Use the redirectUri from the request
     if (!payload.redirectUri) {
-      payload.redirectUri = "https://api.hayotush.com/api/auth/google/callback";
-      console.log("🔧 Forced redirectUri in authService:", payload.redirectUri);
+      console.error("❌ Missing redirectUri in OAuth request");
+      throw new Error("Missing redirectUri");
     }
     console.log("🔧 Forced clientId in authService:", payload.clientId);
   }
