@@ -3,10 +3,14 @@ import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { Alert } from "react-native";
+import { EventEmitter } from "events";
+
+// Create event emitter for consent updates
+export const consentEvents = new EventEmitter();
 
 const TOKEN_KEY = "token";
 // Force the correct API URL for now
-const API_URL = "https://api.hayotush.com/api";
+const API_URL = "http://192.168.1.141:3000/api";
 
 console.log("🔗 API URL:", API_URL);
 
@@ -82,6 +86,15 @@ httpServices.interceptors.response.use(
           },
         },
       ]);
+    } else if (status === 403 && error.response?.data?.error === "CONSENT_REQUIRED") {
+      console.log("📄 Consent required - showing consent modal");
+      
+      // Emit event to show consent modal
+      consentEvents.emit("consentRequired", {
+        requiredDocuments: error.response?.data?.requiredDocuments,
+      });
+      
+      // Don't show alert, let the modal handle it
     } else if (status === 500) {
       console.error("🚨 Server error:", error.response?.data);
     } else if (status === 404) {

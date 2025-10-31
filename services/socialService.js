@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // import { API_BASE_URL } from "../config.json"; // קובץ לא קיים
-const API_BASE_URL = "https://api.hayotush.com/api"; // URL קבוע
+const API_BASE_URL = "http://192.168.1.141:3000/api"; // URL מקומי
 
 const socialService = {
   // Get current social connections status

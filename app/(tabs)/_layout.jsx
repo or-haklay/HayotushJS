@@ -60,6 +60,18 @@ const TabsLayout = () => {
           ),
         }}
       />
+      
+      {/* מסך טיולים */}
+      <Tabs.Screen
+        name="walks"
+        options={{
+          title: t("walks.title"),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="walk" size={size} color={color} />
+          ),
+        }}
+      />
+      
       {/* טאב ידע */}
       <Tabs.Screen
         name="learn"

@@ -4,6 +4,7 @@ import { Text, ProgressBar, Chip, Card } from "react-native-paper";
 import { COLORS, FONTS, SIZING } from "../../theme/theme";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../context/ToastContext";
+import { useRTL } from "../../hooks/useRTL";
 
 export default function DailyMissions({
   points,
@@ -13,6 +14,8 @@ export default function DailyMissions({
   onRefresh,
 }) {
   const { t } = useTranslation();
+  const rtl = useRTL();
+  const styles = createStyles(rtl);
 
   // Safe useToast with error handling
   let showSuccess;
@@ -93,7 +96,7 @@ export default function DailyMissions({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (rtl) => StyleSheet.create({
   card: { marginBottom: SIZING.margin, borderRadius: 16 },
   title: { ...FONTS.h3 },
   subtitle: { ...FONTS.caption },
@@ -103,5 +106,5 @@ const styles = StyleSheet.create({
   missionChip: { backgroundColor: "#f2f5f7" },
   done: { backgroundColor: "rgba(0,200,0,0.08)" },
   todo: { backgroundColor: "rgba(0,0,0,0.04)" },
-  refresh: { marginTop: 6, color: COLORS.primary, textAlign: "right" },
+  refresh: { marginTop: 6, color: COLORS.primary, textAlign: rtl.textAlign },
 });

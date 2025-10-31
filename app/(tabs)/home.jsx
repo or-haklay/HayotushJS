@@ -17,6 +17,7 @@ import { SIZING, FONTS, getColors } from "../../theme/theme";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../context/ToastContext";
 import { useTheme as useAppTheme } from "../../context/ThemeContext";
+import { useRTL } from "../../hooks/useRTL";
 
 // Import our new components
 import ScreenContainer from "../../components/ui/ScreenContainer";
@@ -28,6 +29,7 @@ import PetCard from "../../components/home/PetCard";
 import QuickActionButton from "../../components/home/QuickActionButton";
 import * as gamificationService from "../../services/gamificationService";
 import NotificationBell from "../../components/ui/NotificationBell";
+import notificationService from "../../services/notificationService";
 
 const HomeScreen = () => {
   const theme = useTheme();
@@ -37,7 +39,8 @@ const HomeScreen = () => {
   const { isDark } = useAppTheme();
   const colors = getColors(isDark);
   const { showSuccess } = useToast();
-  const styles = createStyles(colors);
+  const rtl = useRTL();
+  const styles = createStyles(colors, rtl);
   const [user, setUser] = useState(null);
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -217,13 +220,63 @@ const HomeScreen = () => {
             }}
           />
         </View>
+
+        {/* כפתור בדיקת התראות */}
+        <Text style={styles.sectionTitle}>בדיקת התראות</Text>
+        <View style={styles.testNotificationsContainer}>
+          <QuickActionButton
+            title="בדיקת התראה מקומית"
+            icon={
+              <Ionicons name="notifications" size={30} color={colors.white} />
+            }
+            color="#FF6B6B"
+            onPress={async () => {
+              try {
+                await notificationService.scheduleLocalNotification(
+                  "🔔 בדיקת התראה",
+                  "זוהי התראה מקומית לבדיקה - תופיע בעוד 3 שניות",
+                  { seconds: 3 }
+                );
+                showSuccess("התראה מקומית נשלחה בהצלחה!");
+              } catch (error) {
+                console.error("Error sending notification:", error);
+                showSuccess("שגיאה בשליחת התראה: " + error.message);
+              }
+            }}
+          />
+          <QuickActionButton
+            title="בדיקת הרשאות"
+            icon={
+              <Ionicons name="shield-checkmark" size={30} color={colors.white} />
+            }
+            color="#4ECDC4"
+            onPress={async () => {
+              try {
+                const hasPermission = await notificationService.requestPermissions();
+                if (hasPermission) {
+                  const token = await notificationService.getPushToken();
+                  showSuccess(
+                    token 
+                      ? `הרשאות אושרו! Token: ${token.substring(0, 20)}...`
+                      : "הרשאות אושרו! (אין token באמולטור)"
+                  );
+                } else {
+                  showSuccess("הרשאות התראות נדחו");
+                }
+              } catch (error) {
+                console.error("Error checking permissions:", error);
+                showSuccess("שגיאה בבדיקת הרשאות: " + error.message);
+              }
+            }}
+          />
+        </View>
       </ScrollView>
     </ScreenContainer>
   );
 };
 
 // סגנונות העיצוב
-const createStyles = (colors) =>
+const createStyles = (colors, rtl) =>
   StyleSheet.create({
     centerContainer: {
       flex: 1,
@@ -249,16 +302,24 @@ const createStyles = (colors) =>
       color: colors.textSecondary,
       marginTop: SIZING.margin,
       marginBottom: SIZING.margin * 1.5,
+      textAlign: rtl.textAlign,
     },
     sectionTitle: {
       ...FONTS.h2,
       color: colors.textSecondary,
       marginBottom: SIZING.margin,
+      textAlign: rtl.textAlign,
     },
     quickActionsContainer: {
-      flexDirection: "row",
+      flexDirection: rtl.flexDirection,
       justifyContent: "space-between",
       marginHorizontal: -SIZING.base / 2,
+    },
+    testNotificationsContainer: {
+      flexDirection: rtl.flexDirection,
+      justifyContent: "space-between",
+      marginHorizontal: -SIZING.base / 2,
+      marginTop: SIZING.margin,
     },
     placeholderImage: {
       width: "60%",
@@ -266,7 +327,7 @@ const createStyles = (colors) =>
       marginBottom: SIZING.base,
     },
     headerTop: {
-      flexDirection: "row",
+      flexDirection: rtl.flexDirection,
       justifyContent: "space-between",
       alignItems: "center",
       width: "100%",

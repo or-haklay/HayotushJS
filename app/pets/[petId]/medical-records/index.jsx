@@ -26,6 +26,7 @@ import {
 import { getColors, FONTS, SIZING, COLORS } from "../../../../theme/theme";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../../context/ThemeContext";
+import { useRTL } from "../../../../hooks/useRTL";
 
 export default function MedicalRecordsList() {
   const { petId } = useLocalSearchParams();
@@ -33,7 +34,8 @@ export default function MedicalRecordsList() {
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const colors = getColors(isDark);
-  const styles = createStyles(colors);
+  const rtl = useRTL();
+  const styles = createStyles(colors, rtl);
   const [rows, setRows] = useState([]);
   const [filteredRows, setFilteredRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -401,7 +403,7 @@ export default function MedicalRecordsList() {
   );
 }
 
-const createStyles = (colors) =>
+const createStyles = (colors, rtl) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -454,7 +456,7 @@ const createStyles = (colors) =>
     recordDate: {
       ...FONTS.caption,
       color: colors.textSecondary,
-      textAlign: "right",
+      textAlign: rtl.textAlign,
     },
     recordDescription: {
       ...FONTS.body,

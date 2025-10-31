@@ -5,11 +5,13 @@ import {
   Pressable,
   SafeAreaView,
   ImageBackground,
+  Text,
 } from "react-native";
-import { Text, ActivityIndicator, Chip } from "react-native-paper";
+import { ActivityIndicator, Chip } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { COLORS, SIZING, FONTS, getColors } from "../../../theme/theme";
 import { useTheme } from "../../../context/ThemeContext";
+import { useRTL } from "../../../hooks/useRTL";
 import * as contentService from "../../../services/contentService";
 
 const getCategoryColor = (categoryKey, isDark = false) => {
@@ -51,17 +53,9 @@ export default function LearnCategoryList() {
   const router = useRouter();
   const { isDark } = useTheme();
   const colors = getColors(isDark);
+  const rtl = useRTL();
 
-  // פונקציה לזיהוי שפה ויישור טקסט
-  const isHebrew = (text) =>
-    typeof text === "string" && /[\u0590-\u05FF]/.test(text);
-  const getTextDirection = (text) => {
-    if (isHebrew(text)) {
-      return { textAlign: "right", writingDirection: "rtl" };
-    } else {
-      return { textAlign: "left", writingDirection: "ltr" };
-    }
-  };
+  // כל הטקסט משתמש בכיוון של שפת האפליקציה
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
   const [sort, setSort] = useState("recent");
@@ -94,7 +88,7 @@ export default function LearnCategoryList() {
           ? require("../../../assets/images/pet-new-background2.png")
           : require("../../../assets/images/pet-new-background.png")
       }
-      style={{ flex: 1 }}
+      style={{ flex: 1, direction: rtl.direction }}
       resizeMode="cover"
     >
       <SafeAreaView
@@ -103,6 +97,7 @@ export default function LearnCategoryList() {
           backgroundColor: isDark
             ? "rgba(14, 26, 26, 0.9)"
             : "rgba(255, 255, 255, 0.8)",
+          direction: rtl.direction,
         }}
       >
         <View
@@ -111,7 +106,7 @@ export default function LearnCategoryList() {
             paddingHorizontal: SIZING.padding,
             paddingBottom: SIZING.padding,
             paddingTop: SIZING.padding * 2,
-            direction: "rtl",
+            direction: rtl.direction,
           }}
         >
           <Text
@@ -119,26 +114,32 @@ export default function LearnCategoryList() {
               ...FONTS.h2,
               marginBottom: 8,
               color: colors.text,
-              ...getTextDirection(title || "קטגוריה"),
+              textAlign: rtl.textAlign,
+              writingDirection: rtl.writingDirection,
             }}
           >
             {title || "קטגוריה"}
           </Text>
 
           <View
-            style={{ flexDirection: "row-reverse", gap: 8, marginBottom: 8 }}
+            key={`chips-${rtl.isRTL}`}
+            style={{ flexDirection: rtl.flexDirection, gap: 8, marginBottom: 8 }}
           >
             <Chip
+              key={`chip-recent-${rtl.isRTL}`}
               selected={sort === "recent"}
               onPress={() => setSort("recent")}
-              style={{ textAlign: "right" }}
+              style={{ direction: rtl.direction }}
+              textStyle={{ textAlign: rtl.textAlign }}
             >
               חדש
             </Chip>
             <Chip
+              key={`chip-title-${rtl.isRTL}`}
               selected={sort === "title"}
               onPress={() => setSort("title")}
-              style={{ textAlign: "right" }}
+              style={{ direction: rtl.direction }}
+              textStyle={{ textAlign: rtl.textAlign }}
             >
               לפי כותרת
             </Chip>
@@ -158,7 +159,7 @@ export default function LearnCategoryList() {
             <FlatList
               data={items}
               keyExtractor={(i) => i.slug}
-              contentContainerStyle={{ paddingBottom: 24 }}
+              contentContainerStyle={{ paddingBottom: 24, direction: rtl.direction }}
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() =>
@@ -174,13 +175,15 @@ export default function LearnCategoryList() {
                     marginBottom: 10,
                     borderWidth: 1,
                     borderColor: COLORS.neutral + "22",
+                    direction: rtl.direction,
                   }}
                 >
                   <Text
                     style={{
                       ...FONTS.h3,
                       color: colors.text,
-                      ...getTextDirection(item.title),
+                      textAlign: rtl.textAlign,
+                      writingDirection: rtl.writingDirection,
                     }}
                   >
                     {item.title}
@@ -190,7 +193,8 @@ export default function LearnCategoryList() {
                       style={{
                         color: colors.textSecondary,
                         marginTop: 6,
-                        ...getTextDirection(item.summary),
+                        textAlign: rtl.textAlign,
+                        writingDirection: rtl.writingDirection,
                       }}
                       numberOfLines={2}
                     >
@@ -202,8 +206,8 @@ export default function LearnCategoryList() {
                       style={{
                         color: colors.textSecondary,
                         marginTop: 6,
-                        textAlign: "right",
-                        writingDirection: "rtl",
+                        textAlign: rtl.textAlign,
+                        writingDirection: rtl.writingDirection,
                       }}
                     >
                       ~{item.readingTimeMin} דק'
@@ -216,8 +220,8 @@ export default function LearnCategoryList() {
                   <Text
                     style={{
                       color: colors.textSecondary,
-                      textAlign: "right",
-                      writingDirection: "rtl",
+                      textAlign: rtl.textAlign,
+                      writingDirection: rtl.writingDirection,
                     }}
                   >
                     לא נמצאו מאמרים

@@ -33,17 +33,9 @@ export function useAuth() {
 
   // Login with Google OAuth
   const loginWithGoogle = useCallback(
-    async ({ code, state, codeVerifier, redirectUri, clientId, platform }) => {
+    async ({ code, state, codeVerifier, redirectUri, clientId, platform, idToken, serverAuthCode }) => {
       try {
         setIsLoading(true);
-
-        console.log("🔍 loginWithGoogle received:", {
-          code: code ? code.substring(0, 20) + "..." : "missing",
-          redirectUri,
-          clientId,
-          platform,
-          state: state ? state.substring(0, 20) + "..." : "missing",
-        });
 
         const token = await authService.oauthLogin("google", {
           code,
@@ -52,6 +44,8 @@ export function useAuth() {
           codeVerifier,
           clientId,
           platform,
+          idToken,
+          serverAuthCode,
         });
 
         if (token) {

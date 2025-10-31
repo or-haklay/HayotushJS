@@ -6,11 +6,13 @@ import {
   Pressable,
   SafeAreaView,
   ImageBackground,
+  Text,
 } from "react-native";
-import { Text, ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator } from "react-native-paper";
 import { useLocalSearchParams } from "expo-router";
 import { COLORS, SIZING, FONTS, getColors } from "../../../../theme/theme";
 import { useTheme } from "../../../../context/ThemeContext";
+import { useRTL } from "../../../../hooks/useRTL";
 import ContentRenderer from "../../../../components/content/ContentRenderer";
 import * as contentService from "../../../../services/contentService";
 import gamificationService from "../../../../services/gamificationService";
@@ -19,6 +21,7 @@ export default function LearnArticleScreen() {
   const { slug } = useLocalSearchParams();
   const { isDark } = useTheme();
   const colors = getColors(isDark);
+  const rtl = useRTL();
   const [loading, setLoading] = useState(true);
   const [article, setArticle] = useState(null);
   const [saved, setSaved] = useState(false);
@@ -71,7 +74,7 @@ export default function LearnArticleScreen() {
             ? require("../../../../assets/images/pet-new-background2.png")
             : require("../../../../assets/images/pet-new-background.png")
         }
-        style={{ flex: 1 }}
+        style={{ flex: 1, direction: rtl.direction }}
         resizeMode="cover"
       >
         <SafeAreaView
@@ -80,6 +83,7 @@ export default function LearnArticleScreen() {
             backgroundColor: isDark
               ? "rgba(14, 26, 26, 0.9)"
               : "rgba(255, 255, 255, 0.8)",
+            direction: rtl.direction,
           }}
         >
           <View
@@ -100,7 +104,7 @@ export default function LearnArticleScreen() {
             ? require("../../../../assets/images/pet-new-background2.png")
             : require("../../../../assets/images/pet-new-background.png")
         }
-        style={{ flex: 1 }}
+        style={{ flex: 1, direction: rtl.direction }}
         resizeMode="cover"
       >
         <SafeAreaView
@@ -109,6 +113,7 @@ export default function LearnArticleScreen() {
             backgroundColor: isDark
               ? "rgba(14, 26, 26, 0.9)"
               : "rgba(255, 255, 255, 0.8)",
+            direction: rtl.direction,
           }}
         >
           <View
@@ -116,8 +121,8 @@ export default function LearnArticleScreen() {
           >
             <Text
               style={{
-                textAlign: "right",
-                writingDirection: "rtl",
+                textAlign: rtl.textAlign,
+                writingDirection: rtl.writingDirection,
               }}
             >
               לא נמצא מאמר
@@ -131,7 +136,7 @@ export default function LearnArticleScreen() {
   return (
     <ImageBackground
       source={require("../../../../assets/images/pet-new-background.png")}
-      style={{ flex: 1 }}
+      style={{ flex: 1, direction: rtl.direction }}
       resizeMode="cover"
     >
       <SafeAreaView
@@ -140,13 +145,14 @@ export default function LearnArticleScreen() {
           backgroundColor: isDark
             ? "rgba(14, 26, 26, 0.9)"
             : "rgba(255, 255, 255, 0.8)",
+          direction: rtl.direction,
         }}
       >
         <ScrollView
-          style={{ flex: 1 }}
+          style={{ flex: 1, direction: rtl.direction }}
           contentContainerStyle={{
             paddingTop: SIZING.padding,
-            direction: "rtl",
+            direction: rtl.direction,
           }}
         >
           {article.heroImage ? (
@@ -167,15 +173,15 @@ export default function LearnArticleScreen() {
               borderWidth: 1,
               borderColor: COLORS.neutral + "22",
               elevation: 2,
-              direction: "rtl",
+              direction: rtl.direction,
             }}
           >
             <Text
               style={{
                 ...FONTS.h1,
                 color: colors.text,
-                textAlign: "right",
-                writingDirection: "rtl",
+                textAlign: rtl.textAlign,
+                writingDirection: rtl.writingDirection,
               }}
             >
               {article.title}
@@ -185,8 +191,8 @@ export default function LearnArticleScreen() {
                 style={{
                   color: colors.textSecondary,
                   marginTop: 6,
-                  textAlign: "right",
-                  writingDirection: "rtl",
+                  textAlign: rtl.textAlign,
+                  writingDirection: rtl.writingDirection,
                 }}
               >
                 {article.summary}
@@ -197,7 +203,7 @@ export default function LearnArticleScreen() {
               onPress={toggleSave}
               style={{
                 marginTop: 8,
-                alignSelf: "flex-end",
+                alignSelf: rtl.isRTL ? "flex-start" : "flex-end",
                 paddingVertical: 6,
                 paddingHorizontal: 12,
                 backgroundColor: saved ? colors.accent : colors.surface,
@@ -209,8 +215,8 @@ export default function LearnArticleScreen() {
               <Text
                 style={{
                   color: saved ? colors.onAccent : colors.text,
-                  textAlign: "right",
-                  writingDirection: "rtl",
+                  textAlign: rtl.textAlign,
+                  writingDirection: rtl.writingDirection,
                 }}
               >
                 {saved ? "שמור מקומית ✓" : "שמור מקומית"}

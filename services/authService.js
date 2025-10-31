@@ -65,7 +65,7 @@ async function createUser(userData) {
 
     return data;
   } catch (error) {
-    console.error("🔍 Error creating user:", error); // 🆕 הוסף את זה
+    console.error("Error creating user:", error);
     throw error;
   }
 }
@@ -102,32 +102,61 @@ async function refreshAuthHeaderFromStorage() {
 }
 
 async function oauthLogin(provider, payload) {
-  console.log("🔍 oauthLogin called with:", { provider, payload });
-  console.log("🔍 Payload keys:", Object.keys(payload));
-  console.log("🔍 redirectUri value:", payload.redirectUri);
+  // Support for native Google Sign-In (with idToken or serverAuthCode)
+  if (provider === "google" && (payload.idToken || payload.serverAuthCode)) {
+    // If we have serverAuthCode, use it as authorization code (OAuth flow)
+    // If we only have idToken, send it directly for verification (native flow)
+    const finalPayload = {
+      clientId: payload.clientId,
+      platform: payload.platform || "native",
+    };
 
-  // Force clientId for Google OAuth - Use Web Client ID
-  if (provider === "google") {
-    payload.clientId =
-      "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com";
-    // Use the redirectUri from the request
-    if (!payload.redirectUri) {
-      console.error("❌ Missing redirectUri in OAuth request");
-      throw new Error("Missing redirectUri");
+    if (payload.serverAuthCode) {
+      // Use serverAuthCode as authorization code (OAuth flow)
+      finalPayload.code = payload.serverAuthCode;
+      finalPayload.redirectUri = "postmessage";
+    } else if (payload.idToken) {
+      // Send idToken directly for native verification
+      finalPayload.idToken = payload.idToken;
+      finalPayload.platform = "native";
     }
-    console.log("🔧 Forced clientId in authService:", payload.clientId);
+
+    const { data } = await httpServices.post(`/auth/${provider}`, finalPayload);
+    await setToken(data.token);
+    return data.token;
   }
 
-  console.log("🔍 Final payload before sending:", {
-    code: payload.code ? payload.code.substring(0, 20) + "..." : "missing",
-    redirectUri: payload.redirectUri,
-    clientId: payload.clientId,
-    state: payload.state ? payload.state.substring(0, 20) + "..." : "missing",
-  });
+  // Original flow with authorization code
+  if (provider === "google") {
+    // Don't override the clientId - use what the frontend sent
+    if (!payload.redirectUri) {
+      console.error("Missing redirectUri in OAuth request");
+      throw new Error("Missing redirectUri");
+    }
+  }
 
   const { data } = await httpServices.post(`/auth/${provider}`, payload);
   await setToken(data.token);
   return data.token;
+}
+
+async function deleteAccount() {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      throw new Error("User not found");
+    }
+    
+    const { data } = await httpServices.delete(`/users/${userId}`);
+    
+    // Clear token after successful deletion
+    await logout();
+    
+    return data;
+  } catch (error) {
+    console.error("Delete account error:", error);
+    throw error;
+  }
 }
 
 export default {
@@ -141,4 +170,5 @@ export default {
   login,
   refreshAuthHeaderFromStorage,
   oauthLogin,
+  deleteAccount,
 };

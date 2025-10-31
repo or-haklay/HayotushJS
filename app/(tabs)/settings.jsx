@@ -61,10 +61,29 @@ export default function SettingsScreen() {
   const [textSizeDialogVisible, setTextSizeDialogVisible] = useState(false);
   const [deleteAccountDialogVisible, setDeleteAccountDialogVisible] =
     useState(false);
+  
+  // Legal consent info
+  const [consentInfo, setConsentInfo] = useState(null);
 
   useEffect(() => {
     loadUser();
+    loadConsentInfo();
   }, []);
+
+  const loadConsentInfo = async () => {
+    try {
+      const userData = await authService.getUser();
+      if (userData) {
+        setConsentInfo({
+          termsVersion: userData.consentVersion?.terms || "1.0",
+          privacyVersion: userData.consentVersion?.privacy || "1.0",
+          timestamp: userData.consentTimestamp,
+        });
+      }
+    } catch (error) {
+      console.error("Error loading consent info:", error);
+    }
+  };
 
   const loadUser = async () => {
     try {
@@ -82,7 +101,7 @@ export default function SettingsScreen() {
     router.replace("/(auth)/login");
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     Alert.alert(
       t("settings.privacy.delete_account"),
       t("settings.privacy.delete_account_warning"),
@@ -91,9 +110,29 @@ export default function SettingsScreen() {
         {
           text: t("settings.privacy.delete_account"),
           style: "destructive",
-          onPress: () => {
-            // TODO: Implement account deletion
-            console.log("Delete account");
+          onPress: async () => {
+            try {
+              await authService.deleteAccount();
+              Alert.alert(
+                t("common.success"),
+                t("settings.privacy.account_deleted"),
+                [
+                  {
+                    text: t("action.ok"),
+                    onPress: () => {
+                      router.replace("/(auth)/login");
+                    },
+                  },
+                ]
+              );
+            } catch (error) {
+              console.error("Error deleting account:", error);
+              const errorMessage =
+                error?.response?.data?.message ||
+                error?.message ||
+                t("settings.privacy.delete_error");
+              Alert.alert(t("common.error"), errorMessage);
+            }
           },
         },
       ]
@@ -446,6 +485,49 @@ export default function SettingsScreen() {
               right={(props) => <List.Icon {...props} icon="chevron-right" />}
               onPress={handleDeleteAccount}
             />
+          </Card.Content>
+        </Card>
+
+        {/* Legal & Compliance Section */}
+        <Card style={dynamicStyles.sectionCard}>
+          <Card.Content>
+            <Text style={dynamicStyles.sectionTitle}>
+              {t("settings.legal.title")}
+            </Text>
+
+            <List.Item
+              title={t("settings.legal.privacy_policy")}
+              description={consentInfo ? `${t("settings.legal.version")} ${consentInfo.privacyVersion}` : ""}
+              left={(props) => <List.Icon {...props} icon="shield-account" />}
+              right={(props) => <List.Icon {...props} icon="open-in-new" />}
+              onPress={() =>
+                openLegalDocument(
+                  "https://hayotush.com/privacy",
+                  t("settings.legal.privacy_policy")
+                )
+              }
+            />
+
+            <List.Item
+              title={t("settings.legal.terms_of_service")}
+              description={consentInfo ? `${t("settings.legal.version")} ${consentInfo.termsVersion}` : ""}
+              left={(props) => <List.Icon {...props} icon="file-document" />}
+              right={(props) => <List.Icon {...props} icon="open-in-new" />}
+              onPress={() =>
+                openLegalDocument(
+                  "https://hayotush.com/terms",
+                  t("settings.legal.terms_of_service")
+                )
+              }
+            />
+
+            {consentInfo?.timestamp && (
+              <List.Item
+                title={t("settings.legal.last_accepted")}
+                description={new Date(consentInfo.timestamp).toLocaleDateString()}
+                left={(props) => <List.Icon {...props} icon="calendar-check" />}
+              />
+            )}
           </Card.Content>
         </Card>
 

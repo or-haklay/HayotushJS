@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "328773421799",
+    "project_id": "hayotush-bbe34",
+    "storage_bucket": "hayotush-bbe34.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:328773421799:android:932f59fe8ba12f13eff042",
+        "android_client_info": {
+          "package_name": "com.hayotush.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgjnFkbZ5erJWAxCUC8OuIG0dvwyGHLmw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

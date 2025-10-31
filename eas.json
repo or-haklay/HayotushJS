@@ -18,10 +18,20 @@
         "buildType": "app-bundle"
       }
     },
+    "preview-apk": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease"
+      },
+      "env": {
+        "EXPO_NO_CAPABILITY_SYNC": "1"
       }
     }
   },

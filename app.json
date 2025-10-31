@@ -17,24 +17,69 @@
           "icon": "./assets/images/logo.png",
           "color": "#4CAF50",
           "androidMode": "default",
-          "androidCollapsedTitle": "התראות חדשות"
+          "androidCollapsedTitle": "התראות חדשות",
+          "androidChannelId": "default"
+        }
+      ],
+      [
+        "@react-native-firebase/app",
+        {
+          "android": {
+            "googleServicesFile": "./services/google-services.json"
+          },
+          "ios": {
+            "googleServicesFile": "./services/GoogleService-Info.plist"
+          }
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d",
+          "android": {
+            "googleServicesFile": "./services/google-services.json"
+          }
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
     },
+    "notification": {
+      "icon": "./assets/images/logo.png",
+      "color": "#4CAF50",
+      "androidMode": "default",
+      "androidCollapsedTitle": "התראות חדשות"
+    },
     "extra": {
       "EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
       "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "387230820014-7nq8eac3v8u107au3bb3firb33b3c8d6.apps.googleusercontent.com",
       "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
       "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
-      "EXPO_PUBLIC_API_URL": "https://api.hayotush.com/api",
+      "EXPO_PUBLIC_API_URL": "http://192.168.1.141:3000/api",
       "router": {},
       "eas": {
         "projectId": "cdbae1c1-512e-4e25-814b-5571a946762b"
       }
     },
-    "owner": "orhaklay"
+    "owner": "orhaklay",
+    "android": {
+      "package": "com.hayotush.app",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION"
+      ],
+      "googleServicesFile": "./services/google-services.json"
+    },
+    "ios": {
+      "bundleIdentifier": "com.hayotush.app",
+      "buildNumber": "1",
+      "googleServicesFile": "./services/GoogleService-Info.plist"
+    }
   }
 }

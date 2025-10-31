@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, FlatList, Pressable, ImageBackground } from "react-native";
+import { View, FlatList, Pressable, ImageBackground, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, ActivityIndicator, Searchbar, Chip } from "react-native-paper";
+import { ActivityIndicator, Searchbar, Chip } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { COLORS, SIZING, FONTS, getColors } from "../../../theme/theme";
 import { useTheme } from "../../../context/ThemeContext";
+import { useRTL } from "../../../hooks/useRTL";
 import * as contentService from "../../../services/contentService";
 
 const getCategoryColor = (categoryKey, isDark = false) => {
@@ -45,17 +46,10 @@ export default function LearnHome() {
   const router = useRouter();
   const { isDark } = useTheme();
   const colors = getColors(isDark);
+  const rtl = useRTL();
 
-  // פונקציה לזיהוי שפה ויישור טקסט
-  const isHebrew = (text) =>
-    typeof text === "string" && /[\u0590-\u05FF]/.test(text);
-  const getTextDirection = (text) => {
-    if (isHebrew(text)) {
-      return { textAlign: "right", writingDirection: "rtl" };
-    } else {
-      return { textAlign: "left", writingDirection: "ltr" };
-    }
-  };
+  // כל הטקסט משתמש בכיוון של שפת האפליקציה
+  // getTextDirection הוסר - נשתמש ב-rtl.textAlign ו-rtl.writingDirection ישירות
   const [loading, setLoading] = useState(true);
   const [cats, setCats] = useState([]);
   const [highlights, setHighlights] = useState([]);
@@ -125,7 +119,7 @@ export default function LearnHome() {
             ? require("../../../assets/images/pet-new-background2.png")
             : require("../../../assets/images/pet-new-background.png")
         }
-        style={{ flex: 1 }}
+        style={{ flex: 1, direction: rtl.direction }}
         resizeMode="cover"
       >
         <SafeAreaView
@@ -134,6 +128,7 @@ export default function LearnHome() {
             backgroundColor: isDark
               ? "rgba(14, 26, 26, 0.9)"
               : "rgba(255, 255, 255, 0.8)",
+            direction: rtl.direction,
           }}
         >
           <View
@@ -149,7 +144,7 @@ export default function LearnHome() {
   return (
     <ImageBackground
       source={require("../../../assets/images/pet-new-background.png")}
-      style={{ flex: 1 }}
+      style={{ flex: 1, direction: rtl.direction }}
       resizeMode="cover"
     >
       <SafeAreaView
@@ -158,6 +153,7 @@ export default function LearnHome() {
           backgroundColor: isDark
             ? "rgba(14, 26, 26, 0.9)"
             : "rgba(255, 255, 255, 0.8)",
+          direction: rtl.direction,
         }}
       >
         <View
@@ -166,7 +162,7 @@ export default function LearnHome() {
             paddingHorizontal: SIZING.padding,
             paddingBottom: SIZING.padding,
             paddingTop: SIZING.padding * 2,
-            direction: "rtl",
+            direction: rtl.direction,
           }}
         >
           <Text
@@ -174,8 +170,8 @@ export default function LearnHome() {
               ...FONTS.h1,
               marginBottom: SIZING.margin,
               color: COLORS.neutral,
-              textAlign: "right",
-              writingDirection: "rtl",
+              textAlign: rtl.textAlign,
+              writingDirection: rtl.writingDirection,
             }}
           >
             ידע
@@ -188,27 +184,35 @@ export default function LearnHome() {
             style={{
               backgroundColor: colors.background,
               marginBottom: 8,
-              textAlign: "right",
-              writingDirection: "rtl",
+              direction: rtl.direction,
+            }}
+            inputStyle={{
+              textAlign: rtl.textAlign,
+              writingDirection: rtl.writingDirection,
             }}
             iconColor={COLORS.primary}
           />
 
           {searchQuery.trim() && (
             <View
-              style={{ flexDirection: "row-reverse", gap: 8, marginBottom: 8 }}
+              key={`chips-${rtl.isRTL}`}
+              style={{ flexDirection: rtl.flexDirection, gap: 8, marginBottom: 8 }}
             >
               <Chip
+                key={`chip-recent-${rtl.isRTL}`}
                 selected={sort === "recent"}
                 onPress={() => setSort("recent")}
-                style={{ textAlign: "right" }}
+                style={{ direction: rtl.direction }}
+                textStyle={{ textAlign: rtl.textAlign }}
               >
                 חדש
               </Chip>
               <Chip
+                key={`chip-title-${rtl.isRTL}`}
                 selected={sort === "title"}
                 onPress={() => setSort("title")}
-                style={{ textAlign: "right" }}
+                style={{ direction: rtl.direction }}
+                textStyle={{ textAlign: rtl.textAlign }}
               >
                 לפי כותרת
               </Chip>
@@ -219,7 +223,7 @@ export default function LearnHome() {
             <FlatList
               data={searchResults}
               keyExtractor={(i) => i.slug}
-              contentContainerStyle={{ paddingBottom: 24 }}
+              contentContainerStyle={{ paddingBottom: 24, direction: rtl.direction }}
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() =>
@@ -235,13 +239,15 @@ export default function LearnHome() {
                     marginBottom: 10,
                     borderWidth: 1,
                     borderColor: COLORS.neutral + "22",
+                    direction: rtl.direction,
                   }}
                 >
                   <Text
                     style={{
                       ...FONTS.h3,
                       color: colors.text,
-                      ...getTextDirection(item.title),
+                      textAlign: rtl.textAlign,
+                      writingDirection: rtl.writingDirection,
                     }}
                   >
                     {item.title}
@@ -251,7 +257,8 @@ export default function LearnHome() {
                       style={{
                         color: colors.textSecondary,
                         marginTop: 6,
-                        ...getTextDirection(item.summary),
+                        textAlign: rtl.textAlign,
+                        writingDirection: rtl.writingDirection,
                       }}
                       numberOfLines={2}
                     >
@@ -263,8 +270,8 @@ export default function LearnHome() {
                       style={{
                         color: colors.textSecondary,
                         marginTop: 6,
-                        textAlign: "right",
-                        writingDirection: "rtl",
+                        textAlign: rtl.textAlign,
+                        writingDirection: rtl.writingDirection,
                       }}
                     >
                       ~{item.readingTimeMin} דק'
@@ -277,8 +284,8 @@ export default function LearnHome() {
                   <Text
                     style={{
                       color: COLORS.neutral,
-                      textAlign: "right",
-                      writingDirection: "rtl",
+                      textAlign: rtl.textAlign,
+                      writingDirection: rtl.writingDirection,
                     }}
                   >
                     לא נמצאו מאמרים
@@ -295,8 +302,8 @@ export default function LearnHome() {
                       ...FONTS.h2,
                       color: colors.text,
                       marginBottom: 12,
-                      textAlign: "right",
-                      writingDirection: "rtl",
+                      textAlign: rtl.textAlign,
+                      writingDirection: rtl.writingDirection,
                     }}
                   >
                     מומלצים עבורך
@@ -306,7 +313,7 @@ export default function LearnHome() {
                     keyExtractor={(item) => item.slug}
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ gap: 12, paddingHorizontal: 4 }}
+                    contentContainerStyle={{ gap: 12, paddingHorizontal: 4, direction: rtl.direction }}
                     renderItem={({ item }) => (
                       <Pressable
                         onPress={() =>
@@ -322,14 +329,15 @@ export default function LearnHome() {
                           padding: 16,
                           borderWidth: 1,
                           borderColor: COLORS.neutral + "22",
+                          direction: rtl.direction,
                         }}
                       >
                         <Text
                           style={{
                             ...FONTS.h3,
                             color: colors.text,
-                            textAlign: "right",
-                            writingDirection: "rtl",
+                            textAlign: rtl.textAlign,
+                            writingDirection: rtl.writingDirection,
                           }}
                           numberOfLines={3}
                         >
@@ -344,8 +352,8 @@ export default function LearnHome() {
                 data={cats}
                 keyExtractor={(i) => i.key}
                 numColumns={2}
-                columnWrapperStyle={{ gap: 12 }}
-                contentContainerStyle={{ gap: 12, paddingBottom: 24 }}
+                columnWrapperStyle={{ gap: 12, flexDirection: "row" }}
+                contentContainerStyle={{ gap: 12, paddingBottom: 24, direction: rtl.direction }}
                 renderItem={({ item }) => (
                   <Pressable
                     onPress={() =>
@@ -361,14 +369,15 @@ export default function LearnHome() {
                       padding: 16,
                       borderWidth: 1,
                       borderColor: COLORS.neutral + "22",
+                      direction: rtl.direction,
                     }}
                   >
                     <Text
                       style={{
                         ...FONTS.h3,
                         color: colors.text,
-                        textAlign: "right",
-                        writingDirection: "rtl",
+                        textAlign: rtl.textAlign,
+                        writingDirection: rtl.writingDirection,
                       }}
                     >
                       {item.title}
@@ -378,8 +387,8 @@ export default function LearnHome() {
                         style={{
                           color: colors.textSecondary,
                           marginTop: 6,
-                          textAlign: "right",
-                          writingDirection: "rtl",
+                          textAlign: rtl.textAlign,
+                          writingDirection: rtl.writingDirection,
                         }}
                       >
                         {item.description}
