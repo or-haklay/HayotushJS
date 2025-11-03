@@ -4,13 +4,21 @@ import legalService from "../services/legalService";
 /**
  * Hook to check if user needs to accept updated legal documents
  * Returns consent status and required documents
+ * @param {boolean} userIsAuthenticated - Whether user is authenticated
  */
-const useConsentCheck = () => {
+const useConsentCheck = (userIsAuthenticated = false) => {
   const [needsConsent, setNeedsConsent] = useState(false);
   const [requiredDocuments, setRequiredDocuments] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const checkConsent = async () => {
+    // אם המשתמש לא מחובר, לא צריך לבדוק consent
+    if (!userIsAuthenticated) {
+      setNeedsConsent(false);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await legalService.checkConsentStatus();
@@ -23,9 +31,15 @@ const useConsentCheck = () => {
         setRequiredDocuments(null);
       }
     } catch (error) {
-      console.error("Error checking consent status:", error);
-      // Don't block the app if there's an error
-      setNeedsConsent(false);
+      // 401 הוא צפוי אם המשתמש לא מחובר - לא נציג error
+      if (error.response?.status === 401) {
+        setNeedsConsent(false);
+        setRequiredDocuments(null);
+      } else {
+        console.error("Error checking consent status:", error);
+        // Don't block the app if there's an error
+        setNeedsConsent(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -50,7 +64,7 @@ const useConsentCheck = () => {
 
   useEffect(() => {
     checkConsent();
-  }, []);
+  }, [userIsAuthenticated]);
 
   return {
     needsConsent,

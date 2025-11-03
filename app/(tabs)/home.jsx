@@ -131,7 +131,6 @@ const HomeScreen = () => {
         title="Hayotush"
         showLogo={true}
         rightIcon="bell"
-        onRightPress={() => {}}
       />
 
       <ScrollView contentContainerStyle={styles.scrollViewContent}>

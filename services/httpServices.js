@@ -1,18 +1,14 @@
 import axios from "axios";
-import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { Alert } from "react-native";
 import { EventEmitter } from "events";
+import { API_URL } from "../config/apiConfig";
 
 // Create event emitter for consent updates
 export const consentEvents = new EventEmitter();
 
 const TOKEN_KEY = "token";
-// Force the correct API URL for now
-const API_URL = "http://192.168.1.141:3000/api";
-
-console.log("🔗 API URL:", API_URL);
 
 // Create axios instance instead of modifying defaults
 const httpServices = axios.create({
@@ -72,20 +68,31 @@ httpServices.interceptors.response.use(
     const status = error.response?.status;
 
     if (status === 401) {
-      console.log("🔐 Unauthorized - redirecting to login");
+      // בדיקה אם זה route שצפוי להחזיר 401 אם המשתמש לא מחובר (לא נציג error)
+      const isExpected401 = error.config?.url?.includes("/legal/consent-status") ||
+                            error.config?.url?.includes("/auth/") ||
+                            error.config?.url?.includes("/users/login") ||
+                            error.config?.url?.includes("/users/register");
+      
+      if (!isExpected401) {
+        console.log("🔐 Unauthorized - redirecting to login");
 
-      // בדיקה אם אנחנו כבר במסך התחברות
-      const currentRoute = router.canGoBack() ? "unknown" : "login";
+        // בדיקה אם אנחנו כבר במסך התחברות
+        const currentRoute = router.canGoBack() ? "unknown" : "login";
 
-      Alert.alert("הפגישה פגה תוקף", "הפגישה שלך פגה תוקף. אנא התחבר שוב.", [
-        {
-          text: "התחבר",
-          onPress: async () => {
-            await AsyncStorage.removeItem(TOKEN_KEY);
-            router.replace("/(auth)/login");
+        Alert.alert("הפגישה פגה תוקף", "הפגישה שלך פגה תוקף. אנא התחבר שוב.", [
+          {
+            text: "התחבר",
+            onPress: async () => {
+              await AsyncStorage.removeItem(TOKEN_KEY);
+              router.replace("/(auth)/login");
+            },
           },
-        },
-      ]);
+        ]);
+      } else {
+        // זה route שצפוי להחזיר 401 אם המשתמש לא מחובר - לא נציג error
+        // פשוט נדחה את ה-error בשקט
+      }
     } else if (status === 403 && error.response?.data?.error === "CONSENT_REQUIRED") {
       console.log("📄 Consent required - showing consent modal");
       

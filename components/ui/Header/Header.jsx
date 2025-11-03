@@ -24,7 +24,7 @@ const Header = ({
         {showLogo && (
           <View style={styles.logoContainer}>
             <Image
-              source={require("../../../assets/images/logo.png")}
+              source={require("../../../assets/ic_launcher-web.png")}
               style={styles.logoImage}
             />
             <Text style={styles.logoText}>{title}</Text>
@@ -34,14 +34,16 @@ const Header = ({
         {!showLogo && <Text style={styles.title}>{title}</Text>}
       </View>
 
-      {rightIcon && (
+      {rightIcon === "bell" ? (
+        <NotificationBell />
+      ) : rightIcon ? (
         <IconButton
           icon={rightIcon}
           iconColor={styles.rightIcon.color}
           size={28}
           onPress={onRightPress}
         />
-      )}
+      ) : null}
     </View>
   );
 };

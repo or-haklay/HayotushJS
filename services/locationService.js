@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL as API_BASE_URL } from '../config/apiConfig';
 
 const WALK_DATA_KEY = 'active_walk_data';
 
@@ -257,9 +258,7 @@ export const clearStoredWalkData = async () => {
 export const detectPOIs = async (lat, lng, radius = 100) => {
   try {
     // Call backend API to detect POIs using fetch (no auth needed for this public endpoint)
-    const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.141:3000/api';
-    
-    const response = await fetch(`${API_URL}/places/nearby?lat=${lat}&lng=${lng}&radius=${radius}`, {
+    const response = await fetch(`${API_BASE_URL}/places/nearby?lat=${lat}&lng=${lng}&radius=${radius}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

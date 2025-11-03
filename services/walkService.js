@@ -138,6 +138,122 @@ export const deleteWalk = async (walkId) => {
   }
 };
 
+// Sync walk to server if it doesn't exist
+export const syncWalkToServer = async (walkId) => {
+  try {
+    const walks = await getWalksFromStorage();
+    const walk = walks.find(w => w._id === walkId);
+    
+    if (!walk) {
+      throw new Error('Walk not found in local storage');
+    }
+    
+    // Try to sync to server
+    try {
+      const httpServices = (await import('./httpServices')).default;
+      
+      // Check if walk exists on server
+      try {
+        await httpServices.get(`/walks/walk/${walkId}`);
+        // Walk exists on server
+        return walkId;
+      } catch (getError) {
+        // Walk doesn't exist on server, create it
+        console.log('Walk not found on server, syncing...');
+        const { petId, pet, startTime, route, pois, title, distance, duration, endTime, isAutoCompleted, isShared } = walk;
+        
+        const response = await httpServices.post('/walks', {
+          petId: petId?.startsWith('temp_') ? null : petId, // Don't send temp pets
+          pet,
+          startTime,
+          route,
+          pois,
+          title,
+          distance,
+          duration,
+          endTime,
+          isAutoCompleted,
+          isShared,
+        });
+        
+        // Update local walk with server ID
+        const serverWalkId = response.data?._id || response._id;
+        if (serverWalkId && serverWalkId !== walkId) {
+          const index = walks.findIndex(w => w._id === walkId);
+          if (index !== -1) {
+            walks[index] = {
+              ...walks[index],
+              _id: serverWalkId,
+              serverSynced: true,
+            };
+            await saveWalksToStorage(walks);
+            return serverWalkId;
+          }
+        }
+        
+        return serverWalkId || walkId;
+      }
+    } catch (apiError) {
+      console.log('Failed to sync walk to server:', apiError.message);
+      // Return local ID as fallback
+      return walkId;
+    }
+  } catch (error) {
+    console.error('Error syncing walk to server:', error);
+    throw error;
+  }
+};
+
+export const updateWalkShareStatus = async (walkId, isShared) => {
+  try {
+    // First, try to sync walk to server
+    const syncedWalkId = await syncWalkToServer(walkId);
+    
+    // Try to update via API first (if backend is available)
+    try {
+      const httpServices = (await import('./httpServices')).default;
+      const response = await httpServices.patch(`/walks/${syncedWalkId}`, { isShared });
+      const updatedWalk = response.data || response;
+      
+      // Update local storage with server response
+      const walks = await getWalksFromStorage();
+      const index = walks.findIndex(w => w._id === walkId || w._id === syncedWalkId);
+      if (index !== -1) {
+        walks[index] = {
+          ...walks[index],
+          ...updatedWalk,
+          isShared,
+          updatedAt: new Date().toISOString(),
+        };
+        await saveWalksToStorage(walks);
+      }
+      
+      return updatedWalk;
+    } catch (apiError) {
+      // If API call fails, update local storage
+      console.log('API update failed, updating local storage:', apiError.message);
+      const walks = await getWalksFromStorage();
+      const index = walks.findIndex(w => w._id === walkId || w._id === syncedWalkId);
+      
+      if (index === -1) {
+        throw new Error('Walk not found');
+      }
+      
+      walks[index] = {
+        ...walks[index],
+        isShared,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      await saveWalksToStorage(walks);
+      return walks[index];
+    }
+  } catch (error) {
+    console.error('Error updating walk share status:', error);
+    throw error;
+  }
+};
+
 export default {
   createWalk,
   updateWalk,
@@ -145,4 +261,6 @@ export default {
   getWalksByPetId,
   getAllWalks,
   deleteWalk,
+  updateWalkShareStatus,
+  syncWalkToServer,
 };

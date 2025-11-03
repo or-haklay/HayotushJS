@@ -353,7 +353,7 @@ const ActiveWalkScreen = () => {
             ref={mapRef}
             style={styles.map}
             initialRegion={currentRegion}
-            showsUserLocation={true}
+            showsUserLocation={false}
             showsMyLocationButton={false}
             scrollEnabled={true}
             zoomEnabled={true}
@@ -389,12 +389,12 @@ const ActiveWalkScreen = () => {
               />
             )}
             
-            {/* Current location marker (last point) */}
-            {routeCoordinates.length > 1 && Marker && (
+            {/* End point marker (only if walk is completed) */}
+            {routeCoordinates.length > 1 && activeWalk.endTime && Marker && (
               <Marker
                 coordinate={routeCoordinates[routeCoordinates.length - 1]}
-                title={t('walks.current_location')}
-                pinColor={theme.colors.primary}
+                title={t('walks.end_point')}
+                pinColor="red"
               />
             )}
             
@@ -486,6 +486,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 20,
+    paddingTop: 20 + (Constants.statusBarHeight || 0),
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

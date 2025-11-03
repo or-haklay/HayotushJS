@@ -402,15 +402,27 @@ const WalksScreen = () => {
           </>
         )}
 
-        <TouchableOpacity
-          style={[styles.historyButton, { borderColor: theme.colors.outline }]}
-          onPress={() => router.push('/walks/walk-history')}
-        >
-          <Ionicons name="time" size={20} color={theme.colors.onSurface} />
-          <Text style={[styles.historyButtonText, { color: theme.colors.onSurface }]}>
-            {t('walks.history')}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={[styles.actionButton, { borderColor: theme.colors.outline }]}
+            onPress={() => router.push('/walks/walk-history')}
+          >
+            <Ionicons name="time" size={20} color={theme.colors.onSurface} />
+            <Text style={[styles.actionButtonText, { color: theme.colors.onSurface }]}>
+              {t('walks.history')}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.actionButton, { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryContainer }]}
+            onPress={() => router.push('/walks/walk-stats')}
+          >
+            <Ionicons name="stats-chart" size={20} color={theme.colors.primary} />
+            <Text style={[styles.actionButtonText, { color: theme.colors.onPrimaryContainer }]}>
+              {t('walks.stats')}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -532,7 +544,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 10,
   },
-  historyButton: {
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  actionButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -540,9 +558,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
   },
-  historyButtonText: {
+  actionButtonText: {
     fontSize: 16,
     marginLeft: 8,
+    fontWeight: '600',
   },
   emptyState: {
     alignItems: 'center',

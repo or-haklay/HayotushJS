@@ -16,7 +16,10 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 
+const statusBarHeight = Constants.statusBarHeight || 0;
+
 import walkService from '../../services/walkService';
+import ShareWalkModal from '../../components/walks/ShareWalkModal';
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
@@ -51,6 +54,7 @@ const WalkDetailsScreen = () => {
   const [walk, setWalk] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     if (walkId) {
@@ -178,7 +182,7 @@ const WalkDetailsScreen = () => {
   };
 
   const handleShare = () => {
-    Alert.alert(t('walks.share'), t('walks.share_coming_soon'));
+    setShowShareModal(true);
   };
 
   const handleDelete = () => {
@@ -461,6 +465,12 @@ const WalkDetailsScreen = () => {
           )}
         </View>
       </ScrollView>
+      
+      <ShareWalkModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        walk={walk}
+      />
     </SafeAreaView>
   );
 };
@@ -479,6 +489,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    paddingTop: 12 + statusBarHeight,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

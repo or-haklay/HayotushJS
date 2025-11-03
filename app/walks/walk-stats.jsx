@@ -13,9 +13,13 @@ import { useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 
 import { useWalk } from '../../context/WalkContext';
+
+const statusBarHeight = Constants.statusBarHeight || 0;
 import WalkChart from '../../components/walks/WalkChart';
+import walkService from '../../services/walkService';
 
 const WalkStatsScreen = () => {
   const { t } = useTranslation();
@@ -31,15 +35,37 @@ const WalkStatsScreen = () => {
   } = useWalk();
 
   const [selectedPeriod, setSelectedPeriod] = useState('week');
+  const [allWalks, setAllWalks] = useState([]);
 
   useEffect(() => {
     if (petId) {
       loadWalks(petId);
+    } else {
+      // If no petId, load all walks from local storage
+      loadAllWalks();
     }
   }, [petId]);
 
+  const loadAllWalks = async () => {
+    try {
+      const walksData = await walkService.getAllWalks();
+      console.log('📊 Loaded all walks:', walksData.length, 'walks');
+      setAllWalks(walksData);
+    } catch (error) {
+      console.error('Error loading all walks:', error);
+    }
+  };
+
   const getFilteredWalks = () => {
-    if (!walks || walks.length === 0) return [];
+    const walksToUse = petId ? walks : allWalks;
+    console.log('🔍 Filtering walks:', {
+      petId,
+      walksCount: petId ? walks.length : allWalks.length,
+      selectedPeriod,
+      walksToUseCount: walksToUse.length,
+    });
+    
+    if (!walksToUse || walksToUse.length === 0) return [];
     
     const now = new Date();
     const filterDate = new Date();
@@ -55,10 +81,19 @@ const WalkStatsScreen = () => {
         filterDate.setFullYear(now.getFullYear() - 1);
         break;
       default:
-        return walks;
+        return walksToUse;
     }
     
-    return walks.filter(walk => new Date(walk.startTime) >= filterDate);
+    console.log('📅 Filter date:', filterDate, 'Now:', now);
+    const filtered = walksToUse.filter(walk => {
+      const walkDate = new Date(walk.startTime);
+      const isIncluded = walkDate >= filterDate;
+      console.log('🚶 Walk:', walkDate, '>=', filterDate, '=', isIncluded);
+      return isIncluded;
+    });
+    
+    console.log('✅ Filtered walks count:', filtered.length);
+    return filtered;
   };
 
   const filteredWalks = getFilteredWalks();
@@ -75,7 +110,10 @@ const WalkStatsScreen = () => {
     Alert.alert(t('walks.share_stats'), t('walks.share_coming_soon'));
   };
 
-  if (isLoadingWalks) {
+  const isLoading = petId ? isLoadingWalks : false;
+  const walksToDisplay = petId ? walks : allWalks;
+
+  if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -174,6 +212,16 @@ const WalkStatsScreen = () => {
       </View>
 
       <ScrollView style={styles.content}>
+        {/* Info message for week chart */}
+        {selectedPeriod === 'week' && (
+          <View style={[styles.infoCard, { backgroundColor: theme.colors.primaryContainer }]}>
+            <Ionicons name="information-circle" size={20} color={theme.colors.primary} />
+            <Text style={[styles.infoText, { color: theme.colors.onPrimaryContainer }]}>
+              {t('walks.weekly_chart_info') || 'הגרף השבועי מציג את המרחק שהלכת בכל יום בשבוע האחרון'}
+            </Text>
+          </View>
+        )}
+        
         <WalkChart walks={filteredWalks} period={selectedPeriod} />
         
         {/* Additional Stats */}
@@ -193,14 +241,14 @@ const WalkStatsScreen = () => {
             <View style={styles.insightItem}>
               <Ionicons name="calendar" size={20} color={theme.colors.primary} />
               <Text style={[styles.insightText, { color: theme.colors.onSurface }]}>
-                {t('walks.most_active_day')}: {getMostActiveDay(filteredWalks)}
+                {t('walks.most_active_day')}: {getMostActiveDay(filteredWalks, t)}
               </Text>
             </View>
             
             <View style={styles.insightItem}>
               <Ionicons name="time" size={20} color={theme.colors.primary} />
               <Text style={[styles.insightText, { color: theme.colors.onSurface }]}>
-                {t('walks.preferred_time')}: {getPreferredTime(filteredWalks)}
+                {t('walks.preferred_time')}: {getPreferredTime(filteredWalks, t)}
               </Text>
             </View>
           </View>
@@ -234,7 +282,7 @@ const getLongestStreak = (walks) => {
   return maxStreak;
 };
 
-const getMostActiveDay = (walks) => {
+const getMostActiveDay = (walks, t) => {
   if (walks.length === 0) return t('walks.no_data');
   
   const dayCount = {};
@@ -246,7 +294,7 @@ const getMostActiveDay = (walks) => {
   return Object.keys(dayCount).reduce((a, b) => dayCount[a] > dayCount[b] ? a : b);
 };
 
-const getPreferredTime = (walks) => {
+const getPreferredTime = (walks, t) => {
   if (walks.length === 0) return t('walks.no_data');
   
   const timeCount = {};
@@ -274,6 +322,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    paddingTop: 12 + statusBarHeight,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -315,6 +364,19 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 16,
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
   },
   additionalStats: {
     margin: 16,

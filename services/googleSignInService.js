@@ -6,43 +6,104 @@ import Constants from 'expo-constants';
 // Lazy load the Google Sign-In module to avoid errors in Expo Go
 let GoogleSignin = null;
 let statusCodes = null;
+let moduleLoadError = null; // Cache the error to avoid repeated attempts
 
 async function loadGoogleSignIn() {
+  // If we already tried and failed, return early
+  if (moduleLoadError) {
+    return { GoogleSignin: null, statusCodes: null };
+  }
+  
+  // If already loaded successfully, return cached
   if (GoogleSignin) return { GoogleSignin, statusCodes };
   
   try {
     // Check if we're in Expo Go - native modules won't work there
-    const isExpoGo = 
-      Constants.executionEnvironment === 'storeClient' || 
-      Constants.appOwnership === 'expo' ||
-      !Constants.appOwnership;
+    // ב-Expo Go: executionEnvironment === 'storeClient'
+    // ב-development build: executionEnvironment !== 'storeClient'
+    const isExpoGo = Constants?.executionEnvironment === 'storeClient';
     
     // Also check if running in bare workflow but module might not be linked
     if (isExpoGo) {
       console.log('⚠️ Google Sign-In native module not available in Expo Go');
       console.log('ℹ️ Please use a development build: npx expo run:android');
+      moduleLoadError = new Error('Expo Go detected');
       return { GoogleSignin: null, statusCodes: null };
     }
 
-    // Try to load the module
-    const module = await import('@react-native-google-signin/google-signin');
+    // Try to load the module with error handling for native module initialization
+    // We use a Promise wrapper to catch synchronous errors during module evaluation
+    let module;
+    try {
+      // Wrap in Promise.resolve to ensure we can catch synchronous errors
+      module = await Promise.resolve().then(async () => {
+        try {
+          return await import('@react-native-google-signin/google-signin');
+        } catch (e) {
+          // Re-throw with better context
+          throw e;
+        }
+      });
+    } catch (importError) {
+      // Handle the case where the module fails to initialize due to missing native module
+      const errorMessage = importError?.message || '';
+      const errorName = importError?.name || '';
+      
+      if (errorMessage.includes('TurboModuleRegistry') || 
+          errorMessage.includes('RNGoogleSignin') ||
+          errorMessage.includes('could not be found') ||
+          errorName === 'Invariant Violation') {
+        console.warn('⚠️ Google Sign-In native module is not linked');
+        console.warn('ℹ️ Solution: Rebuild your app with:');
+        console.warn('   npx expo run:android');
+        console.warn('   OR build a development client: eas build --profile development --platform android');
+        moduleLoadError = importError;
+        return { GoogleSignin: null, statusCodes: null };
+      }
+      throw importError;
+    }
+    
+    // Check if module loaded successfully
+    if (!module || !module.GoogleSignin) {
+      const error = new Error('Module loaded but GoogleSignin is missing');
+      moduleLoadError = error;
+      return { GoogleSignin: null, statusCodes: null };
+    }
+    
     GoogleSignin = module.GoogleSignin;
     statusCodes = module.statusCodes;
     
     // Verify the module is actually available (not just imported)
     if (!GoogleSignin || typeof GoogleSignin.configure !== 'function') {
-      console.error('⚠️ Google Sign-In module loaded but not properly initialized');
-      console.error('ℹ️ Make sure you ran: npx expo prebuild && npx expo run:android');
+      console.warn('⚠️ Google Sign-In module loaded but not properly initialized');
+      console.warn('ℹ️ Make sure you ran: npx expo run:android');
+      moduleLoadError = new Error('Module not properly initialized');
       return { GoogleSignin: null, statusCodes: null };
     }
     
     return { GoogleSignin, statusCodes };
   } catch (error) {
-    console.error('❌ Failed to load Google Sign-In module:', error);
-    console.error('ℹ️ This usually means:');
-    console.error('   1. You are running in Expo Go (use dev build instead)');
-    console.error('   2. The native module is not linked (run: npx expo prebuild)');
-    console.error('   3. The app was not rebuilt after adding the package');
+    // Catch any other errors during module loading
+    const errorMessage = error?.message || '';
+    const errorName = error?.name || '';
+    
+    if (errorMessage.includes('TurboModuleRegistry') || 
+        errorMessage.includes('RNGoogleSignin') ||
+        errorMessage.includes('could not be found') ||
+        errorName === 'Invariant Violation') {
+      console.warn('⚠️ Google Sign-In native module is not linked');
+      console.warn('ℹ️ Solution: Rebuild your app with:');
+      console.warn('   npx expo run:android');
+      console.warn('   OR build a development client: eas build --profile development --platform android');
+      moduleLoadError = error;
+    } else {
+      console.warn('⚠️ Failed to load Google Sign-In module:', error?.message || error);
+      console.warn('ℹ️ This usually means:');
+      console.warn('   1. You are running in Expo Go (use dev build instead)');
+      console.warn('   2. The native module is not linked (run: npx expo prebuild && npx expo run:android)');
+      console.warn('   3. The app was not rebuilt after adding the package');
+      moduleLoadError = error;
+    }
     return { GoogleSignin: null, statusCodes: null };
   }
 }

@@ -8,7 +8,7 @@ import Fontisto from "@expo/vector-icons/Fontisto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import placesService from "../../services/placesService";
-// import config from "../../config.json"; // קובץ לא קיים
+import { API_URL } from "../../config/apiConfig";
 
 // This component uses hooks, so it must be a function component itself.
 // The renderItem in the FlatList should be a function that returns this component.
@@ -39,7 +39,7 @@ const SearchResultCard = ({ item, category }) => {
   const absolutePhoto = (name, maxWidth = 160) => {
     if (!name) return null;
     const rel = placesService.getPhotoUrl(name, maxWidth);
-    const base = "https://api.hayotush.com/api"; // URL קבוע
+    const base = API_URL; // Use config API URL
     return `${base}${rel.startsWith("/") ? "" : "/"}${rel}`;
   };
 

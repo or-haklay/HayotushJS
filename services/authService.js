@@ -31,6 +31,15 @@ async function getJWT() {
 }
 
 async function logout() {
+  // לפני מחיקת token, נמחק את push token מהשרת (אבל נשאיר מקומית)
+  try {
+    const notificationService = await import("./notificationService");
+    await notificationService.default.sendPushTokenToServer(null);
+    console.log("🗑️ Push token removed from server on logout");
+  } catch (error) {
+    console.log("⚠️ Failed to remove push token on logout:", error);
+  }
+  
   await setToken(null);
 }
 

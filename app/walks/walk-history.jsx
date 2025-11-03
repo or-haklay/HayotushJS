@@ -15,8 +15,11 @@ import { useTheme } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 
 import { useWalk } from '../../context/WalkContext';
+
+const statusBarHeight = Constants.statusBarHeight || 0;
 import WalkCard from '../../components/walks/WalkCard';
 import walkService from '../../services/walkService';
 
@@ -62,11 +65,6 @@ const WalkHistoryScreen = () => {
     });
   };
 
-  const handleShareWalk = (walk) => {
-    // TODO: Implement share functionality
-    Alert.alert(t('walks.share'), t('walks.share_coming_soon'));
-  };
-
   const handleDeleteWalk = async (walk) => {
     Alert.alert(
       t('walks.delete_walk'),
@@ -99,7 +97,7 @@ const WalkHistoryScreen = () => {
     <WalkCard
       walk={item}
       onPress={handleWalkPress}
-      onShare={handleShareWalk}
+      onShare={() => {}} // WalkCard handles share internally
       onDelete={handleDeleteWalk}
     />
   );
@@ -191,15 +189,23 @@ const WalkHistoryScreen = () => {
           {t('walks.history')}
         </Text>
         
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => {
-            // TODO: Implement filter functionality
-            Alert.alert(t('walks.filter'), t('walks.filter_coming_soon'));
-          }}
-        >
-          <Ionicons name="filter" size={24} color={theme.colors.onSurface} />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => router.push('/walks/walk-stats')}
+          >
+            <Ionicons name="stats-chart" size={24} color={theme.colors.onSurface} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => {
+              // TODO: Implement filter functionality
+              Alert.alert(t('walks.filter'), t('walks.filter_coming_soon'));
+            }}
+          >
+            <Ionicons name="filter" size={24} color={theme.colors.onSurface} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -243,6 +249,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    paddingTop: 12 + statusBarHeight,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -255,9 +262,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
+    flex: 1,
+    textAlign: 'center',
   },
-  filterButton: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerButton: {
     padding: 8,
+    marginLeft: 8,
   },
   scrollView: {
     flex: 1,

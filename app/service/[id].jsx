@@ -24,7 +24,7 @@ import {
   Badge,
 } from "react-native-paper";
 import placesService from "../../services/placesService";
-// import config from "../../config.json"; // קובץ לא קיים
+import { API_URL } from "../../config/apiConfig";
 import { getColors, COLORS } from "../../theme/theme";
 import { useTheme } from "../../context/ThemeContext";
 import { useTranslation } from "react-i18next";
@@ -40,7 +40,7 @@ const toText = (v) => {
 const absolutePhoto = (name, maxWidth = 900) => {
   if (!name) return null;
   const rel = placesService.getPhotoUrl(name, maxWidth); // returns /api/places/photo?...
-  const base = "https://api.hayotush.com/api"; // URL קבוע
+  const base = API_URL; // Use config API URL
   return `${base}${rel.startsWith("/") ? "" : "/"}${rel}`;
 };
 

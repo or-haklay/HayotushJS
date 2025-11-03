@@ -18,12 +18,38 @@ export default function GoogleAuthButton() {
     
     const loadGoogleSignIn = async () => {
       try {
-        const { GoogleSignin } = await import("@react-native-google-signin/google-signin");
+        let GoogleSignin;
+        try {
+          // Wrap in Promise.resolve to catch synchronous errors during module evaluation
+          const module = await Promise.resolve().then(async () => {
+            return await import("@react-native-google-signin/google-signin");
+          });
+          GoogleSignin = module?.GoogleSignin;
+        } catch (importError) {
+          // Handle the case where the module fails to initialize due to missing native module
+          const errorMessage = importError?.message || '';
+          const errorName = importError?.name || '';
+          
+          if (errorMessage.includes('TurboModuleRegistry') || 
+              errorMessage.includes('RNGoogleSignin') ||
+              errorMessage.includes('could not be found') ||
+              errorName === 'Invariant Violation') {
+            console.warn("⚠️ Google Sign-In native module is not linked");
+            console.warn("ℹ️ Rebuild your app with: npx expo run:android");
+            return; // Button will be hidden
+          }
+          throw importError;
+        }
+        
+        if (!GoogleSignin) {
+          console.warn("⚠️ Google Sign-In module loaded but GoogleSignin is missing");
+          return; // Button will be hidden
+        }
         
         const webClientId = Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
         const iosClientId = Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 
-        if (webClientId && isMounted) {
+        if (webClientId && isMounted && GoogleSignin) {
           GoogleSignin.configure({
             webClientId: webClientId, // Required for server-side auth
             iosClientId: iosClientId, // Optional for iOS
@@ -39,7 +65,19 @@ export default function GoogleAuthButton() {
           setGoogleSignInReady(true);
         }
       } catch (error) {
-        console.warn("⚠️ Google Sign-In module not available:", error.message);
+        // Handle any other errors
+        const errorMessage = error?.message || '';
+        const errorName = error?.name || '';
+        
+        if (errorMessage.includes('TurboModuleRegistry') || 
+            errorMessage.includes('RNGoogleSignin') ||
+            errorMessage.includes('could not be found') ||
+            errorName === 'Invariant Violation') {
+          console.warn("⚠️ Google Sign-In native module is not linked");
+          console.warn("ℹ️ Rebuild your app with: npx expo run:android");
+        } else {
+          console.warn("⚠️ Google Sign-In module not available:", errorMessage || error);
+        }
         // Module not available - button will be hidden
       }
     };
@@ -56,7 +94,36 @@ export default function GoogleAuthButton() {
       setIsSubmitting(true);
       
       // Dynamically import GoogleSignin
-      const { GoogleSignin, statusCodes } = await import("@react-native-google-signin/google-signin");
+      let GoogleSignin, statusCodes;
+      try {
+        // Wrap in Promise.resolve to catch synchronous errors during module evaluation
+        const module = await Promise.resolve().then(async () => {
+          return await import("@react-native-google-signin/google-signin");
+        });
+        GoogleSignin = module?.GoogleSignin;
+        statusCodes = module?.statusCodes;
+      } catch (importError) {
+        // Handle the case where the module fails to initialize due to missing native module
+        const errorMessage = importError?.message || '';
+        const errorName = importError?.name || '';
+        
+        if (errorMessage.includes('TurboModuleRegistry') || 
+            errorMessage.includes('RNGoogleSignin') ||
+            errorMessage.includes('could not be found') ||
+            errorName === 'Invariant Violation') {
+          Alert.alert(
+            "שגיאה", 
+            "מודול Google Sign-In אינו מחובר.\nאנא בנה מחדש את האפליקציה:\nnpx expo run:android"
+          );
+          return;
+        }
+        throw importError;
+      }
+      
+      if (!GoogleSignin) {
+        Alert.alert("שגיאה", "מודול Google Sign-In לא זמין");
+        return;
+      }
       
       await GoogleSignin.hasPlayServices();
       
@@ -107,8 +174,10 @@ export default function GoogleAuthButton() {
       // Try to get statusCodes for error handling
       let statusCodes = null;
       try {
-        const module = await import("@react-native-google-signin/google-signin");
-        statusCodes = module.statusCodes;
+        const module = await Promise.resolve().then(async () => {
+          return await import("@react-native-google-signin/google-signin");
+        });
+        statusCodes = module?.statusCodes;
       } catch {}
 
       if (statusCodes && error.code === statusCodes.SIGN_IN_CANCELLED) {

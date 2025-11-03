@@ -5,6 +5,7 @@
     "version": "1.0.1",
     "sdkVersion": "54.0.0",
     "scheme": "hayotush",
+    "icon": "./assets/ic_launcher-web.png",
     "newArchEnabled": true,
     "plugins": [
       "expo-router",
@@ -14,7 +15,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/logo.png",
+          "icon": "./assets/ic_launcher-web.png",
           "color": "#4CAF50",
           "androidMode": "default",
           "androidCollapsedTitle": "התראות חדשות",
@@ -46,7 +47,7 @@
       "typedRoutes": true
     },
     "notification": {
-      "icon": "./assets/images/logo.png",
+      "icon": "./assets/ic_launcher-web.png",
       "color": "#4CAF50",
       "androidMode": "default",
       "androidCollapsedTitle": "התראות חדשות"
@@ -56,7 +57,7 @@
       "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "387230820014-7nq8eac3v8u107au3bb3firb33b3c8d6.apps.googleusercontent.com",
       "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
       "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "387230820014-mc1s8vkumvl98m3e5s82qlevuhfetk3d.apps.googleusercontent.com",
-      "EXPO_PUBLIC_API_URL": "http://192.168.1.141:3000/api",
+      "EXPO_PUBLIC_API_URL": "https://api.hayotush.com/api",
       "router": {},
       "eas": {
         "projectId": "cdbae1c1-512e-4e25-814b-5571a946762b"
@@ -64,8 +65,12 @@
     },
     "owner": "orhaklay",
     "android": {
+      "icon": "./assets/ic_launcher-web.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/android-chrome-512x512.png",
+        "backgroundColor": "#FFFFFF"
+      },
       "package": "com.hayotush.app",
-      "versionCode": 1,
       "permissions": [
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
@@ -77,6 +82,7 @@
       "googleServicesFile": "./services/google-services.json"
     },
     "ios": {
+      "icon": "./assets/ic_launcher-web.png",
       "bundleIdentifier": "com.hayotush.app",
       "buildNumber": "1",
       "googleServicesFile": "./services/GoogleService-Info.plist"
