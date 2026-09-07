@@ -31,7 +31,6 @@ export default function ExpenseFormScreen() {
     showSuccess = toastContext.showSuccess;
     showError = toastContext.showError;
   } catch (error) {
-    console.warn("ToastProvider not available:", error.message);
     showSuccess = () => {}; // Fallback function
     showError = () => {}; // Fallback function
   }

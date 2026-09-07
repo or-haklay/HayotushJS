@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { View, Platform, FlatList } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useState, useEffect } from "react";
+import { View, Platform } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import {
   TextInput,
   Button,
   Text,
-  Chip,
   Snackbar,
-  Switch,
 } from "react-native-paper";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {
@@ -15,6 +13,7 @@ import {
   updateReminder,
   listReminders,
 } from "../../../../services/remindersService";
+import AddToCalendarButton from "../../../../components/reminders/AddToCalendarButton";
 import { FONTS, getColors } from "../../../../theme/theme";
 import { useTheme } from "../../../../context/ThemeContext";
 import { useTranslation } from "react-i18next";
@@ -22,8 +21,7 @@ import { useToast } from "../../../../context/ToastContext";
 
 export default function NewReminder() {
   const { petId, reminderId } = useLocalSearchParams();
-  const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isDark } = useTheme();
   const colors = getColors(isDark);
   // Safe useToast with error handling
@@ -33,11 +31,13 @@ export default function NewReminder() {
     showSuccess = toastContext.showSuccess;
     showError = toastContext.showError;
   } catch (error) {
-    console.warn("ToastProvider not available:", error.message);
     showSuccess = () => {}; // Fallback function
     showError = () => {}; // Fallback function
   }
 
+  const [currentReminderId, setCurrentReminderId] = useState(
+    reminderId || null
+  );
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [date, setDate] = useState(new Date());
@@ -46,6 +46,7 @@ export default function NewReminder() {
   const [showTime, setShowTime] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const languageCode = i18n.language?.split("-")[0] || "he";
 
   // בדיקה שה-petId קיים
   React.useEffect(() => {
@@ -67,7 +68,7 @@ export default function NewReminder() {
           setDesc(found.description || "");
           setDate(new Date(found.date));
           setTime(found.time || "09:00");
-          setRepeat(found.repeatInterval || "none");
+          setCurrentReminderId(found._id || reminderId);
         }
       } catch (e) {
         setErr(t("reminders.edit_load_error"));
@@ -90,16 +91,18 @@ export default function NewReminder() {
         description: desc?.trim(),
         date: combinedDate.toISOString(),
         time,
-        syncWithGoogle: false,
       };
 
       let pointsAdded = 0;
-      if (reminderId) {
-        await updateReminder(reminderId, payload);
+      if (currentReminderId) {
+        await updateReminder(currentReminderId, payload);
         showSuccess(t("toast.success.reminder_updated"));
       } else {
         const result = await createReminder(payload);
         pointsAdded = Number(result?.pointsAdded || 0);
+        if (result?.reminder?._id) {
+          setCurrentReminderId(result.reminder._id);
+        }
         showSuccess(t("toast.success.reminder_created"));
       }
 
@@ -109,7 +112,7 @@ export default function NewReminder() {
         );
       }
 
-      setTimeout(() => router.back(), 600);
+      setErr("");
     } catch (error) {
       console.error("❌ Error in submit:", error);
       showError(t("toast.error.save_failed"));
@@ -136,7 +139,7 @@ export default function NewReminder() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface, padding: 16 }}>
       <Text style={FONTS.h2}>
-        {reminderId
+        {currentReminderId
           ? t("reminders.edit_reminder")
           : t("reminders.new_reminder")}
       </Text>
@@ -205,8 +208,18 @@ export default function NewReminder() {
         loading={loading}
         style={{ marginTop: 16, backgroundColor: colors.primary }}
       >
-        {reminderId ? t("reminders.save_changes") : t("reminders.save")}
+        {currentReminderId
+          ? t("reminders.save_changes")
+          : t("reminders.save")}
       </Button>
+
+      {currentReminderId ? (
+        <AddToCalendarButton
+          reminderId={currentReminderId}
+          language={languageCode}
+          style={{ marginTop: 12 }}
+        />
+      ) : null}
 
       <Snackbar
         visible={!!err}

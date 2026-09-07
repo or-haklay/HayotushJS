@@ -18,16 +18,6 @@ export default function AuthCallback() {
         }
 
         if (code) {
-          console.log("🔍 Auth callback params:", {
-            code: code ? code.substring(0, 20) + "..." : "missing",
-            state: state ? state.substring(0, 20) + "..." : "missing",
-            code_verifier: code_verifier
-              ? code_verifier.substring(0, 20) + "..."
-              : "missing",
-            code_verifier_length: code_verifier ? code_verifier.length : 0,
-            all_params: { code, state, error, code_verifier },
-          });
-
           // Call the login function with the code
           await loginWithGoogle({ code, state, codeVerifier: code_verifier });
 

@@ -15,7 +15,6 @@ export const useRTL = () => {
     const shouldBeRTL = language?.toLowerCase().startsWith("he");
     if (I18nManager.isRTL !== shouldBeRTL) {
       I18nManager.allowRTL(shouldBeRTL);
-      I18nManager.forceRTL(shouldBeRTL);
     }
   }, [language]);
 

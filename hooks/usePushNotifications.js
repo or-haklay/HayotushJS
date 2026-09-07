@@ -11,13 +11,15 @@ import { Platform } from 'react-native';
  * @returns {{notification?: Notifications.Notification, expoPushToken?: Notifications.ExpoPushToken}}
  */
 export const usePushNotifications = () => {
-    Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-            shouldPlaySound: true,
-            shouldSetBadge: false,
-            shouldShowAlert: true,
-        }),
-    });
+    useEffect(() => {
+        Notifications.setNotificationHandler({
+            handleNotification: async () => ({
+                shouldPlaySound: true,
+                shouldSetBadge: false,
+                shouldShowAlert: true,
+            }),
+        });
+    }, []);
 
     const [expoPushToken, setExpoPushToken] = useState(undefined);
     const [notification, setNotification] = useState(undefined);
@@ -36,11 +38,7 @@ export const usePushNotifications = () => {
                     finalStatus = status;
                 }
                 if (finalStatus !== 'granted') {
-                    const { status } = await Notifications.requestPermissionsAsync();
-                    finalStatus = status;
-                    if (finalStatus !== 'granted') {
-                        throw new Error('Permission for push notifications was denied');
-                    }
+                    throw new Error('Permission for push notifications was denied');
                 }
 
                 token = await Notifications.getExpoPushTokenAsync({

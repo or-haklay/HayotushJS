@@ -116,7 +116,7 @@ class FirebaseService {
       const messaging = getMessaging(app);
       const token = await getToken(messaging);
       
-      console.log('🔥 FCM Token:', token);
+      if (__DEV__) { console.log('🔥 FCM Token:', token); }
       return token;
     } catch (error) {
       console.error('🔥 Error getting FCM token:', error);
@@ -124,7 +124,7 @@ class FirebaseService {
       try {
         const messaging = await import('@react-native-firebase/messaging');
         const token = await messaging.default().getToken();
-        console.log('🔥 FCM Token (legacy API):', token);
+        if (__DEV__) { console.log('🔥 FCM Token (legacy API):', token); }
         return token;
       } catch (fallbackError) {
         console.error('🔥 Fallback also failed:', fallbackError);

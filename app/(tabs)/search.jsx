@@ -154,7 +154,7 @@ export default function SearchScreen() {
           t("search.error_generic");
         setErrorMsg(String(msg));
         setRawData([]);
-        console.warn("Search failed", serverData || e?.message);
+        // Silent fail for search
       } finally {
         setLoading(false);
       }

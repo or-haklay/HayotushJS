@@ -30,14 +30,11 @@ const NotificationBell = () => {
   const loadNotifications = async () => {
     try {
       setLoading(true);
-      console.log("📬 [NotificationBell] Loading notifications...");
       const data = await notificationService.getUserNotifications();
-      console.log("📬 [NotificationBell] Received data:", data);
       const notifications = data.notifications || data || [];
-      console.log(`📬 [NotificationBell] Found ${notifications.length} notifications`);
       setNotifications(notifications);
     } catch (error) {
-      console.error("❌ [NotificationBell] Error loading notifications:", error);
+      console.error("[NotificationBell] Error loading notifications:", error);
       setNotifications([]);
     } finally {
       setLoading(false);

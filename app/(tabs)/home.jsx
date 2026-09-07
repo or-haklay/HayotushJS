@@ -29,7 +29,6 @@ import PetCard from "../../components/home/PetCard";
 import QuickActionButton from "../../components/home/QuickActionButton";
 import * as gamificationService from "../../services/gamificationService";
 import NotificationBell from "../../components/ui/NotificationBell";
-import notificationService from "../../services/notificationService";
 
 const HomeScreen = () => {
   const theme = useTheme();
@@ -77,7 +76,7 @@ const HomeScreen = () => {
                 );
               }
             } catch (e) {
-              console.warn("gamification summary failed", e?.message || e);
+              // Silent fail for gamification summary
             }
           }
         } catch (error) {
@@ -219,56 +218,6 @@ const HomeScreen = () => {
             }}
           />
         </View>
-
-        {/* כפתור בדיקת התראות */}
-        <Text style={styles.sectionTitle}>בדיקת התראות</Text>
-        <View style={styles.testNotificationsContainer}>
-          <QuickActionButton
-            title="בדיקת התראה מקומית"
-            icon={
-              <Ionicons name="notifications" size={30} color={colors.white} />
-            }
-            color="#FF6B6B"
-            onPress={async () => {
-              try {
-                await notificationService.scheduleLocalNotification(
-                  "🔔 בדיקת התראה",
-                  "זוהי התראה מקומית לבדיקה - תופיע בעוד 3 שניות",
-                  { seconds: 3 }
-                );
-                showSuccess("התראה מקומית נשלחה בהצלחה!");
-              } catch (error) {
-                console.error("Error sending notification:", error);
-                showSuccess("שגיאה בשליחת התראה: " + error.message);
-              }
-            }}
-          />
-          <QuickActionButton
-            title="בדיקת הרשאות"
-            icon={
-              <Ionicons name="shield-checkmark" size={30} color={colors.white} />
-            }
-            color="#4ECDC4"
-            onPress={async () => {
-              try {
-                const hasPermission = await notificationService.requestPermissions();
-                if (hasPermission) {
-                  const token = await notificationService.getPushToken();
-                  showSuccess(
-                    token 
-                      ? `הרשאות אושרו! Token: ${token.substring(0, 20)}...`
-                      : "הרשאות אושרו! (אין token באמולטור)"
-                  );
-                } else {
-                  showSuccess("הרשאות התראות נדחו");
-                }
-              } catch (error) {
-                console.error("Error checking permissions:", error);
-                showSuccess("שגיאה בבדיקת הרשאות: " + error.message);
-              }
-            }}
-          />
-        </View>
       </ScrollView>
     </ScreenContainer>
   );
@@ -313,12 +262,6 @@ const createStyles = (colors, rtl) =>
       flexDirection: rtl.flexDirection,
       justifyContent: "space-between",
       marginHorizontal: -SIZING.base / 2,
-    },
-    testNotificationsContainer: {
-      flexDirection: rtl.flexDirection,
-      justifyContent: "space-between",
-      marginHorizontal: -SIZING.base / 2,
-      marginTop: SIZING.margin,
     },
     placeholderImage: {
       width: "60%",

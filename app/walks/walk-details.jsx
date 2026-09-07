@@ -39,7 +39,6 @@ if (MAPS_ENABLED) {
       Marker = maps.Marker;
     }
   } catch (error) {
-    console.warn('⚠️ react-native-maps not available:', error.message);
   }
 }
 

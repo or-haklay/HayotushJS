@@ -17,7 +17,7 @@ async function setToken(token) {
   // Keep Authorization header on httpServices in sync (best-effort)
   try {
     if (token) {
-      httpServices.defaults.headers.common.Authorization = token;
+      httpServices.defaults.headers.common.Authorization = `Bearer ${token}`;
     } else {
       delete httpServices.defaults.headers.common.Authorization;
     }
@@ -104,13 +104,22 @@ async function refreshAuthHeaderFromStorage() {
   const token = await getJWT();
   if (token) {
     try {
-      httpServices.defaults.headers.common.Authorization = token;
+      httpServices.defaults.headers.common.Authorization = `Bearer ${token}`;
     } catch {}
   }
   return token;
 }
 
 async function oauthLogin(provider, payload) {
+  // New flow: Firebase Auth login with idToken
+  if (provider === "firebase" && payload?.idToken) {
+    const { data } = await httpServices.post("/auth/firebase", {
+      idToken: payload.idToken,
+    });
+    await setToken(data.token);
+    return data.token;
+  }
+
   // Support for native Google Sign-In (with idToken or serverAuthCode)
   if (provider === "google" && (payload.idToken || payload.serverAuthCode)) {
     // If we have serverAuthCode, use it as authorization code (OAuth flow)

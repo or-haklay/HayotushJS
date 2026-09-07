@@ -42,9 +42,8 @@ class NotificationService {
       });
 
       this.isInitialized = true;
-      console.log("✅ Notification handlers initialized");
     } catch (error) {
-      console.error("❌ Error initializing notification handlers:", error);
+      console.error("Error initializing notification handlers:", error);
     }
   }
 
@@ -68,7 +67,6 @@ class NotificationService {
         );
       }
 
-      console.log("✅ Notification listeners setup completed");
     }).catch((error) => {
       console.error("❌ Error setting up notification listeners:", error);
     });
@@ -80,9 +78,6 @@ class NotificationService {
       // In expo-notifications, the subscription object has a remove() method
       if (typeof this.notificationListener.remove === 'function') {
         this.notificationListener.remove();
-      } else {
-        // Fallback: just clear the reference if remove() doesn't exist
-        console.warn('⚠️ Notification listener does not have remove() method');
       }
       this.notificationListener = null;
     }
@@ -92,12 +87,9 @@ class NotificationService {
         // In expo-notifications, the subscription object has a remove() method
         if (typeof this.responseListener.remove === 'function') {
           this.responseListener.remove();
-        } else {
-          // Fallback: just clear the reference if remove() doesn't exist
-          console.warn('⚠️ Response listener does not have remove() method');
         }
       } catch (error) {
-        console.warn('⚠️ Error removing response listener:', error.message);
+        // Silent fail for listener removal
       }
       this.responseListener = null;
     }
@@ -122,9 +114,8 @@ class NotificationService {
         enableVibrate: true,
         showBadge: true,
       });
-      console.log("✅ Android notification channel configured");
     } catch (error) {
-      console.error("❌ Error setting up Android notification channel:", error);
+      console.error("Error setting up Android notification channel:", error);
     }
   }
 
@@ -137,7 +128,6 @@ class NotificationService {
 
       // תמיד מבקשים הרשאה אם אין הרשאה או אם זה בפעם הראשונה
       if (existingStatus !== "granted") {
-        console.log("🔔 No notification permission, requesting...");
         const { status } = await Notifications.requestPermissionsAsync({
           ios: {
             allowAlert: true,
@@ -150,7 +140,6 @@ class NotificationService {
       }
 
       if (finalStatus !== "granted") {
-        console.log("❌ Notification permissions denied or not granted");
         return false;
       }
 
@@ -158,11 +147,9 @@ class NotificationService {
       if (Platform.OS === 'android') {
         await this.setupAndroidChannel();
       }
-
-      console.log("✅ Notification permissions granted");
       return true;
     } catch (error) {
-      console.error("❌ Error requesting notification permissions:", error);
+      console.error("Error requesting notification permissions:", error);
       return false;
     }
   }
@@ -172,13 +159,11 @@ class NotificationService {
     try {
       if (token) {
         await AsyncStorage.setItem(PUSH_TOKEN_KEY, token);
-        console.log("💾 Push token saved locally");
       } else {
         await AsyncStorage.removeItem(PUSH_TOKEN_KEY);
-        console.log("🗑️ Push token removed from local storage");
       }
     } catch (error) {
-      console.error("❌ Error saving push token locally:", error);
+      console.error("Error saving push token locally:", error);
     }
   }
 
@@ -188,7 +173,7 @@ class NotificationService {
       const token = await AsyncStorage.getItem(PUSH_TOKEN_KEY);
       return token;
     } catch (error) {
-      console.error("❌ Error loading local push token:", error);
+      console.error("Error loading local push token:", error);
       return null;
     }
   }
@@ -203,12 +188,9 @@ class NotificationService {
         if (localToken) {
           // אם זה FCM token (לא Expo token), נשתמש בו
           if (!localToken.startsWith("ExponentPushToken")) {
-            console.log("📱 Using local FCM token:", localToken);
             return localToken;
-          } else {
-            console.log("⚠️ Local token is Expo token - will try to get new FCM token");
-            // ממשיך לנסות לקבל FCM token חדש
           }
+          // ממשיך לנסות לקבל FCM token חדש
         }
       }
 
@@ -225,44 +207,27 @@ class NotificationService {
         // ב-development build, executionEnvironment לא יהיה "storeClient"
       } catch (constantsError) {
         // אם Constants לא זמין, נמשיך (לא Expo Go)
-        console.log("⚠️ Constants not available, assuming not Expo Go");
       }
 
       if (isExpoGo) {
-        console.log(
-          "Skipping push token fetch in Expo Go (use a development build)."
-        );
         return null;
       }
 
       // Initialize Firebase first (עם טיפול נכון בשגיאות) - תמיד מנסים FCM token קודם
-      console.log("🔥🔥🔥 Step 1: Attempting to initialize Firebase for FCM token...");
       const firebaseInitResult = await firebaseService.initialize();
-      console.log("🔥 Step 1 result: Firebase initialization =", firebaseInitResult);
-      console.log("🔥 Step 1 result: Firebase isInitialized =", firebaseService.isFirebaseInitialized());
       
       // רק אם Firebase אותחל בהצלחה, נסה לקבל FCM token (מועדף על Expo Push Token)
       if (firebaseInitResult && firebaseService.isFirebaseInitialized()) {
         try {
-          console.log("🔥🔥🔥 Step 2: Attempting to get FCM token (preferred over Expo token)...");
           const fcmToken = await firebaseService.getFCMToken();
           if (fcmToken) {
-            console.log("✅✅✅ Step 2 SUCCESS: Successfully got FCM token:", fcmToken);
-            console.log("📱 FCM token will be used for push notifications (works directly with Firebase, no Expo Server Key needed)");
             // שמור מקומית (תמיד מעדכן ל-FCM token אם אפשר)
             await this.savePushTokenLocally(fcmToken);
             return fcmToken;
-          } else {
-            console.log("⚠️ Step 2: FCM token is null, will try Expo push token as fallback");
           }
         } catch (fcmError) {
-          console.error("❌❌❌ Step 2 FAILED: FCM token error:", fcmError.message);
-          console.error("❌ FCM error details:", fcmError);
-          console.log("⚠️ FCM token failed, trying Expo push token as fallback");
+          console.error("FCM token error:", fcmError.message);
         }
-      } else {
-        console.log("⚠️⚠️⚠️ Step 1 FAILED: Firebase not initialized, will use Expo push token");
-        console.log("⚠️ Note: Expo push tokens require FCM Server Key in Expo dashboard (which is deprecated)");
       }
 
       // Fallback to Expo push token (עם טיפול בטוח ב-Constants)
@@ -279,13 +244,10 @@ class NotificationService {
         
         applicationId = Constants?.expoConfig?.android?.package || Constants?.expoConfig?.ios?.bundleIdentifier;
       } catch (constantsError) {
-        console.log("⚠️ Constants not available, cannot get projectId");
+        // Constants not available
       }
 
       if (!projectId) {
-        console.warn(
-          "EAS projectId not found; cannot fetch Expo push token right now."
-        );
         return null;
       }
 
@@ -297,36 +259,33 @@ class NotificationService {
       });
       
       const tokenData = token.data;
-      console.log("✅ Successfully got Expo push token:", tokenData);
       
       // שמור מקומית
       await this.savePushTokenLocally(tokenData);
       
       return tokenData;
     } catch (error) {
-      console.error("❌ Error getting push token:", error);
+      console.error("Error getting push token:", error);
       
       // אם זה Firebase error, נסה ללא Firebase
       if (error.message && error.message.includes("Firebase")) {
-        console.log("🔄 Firebase error detected, trying alternative method...");
         try {
           const Notifications = await getNotificationsModule();
           let projectId = null;
           try {
             projectId = Constants?.expoConfig?.extra?.eas?.projectId;
           } catch (constantsError) {
-            console.log("⚠️ Constants not available in fallback");
+            // Constants not available
           }
           if (projectId) {
             const token = await Notifications.getExpoPushTokenAsync({ projectId });
             const tokenData = token.data;
-            console.log("✅ Got push token without Firebase:", tokenData);
             // שמור מקומית
             await this.savePushTokenLocally(tokenData);
             return tokenData;
           }
         } catch (fallbackError) {
-          console.error("❌ Fallback method also failed:", fallbackError);
+          console.error("Fallback method failed:", fallbackError);
         }
       }
       
@@ -338,29 +297,24 @@ class NotificationService {
   async getUserNotifications() {
     try {
       const response = await httpServices.get("/notifications");
-      console.log("📬 getUserNotifications response:", response);
       
       // השרת מחזיר { notifications: [...], totalPages, currentPage, total }
       const data = response?.data || response;
-      console.log("📬 getUserNotifications data:", data);
       
       // אם יש notifications בתוך data, נחזיר את זה
       if (data && data.notifications && Array.isArray(data.notifications)) {
-        console.log(`📬 Found ${data.notifications.length} notifications`);
         return { notifications: data.notifications };
       }
       
       // אם data הוא מערך ישירות, נחזיר אותו
       if (Array.isArray(data)) {
-        console.log(`📬 Data is array with ${data.length} notifications`);
         return { notifications: data };
       }
       
       // אחרת נחזיר רשימה ריקה
-      console.warn("📬 No notifications found in response, returning empty array");
       return { notifications: [] };
     } catch (error) {
-      console.error("❌ Error fetching notifications:", error);
+      console.error("Error fetching notifications:", error);
       return { notifications: [] };
     }
   }
@@ -414,7 +368,6 @@ class NotificationService {
         },
         trigger,
       });
-      console.log("Local notification scheduled successfully");
     } catch (error) {
       console.error("Error scheduling local notification:", error);
     }
@@ -436,7 +389,6 @@ class NotificationService {
     try {
       const Notifications = await getNotificationsModule();
       await Notifications.cancelScheduledNotificationAsync(notificationId);
-      console.log("Notification cancelled successfully");
     } catch (error) {
       console.error("Error cancelling notification:", error);
     }
@@ -447,7 +399,6 @@ class NotificationService {
     try {
       const Notifications = await getNotificationsModule();
       await Notifications.cancelAllScheduledNotificationsAsync();
-      console.log("All notifications cancelled successfully");
     } catch (error) {
       console.error("Error cancelling all notifications:", error);
     }

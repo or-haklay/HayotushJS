@@ -49,7 +49,6 @@ const WalkStatsScreen = () => {
   const loadAllWalks = async () => {
     try {
       const walksData = await walkService.getAllWalks();
-      console.log('📊 Loaded all walks:', walksData.length, 'walks');
       setAllWalks(walksData);
     } catch (error) {
       console.error('Error loading all walks:', error);
@@ -58,12 +57,6 @@ const WalkStatsScreen = () => {
 
   const getFilteredWalks = () => {
     const walksToUse = petId ? walks : allWalks;
-    console.log('🔍 Filtering walks:', {
-      petId,
-      walksCount: petId ? walks.length : allWalks.length,
-      selectedPeriod,
-      walksToUseCount: walksToUse.length,
-    });
     
     if (!walksToUse || walksToUse.length === 0) return [];
     
@@ -84,15 +77,11 @@ const WalkStatsScreen = () => {
         return walksToUse;
     }
     
-    console.log('📅 Filter date:', filterDate, 'Now:', now);
     const filtered = walksToUse.filter(walk => {
       const walkDate = new Date(walk.startTime);
-      const isIncluded = walkDate >= filterDate;
-      console.log('🚶 Walk:', walkDate, '>=', filterDate, '=', isIncluded);
-      return isIncluded;
+      return walkDate >= filterDate;
     });
     
-    console.log('✅ Filtered walks count:', filtered.length);
     return filtered;
   };
 

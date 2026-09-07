@@ -23,7 +23,6 @@ export default function DailyMissions({
     const toastContext = useToast();
     showSuccess = toastContext.showSuccess;
   } catch (error) {
-    console.warn("ToastProvider not available:", error.message);
     showSuccess = () => {}; // Fallback function
   }
   const completed = missions.filter((m) => m.completed).length;

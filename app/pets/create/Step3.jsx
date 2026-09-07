@@ -74,13 +74,10 @@ export default function Step3() {
           if (uploadResult && uploadResult.success) {
             setUploadProgress(60);
             setUploadStatus("מעדכן את החיה...");
-            console.log("uploadResult", uploadResult);
             setPetData({
               ...petData,
               image: uploadResult.fileUrl,
             });
-            console.log("petData.createdPetId", petData.createdPetId);
-            console.log("uploadResult.fileUrl", uploadResult.fileUrl);
             await petService.updatePetProfilePicture(
               petData.createdPetId,
               uploadResult.fileUrl

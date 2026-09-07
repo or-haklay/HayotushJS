@@ -2,6 +2,7 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL as API_BASE_URL } from '../config/apiConfig';
+import httpServices from './httpServices';
 
 const WALK_DATA_KEY = 'active_walk_data';
 
@@ -14,24 +15,16 @@ export const requestLocationPermissions = async () => {
     const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
     
     if (foregroundStatus !== 'granted') {
-      console.log('Foreground location permission denied');
       return false;
     }
 
     // Request background permissions for production builds
     try {
       const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-      if (backgroundStatus !== 'granted') {
-        console.warn('Background location permission not granted - tracking will work in foreground only');
-      } else {
-        console.log('Background location permission granted');
-      }
+      // Background permission status is tracked but not logged
     } catch (backgroundError) {
       // Background permissions might not be available in Expo Go
-      console.warn('Background location permission not available:', backgroundError.message);
     }
-
-    console.log('Location permissions granted');
     return true;
   } catch (error) {
     console.error('Error requesting location permissions:', error);
@@ -106,7 +99,7 @@ export const isStoppedForDuration = (route, location, duration = 300, radius = 3
     }
   }
 
-  const stoppedTime = (lastPoint.timestamp.getTime() - stopStartTime.getTime()) / 1000;
+  const stoppedTime = (new Date(lastPoint.timestamp).getTime() - new Date(stopStartTime).getTime()) / 1000;
   return stoppedTime >= duration;
 };
 
@@ -160,7 +153,6 @@ export const getWalkSpeed = (route) => {
  */
 export const startLocationTracking = async (options = {}) => {
   try {
-    console.log('Location tracking started (foreground mode)');
     return true;
   } catch (error) {
     console.error('Error starting location tracking:', error);
@@ -174,7 +166,6 @@ export const startLocationTracking = async (options = {}) => {
  */
 export const stopLocationTracking = async () => {
   try {
-    console.log('Location tracking stopped');
     return true;
   } catch (error) {
     console.error('Error stopping location tracking:', error);
@@ -257,21 +248,10 @@ export const clearStoredWalkData = async () => {
  */
 export const detectPOIs = async (lat, lng, radius = 100) => {
   try {
-    // Call backend API to detect POIs using fetch (no auth needed for this public endpoint)
-    const response = await fetch(`${API_BASE_URL}/places/nearby?lat=${lat}&lng=${lng}&radius=${radius}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const response = await httpServices.get('/places/nearby', {
+      params: { lat, lng, radius },
     });
-
-    if (response.ok) {
-      const data = await response.json();
-      return data.pois || [];
-    } else {
-      console.warn('Failed to fetch POIs from backend, returning empty array');
-      return [];
-    }
+    return response.data?.pois || [];
   } catch (error) {
     console.error('Error detecting POIs:', error);
     // Return empty array on error - better than mock data

@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   Modal,
   ImageBackground,
-  Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -43,7 +42,6 @@ import petService from "../services/petService";
 import * as gamificationService from "../services/gamificationService";
 import { useTranslation } from "react-i18next";
 import uploadService from "../services/uploadService";
-import socialService from "../services/socialService";
 
 const dateToISO = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
 const safeNum = (v) =>
@@ -1316,98 +1314,23 @@ export default function ProfileScreen() {
               <Divider style={{ marginVertical: SIZING.base }} />
 
               <View style={styles.rowWrap}>
-                <TouchableOpacity
-                  onPress={() => {
-                    if (form.googleId) {
-                      // Disconnect Google
-                      Alert.alert(
-                        "נתק מגוגל",
-                        "האם אתה בטוח שברצונך לנתק את החשבון מגוגל?",
-                        [
-                          { text: "ביטול", style: "cancel" },
-                          {
-                            text: "נתק",
-                            style: "destructive",
-                            onPress: async () => {
-                              try {
-                                await socialService.disconnectGoogle();
-                                // Reload profile to reflect changes
-                                await reloadProfile();
-                                Alert.alert(
-                                  "הצלחה",
-                                  "החשבון נותק מגוגל בהצלחה"
-                                );
-                              } catch (error) {
-                                console.error(
-                                  "Error disconnecting Google:",
-                                  error
-                                );
-                                Alert.alert(
-                                  "שגיאה",
-                                  "שגיאה בניתוק מגוגל. נסה שוב מאוחר יותר."
-                                );
-                              }
-                            },
-                          },
-                        ]
-                      );
-                    } else {
-                      // Connect Google
-                      Alert.alert(
-                        "חבר לגוגל",
-                        "האם ברצונך לחבר את החשבון לגוגל?",
-                        [
-                          { text: "ביטול", style: "cancel" },
-                          {
-                            text: "חבר",
-                            onPress: async () => {
-                              try {
-                                const response =
-                                  await socialService.getGoogleAuthUrl();
-                                if (response.authUrl) {
-                                  // Open Google OAuth URL in browser
-                                  await Linking.openURL(response.authUrl);
-                                } else {
-                                  Alert.alert(
-                                    "מידע",
-                                    "פונקציונליות החיבור תהיה זמינה בקרוב"
-                                  );
-                                }
-                              } catch (error) {
-                                console.error(
-                                  "Error connecting Google:",
-                                  error
-                                );
-                                Alert.alert(
-                                  "שגיאה",
-                                  "שגיאה בחיבור לגוגל. נסה שוב מאוחר יותר."
-                                );
-                              }
-                            },
-                          },
-                        ]
-                      );
-                    }
+                <Chip
+                  icon={form.googleId ? "check-circle" : "google"}
+                  mode="outlined"
+                  style={{
+                    backgroundColor: form.googleId ? "#28A74520" : "transparent",
+                    borderColor: form.googleId ? "#28A745" : BRAND.primary,
                   }}
                 >
-                  <Chip
-                    icon={form.googleId ? "check-circle" : "google"}
-                    mode="outlined"
-                    style={{
-                      backgroundColor: form.googleId
-                        ? "#28A74520"
-                        : "transparent",
-                      borderColor: form.googleId ? "#28A745" : BRAND.primary,
-                    }}
-                  >
-                    {form.googleId ? "Google מחובר" : "חבר לגוגל"}
-                  </Chip>
-                </TouchableOpacity>
+                  {form.googleId
+                    ? t("profile.google_connected_status")
+                    : t("profile.google_not_connected_status")}
+                </Chip>
               </View>
               <HelperText type="info" visible>
                 {form.googleId
-                  ? "החשבון שלך מחובר לגוגל. תוכל לנתק אותו בכל עת."
-                  : "חבר את החשבון שלך לגוגל לסנכרון נתונים וגיבוי אוטומטי."}
+                  ? t("profile.google_connection_info_connected")
+                  : t("profile.google_connection_info_disconnected")}
               </HelperText>
             </View>
           </List.Section>

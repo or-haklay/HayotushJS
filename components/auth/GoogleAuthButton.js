@@ -34,15 +34,12 @@ export default function GoogleAuthButton() {
               errorMessage.includes('RNGoogleSignin') ||
               errorMessage.includes('could not be found') ||
               errorName === 'Invariant Violation') {
-            console.warn("⚠️ Google Sign-In native module is not linked");
-            console.warn("ℹ️ Rebuild your app with: npx expo run:android");
             return; // Button will be hidden
           }
           throw importError;
         }
         
         if (!GoogleSignin) {
-          console.warn("⚠️ Google Sign-In module loaded but GoogleSignin is missing");
           return; // Button will be hidden
         }
         
@@ -55,12 +52,7 @@ export default function GoogleAuthButton() {
             iosClientId: iosClientId, // Optional for iOS
             offlineAccess: true, // Required to get serverAuthCode
             forceCodeForRefreshToken: true, // Force to get fresh authorization code
-            scopes: [
-              'profile', 
-              'email',
-              'https://www.googleapis.com/auth/calendar',
-              'https://www.googleapis.com/auth/calendar.events'
-            ],
+            scopes: ['profile', 'email'],
           });
           setGoogleSignInReady(true);
         }
@@ -71,12 +63,11 @@ export default function GoogleAuthButton() {
         
         if (errorMessage.includes('TurboModuleRegistry') || 
             errorMessage.includes('RNGoogleSignin') ||
-            errorMessage.includes('could not be found') ||
+            errorMessage.includes('could not be found    ') ||
             errorName === 'Invariant Violation') {
-          console.warn("⚠️ Google Sign-In native module is not linked");
-          console.warn("ℹ️ Rebuild your app with: npx expo run:android");
+          // Module not linked - silent fail
         } else {
-          console.warn("⚠️ Google Sign-In module not available:", errorMessage || error);
+          // Module not available - silent fail
         }
         // Module not available - button will be hidden
       }
@@ -140,7 +131,6 @@ export default function GoogleAuthButton() {
           await GoogleSignin.signOut();
         } catch (signOutError) {
           // Ignore signOut errors - might not be signed in
-          console.log("No previous sign-in to clear");
         }
       }
       
@@ -150,25 +140,15 @@ export default function GoogleAuthButton() {
       // Get tokens
       const tokens = await GoogleSignin.getTokens();
       const idToken = response.idToken || tokens?.idToken;
-      const serverAuthCode = tokens?.serverAuthCode;
       
-      if (idToken || serverAuthCode) {
-        // Send to backend
-        const clientId = Platform.OS === "android"
-          ? Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID
-          : Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ||
-            Constants.expoConfig?.extra?.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-
+      if (idToken) {
         const result = await loginWithGoogle({
           idToken,
-          serverAuthCode,
-          clientId,
-          platform: Platform.OS,
-          });
+        });
 
-          if (result?.success) {
-            router.replace("/(tabs)/home");
-          }
+        if (result?.success) {
+          router.replace("/(tabs)/home");
+        }
       }
     } catch (error) {
       // Try to get statusCodes for error handling
@@ -188,7 +168,23 @@ export default function GoogleAuthButton() {
       } else if (statusCodes && error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         Alert.alert("שגיאה", "שירותי Google Play אינם זמינים");
       } else {
-        Alert.alert("שגיאת התחברות", error.message || "אירעה שגיאה בהתחברות עם Google");
+        // Check for DEVELOPER_ERROR
+        const errorMessage = error.message || "";
+        if (errorMessage.includes("DEVELOPER_ERROR")) {
+          Alert.alert(
+            "שגיאת התחברות",
+            "שגיאת DEVELOPER_ERROR:\n\n" +
+            "ה-SHA-1 fingerprint לא רשום ב-Google Cloud Console.\n\n" +
+            "פתרון:\n" +
+            "1. הרץ: .\\scripts\\get-debug-sha1.ps1\n" +
+            "2. הוסף את ה-SHA-1 ל-Google Cloud Console\n" +
+            "3. בנה מחדש: npm run android\n\n" +
+            "למידע נוסף:\n" +
+            "https://react-native-google-signin.github.io/docs/troubleshooting"
+          );
+        } else {
+          Alert.alert("שגיאת התחברות", errorMessage || "אירעה שגיאה בהתחברות עם Google");
+        }
       }
     } finally {
       setIsSubmitting(false);

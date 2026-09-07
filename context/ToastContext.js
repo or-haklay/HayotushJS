@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import { View, StyleSheet, Animated, Dimensions } from "react-native";
 import { Text, Portal } from "react-native-paper";
 // import { Ionicons } from "@expo/vector-icons";
@@ -18,6 +18,7 @@ const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
   const [queue, setQueue] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const processQueueRef = useRef(null);
 
   const processQueue = useCallback(() => {
     if (queue.length === 0 || isProcessing) return;
@@ -33,9 +34,10 @@ const ToastProvider = ({ children }) => {
       setToasts((prev) => prev.filter((toast) => toast.id !== nextToast.id));
       setIsProcessing(false);
       // Process next toast in queue
-      setTimeout(() => processQueue(), 100);
+      setTimeout(() => processQueueRef.current?.(), 100);
     }, nextToast.duration);
   }, [queue, isProcessing]);
+  processQueueRef.current = processQueue;
 
   const showToast = useCallback(
     (message, type = "info", duration = 3000) => {
@@ -60,7 +62,7 @@ const ToastProvider = ({ children }) => {
           setToasts((prev) => prev.filter((toast) => toast.id !== id));
           setIsProcessing(false);
           // Process queue after current toast
-          setTimeout(() => processQueue(), 100);
+          setTimeout(() => processQueueRef.current?.(), 100);
         }, duration);
       }
 

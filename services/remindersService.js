@@ -58,3 +58,15 @@ export async function completeReminder(reminderId, isCompleted = true) {
 export async function deleteReminder(reminderId) {
   await httpServices.delete(`/reminders/${reminderId}`);
 }
+
+export async function requestReminderInvite(reminderId, options = {}) {
+  const payload = {};
+  if (options.language) {
+    payload.language = options.language;
+  }
+  const { data } = await httpServices.post(
+    `/reminders/${reminderId}/invite`,
+    payload
+  );
+  return data;
+}

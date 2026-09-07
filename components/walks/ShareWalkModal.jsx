@@ -72,9 +72,7 @@ const ShareWalkModal = ({ visible, onClose, walk }) => {
               try {
                 const syncedId = await walkService.syncWalkToServer(walk._id);
                 walkIdToUse = syncedId;
-                console.log('✅ Walk synced to server, using ID:', walkIdToUse);
               } catch (syncError) {
-                console.warn('⚠️ Failed to sync walk to server, using local ID:', syncError.message);
                 // Continue with local ID
               }
               
@@ -83,14 +81,12 @@ const ShareWalkModal = ({ visible, onClose, walk }) => {
               
               // Generate shareable link - ensure _id is string
               const walkId = String(walkIdToUse || walk._id || walk.id || '');
-              console.log('🔗 Sharing walk with ID:', walkId, 'Full walk:', walk);
               
               if (!walkId || walkId === 'undefined' || walkId === 'null') {
                 throw new Error('Walk ID not found or invalid');
               }
               
               const shareLink = `https://hayotush.com/walk/${walkId}`;
-              console.log('📤 Generated share link:', shareLink);
               
               const shareMessage = `${t('walks.share_walk_message')} ${walk.title || `${t('walks.walk_with')} ${walk.pet?.name}`}\n\n${t('walks.distance')}: ${formatDistance(walk.distance)}\n${t('walks.duration')}: ${formatDuration(walk.duration)}\n${t('walks.pois')}: ${walk.pois?.length || 0}\n\n${t('walks.view_walk')}: ${shareLink}`;
               
@@ -103,9 +99,6 @@ const ShareWalkModal = ({ visible, onClose, walk }) => {
               
               // Note: On iOS, result.action can be 'sharedAction' or 'dismissedAction'
               // On Android, result is undefined if user cancels
-              if (result && result.action !== 'dismissedAction') {
-                console.log('Walk shared successfully:', shareLink);
-              }
             } catch (error) {
               console.error('Error sharing link:', error);
               Alert.alert(t('walks.error'), t('walks.share_link_error'));

@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import authService from "../services/authService";
+import { getFirebaseAuth } from "../services/firebaseClient";
+import {
+  GoogleAuthProvider,
+  signInWithCredential,
+} from "firebase/auth";
 
 export function useAuth() {
   const [user, setUser] = useState(null);
@@ -31,21 +36,30 @@ export function useAuth() {
     loadUser();
   }, []);
 
-  // Login with Google OAuth
+  // Login with Google via Firebase Auth (using native Google Sign-In idToken)
   const loginWithGoogle = useCallback(
-    async ({ code, state, codeVerifier, redirectUri, clientId, platform, idToken, serverAuthCode }) => {
+    async ({ idToken }) => {
       try {
         setIsLoading(true);
 
-        const token = await authService.oauthLogin("google", {
-          code,
-          redirectUri,
-          state,
-          codeVerifier,
-          clientId,
-          platform,
-          idToken,
-          serverAuthCode,
+        if (!idToken) {
+          throw new Error("Missing Google idToken");
+        }
+
+        const firebaseAuth = getFirebaseAuth();
+        const credential = GoogleAuthProvider.credential(idToken);
+
+        // Sign in to Firebase with Google credential
+        const userCredential = await signInWithCredential(
+          firebaseAuth,
+          credential
+        );
+
+        const firebaseIdToken = await userCredential.user.getIdToken();
+
+        // Exchange Firebase ID token for app JWT via backend
+        const token = await authService.oauthLogin("firebase", {
+          idToken: firebaseIdToken,
         });
 
         if (token) {

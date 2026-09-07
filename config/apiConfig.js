@@ -29,5 +29,5 @@ export const getApiUrl = () => {
  */
 export const API_URL = getApiUrl();
 
-console.log("🔗 [API Config] API URL:", API_URL);
+if (__DEV__) { console.log("🔗 [API Config] API URL:", API_URL); }
 

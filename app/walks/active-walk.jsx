@@ -39,7 +39,6 @@ if (MAPS_ENABLED) {
       Marker = maps.Marker;
     }
   } catch (error) {
-    console.warn('⚠️ react-native-maps not available:', error.message);
   }
 }
 
@@ -69,7 +68,6 @@ const ActiveWalkScreen = () => {
         activeWalk: !!activeWalk,
         startTime: new Date(activeWalk.startTime)
       };
-      console.log('✅ Initialized tracking with start time:', trackingRef.current.startTime);
     }
   }, [isTracking, activeWalk?.startTime]);
   
@@ -86,8 +84,6 @@ const ActiveWalkScreen = () => {
       return;
     }
     
-    console.log('▶️ Setting up duration update interval');
-    
     const interval = setInterval(() => {
       try {
         const current = trackingRef.current;
@@ -99,14 +95,11 @@ const ActiveWalkScreen = () => {
           dispatchRef.current({ type: 'UPDATE_DURATION' });
         }
       } catch (error) {
-        console.error('❌ Error updating duration:', error);
+        console.error('Error updating duration:', error);
       }
     }, 1000);
     
-    console.log('✅ Duration interval started');
-    
     return () => {
-      console.log('🛑 Clearing duration interval');
       clearInterval(interval);
     };
   }, [isTracking, activeWalk?.petId]); // Only depend on tracking status and petId
@@ -119,16 +112,14 @@ const ActiveWalkScreen = () => {
   // Reset map region when starting a new walk
   useEffect(() => {
     if (activeWalk && isTracking && !watchId) {
-      console.log('🚶 Starting new walk - resetting map region');
       setMapRegion(null); // Reset to allow new initial location
       startLocationTracking();
     }
 
-    return () => {
-      // Cleanup will be handled when walk is stopped
-      if (watchId) {
-        console.log('🧹 Cleaning up location tracking');
-        stopLocationTracking(watchId);
+      return () => {
+        // Cleanup will be handled when walk is stopped
+        if (watchId) {
+          stopLocationTracking(watchId);
         setWatchId(null);
       }
     };
@@ -192,7 +183,7 @@ const ActiveWalkScreen = () => {
           }
         }, 100);
       } catch (initialError) {
-        console.warn('Could not get initial location:', initialError.message);
+        // Silent fail for initial location
       }
       
       // Start watching position with faster updates

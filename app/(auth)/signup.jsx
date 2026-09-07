@@ -103,18 +103,46 @@ const SignUpScreen = () => {
 
     setLoading(true);
     try {
-      await authService.createUser({
+      const response = await authService.createUser({
         name,
         email,
         password,
         termsAccepted: true,
         privacyAccepted: true,
       });
-      Alert.alert(t("auth.signup.title"), t("auth.signup.success"));
-      router.push("/(tabs)/home");
+      
+      // Check if email verification is required
+      if (response.user && !response.user.emailVerified) {
+        // Redirect to email verification screen
+        router.push("/(auth)/verify-email");
+      } else {
+        // Email already verified (Google OAuth) or verification not required
+        Alert.alert(t("auth.signup.title"), t("auth.signup.success"));
+        router.push("/(tabs)/home");
+      }
     } catch (e) {
       console.error("Sign-up error:", e);
-      Alert.alert(t("auth.signup.title"), t("auth.signup.error.general"));
+      
+      // Handle specific error cases
+      let errorMessage = t("auth.signup.error.general");
+      
+      if (e.response?.status === 409) {
+        // Email already exists
+        errorMessage = t("auth.signup.error.email_exists", "This email is already registered. Please login instead.");
+      } else if (e.response?.data?.message) {
+        // Use server error message if available
+        errorMessage = e.response.data.message;
+      } else if (e.message) {
+        // Use error message if available
+        errorMessage = e.message;
+      }
+      
+      Alert.alert(t("auth.signup.title"), errorMessage, [
+        {
+          text: e.response?.status === 409 ? t("auth.login.button", "Login") : "OK",
+          onPress: e.response?.status === 409 ? () => router.push("/(auth)/login") : undefined,
+        },
+      ]);
     } finally {
       setLoading(false);
     }

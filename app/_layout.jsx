@@ -123,10 +123,9 @@ function AppContent() {
       // Initialize Firebase first
       const initializeServices = async () => {
         try {
-          console.log("🔥 Initializing Firebase...");
           await firebaseService.initialize();
         } catch (error) {
-          console.log("🔥 Firebase initialization failed:", error.message);
+          console.error("Firebase initialization failed:", error.message);
         }
       };
 
@@ -140,20 +139,12 @@ function AppContent() {
 
           // Handler לטיפול בלחיצה על התראה (Expo notifications)
           const handleNotificationResponse = (response) => {
-            console.log("🔔🔔🔔 Notification tapped:", response.notification);
-            console.log("🔔 Notification data:", response.notification.request.content.data);
-            console.log("🔔 Notification title:", response.notification.request.content.title);
-            console.log("🔔 Notification body:", response.notification.request.content.body);
             const data = response.notification.request.content.data;
             handleNotificationNavigation(data);
           };
 
           // Handler להתראה שהתקבלה בקדמת הבמה (Expo notifications)
           const handleNotificationReceived = (notification) => {
-            console.log("🔔🔔🔔 Notification received in foreground:", notification);
-            console.log("🔔 Notification data:", notification.request.content.data);
-            console.log("🔔 Notification title:", notification.request.content.title);
-            console.log("🔔 Notification body:", notification.request.content.body);
             // כאן אפשר לעדכן UI, להציג toast, וכו'
           };
 
@@ -165,18 +156,16 @@ function AppContent() {
 
           // הגדרת Firebase foreground handler
           unsubscribeFirebase = await firebaseService.setupForegroundHandler((remoteMessage) => {
-            console.log("🔔🔔🔔 FCM message received in foreground:", remoteMessage);
             // ההתראה תוצג אוטומטית דרך firebaseService
           });
 
           // הגדרת Firebase notification opened handler
           unsubscribeFirebaseNotificationOpened = await firebaseService.setupNotificationOpenedHandler((remoteMessage) => {
-            console.log("🔔 FCM notification opened:", remoteMessage);
             const data = remoteMessage.data || {};
             handleNotificationNavigation(data);
           });
         } catch (error) {
-          console.error("🔔 Error setting up notification handlers:", error);
+          console.error("Error setting up notification handlers:", error);
         }
       };
 
@@ -203,21 +192,17 @@ function AppContent() {
           }
           // אם אין data ספציפי, פשוט נשארים במסך הנוכחי
         } catch (error) {
-          console.error("❌ Error navigating from notification:", error);
+          console.error("Error navigating from notification:", error);
         }
       };
 
       // בקש הרשאות התראות אוטומטית בכל כניסה מחדש
       const requestNotificationPermissions = async () => {
         try {
-          console.log("🔔 Checking notification permissions for current user...");
-          
           // תמיד מבקשים הרשאות (הפונקציה בודקת בעצמה אם צריך לבקש)
           const hasPermission = await notificationService.requestPermissions();
           
           if (hasPermission) {
-            console.log("✅ Notification permissions granted for current user");
-            
             // הגדרת handlers לאחר קבלת הרשאות
             await setupNotificationHandlers();
 
@@ -226,59 +211,25 @@ function AppContent() {
             // אם אין token מקומי, יקבל חדש וישמור מקומית
             const token = await notificationService.getPushToken();
             if (token) {
-              console.log("📱📱📱 Push token received:", token);
-              console.log("📱 Token type:", token.startsWith("ExponentPushToken") ? "Expo" : "FCM");
-              console.log("📱 Token length:", token.length);
               // תמיד שולחים את ה-token לשרת (מעדכן את ה-token למשתמש הנוכחי)
               // Token נשמר מקומית אוטומטית ב-getPushToken()
               try {
                 await notificationService.sendPushTokenToServer(token);
-                console.log("✅✅✅ Push token sent to server successfully for current user");
-                console.log("📱 Server should now be able to send notifications to this token");
               } catch (error) {
-                console.error("❌❌❌ Failed to send push token to server:", error);
-                console.error("❌ Error details:", error.message);
-              }
-            } else {
-              console.log("⚠️⚠️⚠️ No push token received");
-              console.log("⚠️ This means push notifications won't work on this device");
-              
-              // בדיקה אם זה Expo Go (רק storeClient = Expo Go)
-              // ב-development build: executionEnvironment !== "storeClient"
-              try {
-                const isExpoGo = Constants?.executionEnvironment === "storeClient";
-                
-                if (isExpoGo) {
-                  console.warn("⚠️ ⚠️ ⚠️ IMPORTANT: You are running in Expo Go!");
-                  console.warn("⚠️ Push notifications DO NOT work in Expo Go.");
-                  console.warn("⚠️ You need to build a development build to test push notifications:");
-                  console.warn("⚠️ Run: npx expo run:android or npx expo run:ios");
-                  console.warn("⚠️ Or use EAS Build: eas build --profile development --platform android");
-                } else {
-                  // Debug info for development build
-                  console.log("📱 Running in development build or standalone app");
-                  console.log(`📱 Execution environment: ${Constants?.executionEnvironment || "unknown"}`);
-                  console.log(`📱 App ownership: ${Constants?.appOwnership || "unknown"}`);
-                }
-              } catch (constantsError) {
-                // אם Constants לא זמין, פשוט נדלג על הבדיקה
-                console.log("⚠️ Could not check if running in Expo Go (Constants not available)");
+                console.error("Failed to send push token to server:", error);
               }
             }
           } else {
-            console.log("❌ Notification permissions denied for current user");
             // אם המשתמש לא נתן הרשאה, נמחק את ה-push token שלו מהשרת
             // אבל נשאיר אותו מקומית (אולי משתמש אחר נתן הרשאה)
             try {
-              console.log("🗑️ Removing push token from server for user who denied permissions...");
               await notificationService.sendPushTokenToServer(null);
-              console.log("✅ Push token removed from server for current user (kept locally)");
             } catch (error) {
-              console.error("❌ Failed to remove push token:", error);
+              console.error("Failed to remove push token:", error);
             }
           }
         } catch (error) {
-          console.error("🔔 Notification permission error:", error);
+          console.error("Notification permission error:", error);
         }
       };
       

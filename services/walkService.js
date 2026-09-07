@@ -39,12 +39,6 @@ const saveWalksToStorage = async (walks) => {
 
 export const createWalk = async (walkData) => {
   try {
-    console.log('📝 Creating walk locally (NO SERVER CALL):', {
-      petId: walkData.petId,
-      petName: walkData.pet?.name,
-      isTempPet: walkData.petId?.startsWith('temp_')
-    });
-    
     const walks = await getWalksFromStorage();
     const walkId = await getNextWalkId();
     
@@ -159,7 +153,6 @@ export const syncWalkToServer = async (walkId) => {
         return walkId;
       } catch (getError) {
         // Walk doesn't exist on server, create it
-        console.log('Walk not found on server, syncing...');
         const { petId, pet, startTime, route, pois, title, distance, duration, endTime, isAutoCompleted, isShared } = walk;
         
         const response = await httpServices.post('/walks', {
@@ -194,7 +187,6 @@ export const syncWalkToServer = async (walkId) => {
         return serverWalkId || walkId;
       }
     } catch (apiError) {
-      console.log('Failed to sync walk to server:', apiError.message);
       // Return local ID as fallback
       return walkId;
     }
@@ -231,7 +223,6 @@ export const updateWalkShareStatus = async (walkId, isShared) => {
       return updatedWalk;
     } catch (apiError) {
       // If API call fails, update local storage
-      console.log('API update failed, updating local storage:', apiError.message);
       const walks = await getWalksFromStorage();
       const index = walks.findIndex(w => w._id === walkId || w._id === syncedWalkId);
       

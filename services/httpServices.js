@@ -24,26 +24,17 @@ httpServices.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem(TOKEN_KEY);
     if (token && config.headers) {
-      config.headers["authorization"] = token;
+      config.headers["authorization"] = `Bearer ${token}`;
       // Token added to headers
     } else {
       // No token found in AsyncStorage
     }
 
-    // Debug: Log the request being sent
-    if (config.url?.includes("/auth/google")) {
-      console.log("🔍 httpServices sending request:", {
-        url: config.url,
-        method: config.method,
-        data: config.data,
-        headers: config.headers,
-      });
-    }
 
     return config;
   },
   (error) => {
-    console.error("❌ Request interceptor error:", error);
+    console.error("Request interceptor error:", error);
     return Promise.reject(error);
   }
 );
@@ -63,7 +54,7 @@ httpServices.interceptors.response.use(
       code: error.code,
     };
 
-    console.error("❌ Response error:", errorDetails);
+    console.error("Response error:", errorDetails);
 
     const status = error.response?.status;
 
@@ -75,8 +66,6 @@ httpServices.interceptors.response.use(
                             error.config?.url?.includes("/users/register");
       
       if (!isExpected401) {
-        console.log("🔐 Unauthorized - redirecting to login");
-
         // בדיקה אם אנחנו כבר במסך התחברות
         const currentRoute = router.canGoBack() ? "unknown" : "login";
 
@@ -94,8 +83,6 @@ httpServices.interceptors.response.use(
         // פשוט נדחה את ה-error בשקט
       }
     } else if (status === 403 && error.response?.data?.error === "CONSENT_REQUIRED") {
-      console.log("📄 Consent required - showing consent modal");
-      
       // Emit event to show consent modal
       consentEvents.emit("consentRequired", {
         requiredDocuments: error.response?.data?.requiredDocuments,
@@ -103,11 +90,11 @@ httpServices.interceptors.response.use(
       
       // Don't show alert, let the modal handle it
     } else if (status === 500) {
-      console.error("🚨 Server error:", error.response?.data);
+      console.error("Server error:", error.response?.data);
     } else if (status === 404) {
-      console.error("🔍 Not found:", error.config?.url);
+      console.error("Not found:", error.config?.url);
     } else if (!error.response) {
-      console.error("🌐 Network error:", error.message);
+      console.error("Network error:", error.message);
     }
 
     return Promise.reject(error);

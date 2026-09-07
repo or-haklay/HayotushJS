@@ -166,6 +166,15 @@ const LoginScreen = () => {
             <HelperText type="error" visible={!!errors.password}>
               {errors.password}
             </HelperText>
+
+            <Button
+              mode="text"
+              onPress={() => router.push("/(auth)/forgot-password")}
+              style={styles.forgotPasswordButton}
+              labelStyle={{ fontSize: 12 }}
+            >
+              {t("auth.login.forgot_password", "Forgot Password?")}
+            </Button>
           </View>
 
           <View style={styles.footer}>
@@ -246,6 +255,11 @@ const createStyles = (colors) =>
       marginBottom: SIZING.padding,
     },
     input: {
+      marginBottom: SIZING.base,
+    },
+    forgotPasswordButton: {
+      alignSelf: "flex-end",
+      marginTop: -SIZING.base / 2,
       marginBottom: SIZING.base,
       fontSize: 16,
       backgroundColor: colors.surface,
